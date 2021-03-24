@@ -1,7 +1,16 @@
 Change Log
 ==========
+1.1.1 (3/24/2021)
+-------------------
+Fixes
 
-1.0.1 (3/23/2021)
+Fix: fixed the readme for typo's
+Fix: keywords
+Fix: updateStates now only updates when value changed
+Fix: createState now update the state if it already exists
+Fix: updateSetting now only updates when value has changed
+
+1.1.0 (3/23/2021)
 -------------------
 - Fixed some typos
 
