@@ -51,7 +51,7 @@ TPClient.connect() # After you setup everything you need to call this in order t
 
 
 You can also do this
-```
+```python
 import TouchPortalAPI
 
 TPClient = TouchPortalAPI.Client('YourPluginId')
@@ -64,7 +64,7 @@ TPClient.connect()
 ```
 
 There is also some tools that you can use not 2 many atm but here it is
-```
+```python
 from TouchPortal import Tools
 
 Tools.convertImage_to_base64('pathtoyourimage.png') # This can be a url or a image that is stored on your pc if is url just need to pass in the Url
