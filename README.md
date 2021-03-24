@@ -48,8 +48,41 @@ def shutDown(client, data):
 TPClient.connect() # After you setup everything you need to call this in order to connect to TouchPortal
 
 ```
+
+
+You can also do this
+```
+import TouchPortalAPI
+
+TPClient = TouchPortalAPI.Client('YourPluginId')
+
+@TPClient.on('message') # This means it will run this on any message come from socket so you dont need to do multiple.
+def TPMessage(client, data):
+    print(data)
+
+TPClient.connect()
+```
+
+There is also some tools that you can use not 2 many atm but here it is
+```
+from TouchPortal import Tools
+
+Tools.convertImage_to_base64('pathtoyourimage.png') # This can be a url or a image that is stored on your pc if is url just need to pass in the Url
+
+Tools.updateCheck('KillerBOSS2019', 'TP-YTDM-Plugin', 'V1.0') # This only works with github the first parm is your github account and 2nd parm is your plugin  #repository and the 3rd one is the current version that your going to upload it. If there is a update it will return the json data of your repository and If theres #No # updates it will return you False
+```
+
 the `TPClient.on()` uses "type" for example "info" `{"type":"pair","id":"(plugin_id)"}` which is from that so you would put `TPClient.on('info')`
-You can find more at TouchPortal API doc link should be below
+and there is another class in this API which is called TYPES it has all the types (atleast i think so) you can access it by doing
+- TYPES.onHold_up  - "up"
+- TYPES.onHold_down  - "down"
+- TYPES.onConnect  - "info"
+- TYPES.onAction  - "action"
+- TYPES.onListChange  - "listChange"
+- TYPES.onShutdown  - "closePlugin"
+- TYPES.onBroadcast  - "broadcast"
+- TYPES.onSettingUpdate  - "settings"
+- TYPES.allMessage  - "message" # This one is not build in to TouchPortal it's a custom one that it send any message from TP
 
 ## Full TouchPortal API Doc
 https://www.touch-portal.com/api/index.php?section=intro
