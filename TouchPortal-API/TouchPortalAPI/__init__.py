@@ -46,14 +46,14 @@ class Client(BaseEventEmitter):
             if self._onReceiveCallback:
                 self._timerParseReceive = Timer(0, self._onReceiveCallback, args=(self, rxData)).start()
                 self._timerParseReceive = Timer(0, self._onAllMessage, args=(self, rxData)).start()
+            if self._running:
+                self._ParseReceiveData()
 
         except Exception as e:
             if 'timed out' or "[WinError 10054]" in str(e):
                 self.disconnect()
                 pass
-        if self._running:
-            self._ParseReceiveData()
-        
+
     def _onReceiveCallback(self, data, rawData: bytes):
         data = json.loads(rawData.decode())
         self.emit(data["type"], self.client, data)
