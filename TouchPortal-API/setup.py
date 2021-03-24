@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name='TouchPortal API',
-  version='1.0.1',
+  version='1.1.0',
   description='Touch Portal API for Python',
   long_description=open('README.txt').read() + '\n\n' + open('CHANGELOG.txt').read(),
   url='https://github.com/KillerBOSS2019/TouchPortal-API',  
@@ -18,7 +18,7 @@ setup(
   author_email='DamienWeiFen@gmail.com',
   license='MIT', 
   classifiers=classifiers,
-  keywords='TouchPortal API', 
+  keywords='TouchPortal, API', 
   packages=find_packages(),
   install_requires=[
       'pyee',

@@ -1,15 +1,15 @@
-# TouchPortal-API for Python
+# [TouchPortal](https://touch-portal.com)-API for Python
 Easy way to Build Plugins for TouchPortal with little understanding of Python.
 
 ## Installation
-simply run this in your command line `pip install TouchPortal-API` if your not able to you can download [here](https://pypi.org/project/TouchPortal-API/#files) and do `pip install [fileyoudownloaded]`
+Simply run this in your command line `pip install TouchPortal-API` if your not able to you can download [here](https://pypi.org/project/TouchPortal-API/#files) and do `pip install [fileyoudownloaded]`
 Make Sure your on latest version of TouchPortal current Version of TouchPortal API supports TP V2.3
 
 ## Usage
 ```python
-import TouchPortalAPI # This is how you import the plugin
+import TouchPortalAPI # Import the api
 
-TPClient = TouchPortalAPI.Client('YourPluginID') # replace "YourPluginID" with your own Pluginid in your entry.tp
+TPClient = TouchPortalAPI.Client('YourPluginID') # Initiate the client (replace YourPluginID with your ID)
 
 @TPClient.on('info')  # This Will run once You've connected to TouchPortal
 def OnStart(client, data):
@@ -45,7 +45,7 @@ def shutDown(client, data):
     TPClient.disconnect() # This is how you disconnect once you received the closePlugin message
     
     
-TPClient.connect() # After you setup everything you need to call this in order to connect to TouchPortal
+TPClient.connect() # Connect to Touch Portal
 
 ```
 
@@ -69,7 +69,7 @@ from TouchPortal import Tools
 
 Tools.convertImage_to_base64('pathtoyourimage.png') # This can be a url or a image that is stored on your pc if is url just need to pass in the Url
 
-Tools.updateCheck('KillerBOSS2019', 'TP-YTDM-Plugin', 'V1.0') # This only works with github the first parm is your github account and 2nd parm is your plugin  #repository and the 3rd one is the current version that your going to upload it. If there is a update it will return the json data of your repository and If theres #No # updates it will return you False
+Tools.updateCheck('KillerBOSS2019', 'TP-YTDM-Plugin', 'V1.0') # This only works with github the first parm is your github account and 2nd parm is your plugin #repository and the 3rd one is the current version that your going to upload it. If there is a update it will return the json data of your repository and If theres #No # updates it will return you False
 ```
 
 the `TPClient.on()` uses "type" for example "info" `{"type":"pair","id":"(plugin_id)"}` which is from that so you would put `TPClient.on('info')`
@@ -82,13 +82,13 @@ and there is another class in this API which is called TYPES it has all the type
 - TYPES.onShutdown  - "closePlugin"
 - TYPES.onBroadcast  - "broadcast"
 - TYPES.onSettingUpdate  - "settings"
-- TYPES.allMessage  - "message" # This one is not build in to TouchPortal it's a custom one that it send any message from TP
+- TYPES.allMessage  - "message" # This one is not build in to TouchPortal it's a custom one that it send at any message from TP
 
-## Full TouchPortal API Doc
-https://www.touch-portal.com/api/index.php?section=intro
+## Touch Portal api documentation
+https://www.touch-portal.com/api
 
 ## Bugs
-If theres any bugs, Issues, or need help how to use it feel free use Issue tab
+If theres are any bugs, Issues or if you need help feel free use Issue tab
 
 ## Contribute
 Feel Free to suggest a pull request or Fork

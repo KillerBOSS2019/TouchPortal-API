@@ -26,7 +26,8 @@ class Client(BaseEventEmitter):
         self.pluginId = pluginId
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._timerParseReceive = None
-        self.customStates = []
+        self.currentStates = {}
+        self.currentSettings = {}
         self._running = False
 
     def _buffered_readLine(self, socket):
@@ -61,59 +62,55 @@ class Client(BaseEventEmitter):
         data = json.loads(rawData.decode())
         self.emit('message', client, data)
 
-    def createState(self, newStateId, newStateDesc, defaultValue):
-        try:
-            self.customStates.index(newStateId)
-            raise Exception("This States has been already created. Please choice a new State Id")
-        except ValueError:
-            self.customStates.append(newStateId)
-            self.send({"type":"createState", "id": newStateId, "desc": newStateDesc, "defaultValue": defaultValue})
+    def createState(self, stateId, description, value):
+        if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
+            if stateId not in self.currentStates:
+                self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
+                self.currentStates[stateId] = value
+            else:
+                self.stateUpdate(stateId, value)
 
     def removestate(self, StateId):
-        if StateId in self.customState:
-            self.customStates.remove(StateId)
+        if StateId in self.currentStates:
             self.send({"type": "removeState", "id": StateId})
+            self.currentStates.remove(StateId)
         else:
             raise Exception(f"{StateId} Does not exist.")
 
-    def choiceUpdate(self, choiceId, value):
-        if type(value) == type(['a','b','c']):
-            self.send({"type": "choiceUpdate", "id": choiceId, "value": value})
+    def choiceUpdate(self, choiceId, values):
+        if type(values) == type(['a','b','c']):
+            self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
         else:
-            raise Exception(f'choiceUpdate needs to be a list not a {type(value)}')
+            raise Exception(f'values argument needs to be a list not a {type(values)}')
 
-    def choiceUpdateSpecific(self, Id, value, instanceId):
-        if type(value) == type(['a','b','c']):
-            self.send({"type": "choiceUpdate", "id": Id, "instanceId": instanceId, "value": value})
+    def choiceUpdateSpecific(self, Id, values, instanceId):
+        if type(values) == type(['a','b','c']):
+            self.send({"type": "choiceUpdate", "id": Id, "instanceId": instanceId, "value": values})
         else:
-            raise Exception(f"Value needs to be a list not a {type(value)}")
+            raise Exception(f"values argument needs to be a list not a {type(values)}")
 
     def settingUpdate(self, settingName, settingValue):
-        self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
+        if settingName not in self.currentSettings or self.currentSettings[settingName] != settingValue:
+            self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
+            self.currentSettings[settingName] = settingValue
 
-    def stateUpdate(self,stateId, stateValue):
-        self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
+    def stateUpdate(self, stateId, stateValue):
+        if stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
+            self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
+            self.currentStates[stateId] = stateValue
 
     def stateUpdateMany(self, states):
         if type(states) == type(['a','b','c']):
-            for eachstate in states:
-                self.stateUpdate(eachstate['id'],eachstate['value'])
+            for state in states:
+                self.stateUpdate(state['id'], state['value'])
         else:
             raise Exception(f'StateUpdateMany() takes in a list Not a {type(states)}')
         
     def updateActionData(self, instanceId, minValue, maxValue, Id, types):
         '''
-        TouchPortal currently only support data.type "number"
+        TouchPortal currently only supports data.type "number"
         '''
-        self.send({"type": "updateActionData",
-                   "instanceId": instanceId,
-                   data: {
-                       "minValue": minValue,
-                       "maxValue": maxValue,
-                       "id": Id,
-                       "type": types
-                    }
-                   })
+        self.send({"type": "updateActionData", "instanceId": instanceId, data: {"minValue": minValue, "maxValue": maxValue, "id": Id, "type": types}})
         
         
     def send(self, data):
@@ -131,7 +128,7 @@ class Client(BaseEventEmitter):
         try:
             self.client.connect((self.TPHOST, self.TPPORT))
         except ConnectionRefusedError:
-            raise Exception("Faild to connect to TouchPortal. It might be that TouchPortal is not open")
+            raise Exception("Failed to connect to TouchPortal")
         self.send({"type":"pair", "id": self.pluginId})
         self._ParseReceiveData()
 
