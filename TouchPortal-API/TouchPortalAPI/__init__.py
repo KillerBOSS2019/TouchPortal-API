@@ -158,6 +158,7 @@ class Tools():
                 if r.headers['content-type'] in image_formats:
                     return base64.b64encode(requests.get(image).content).decode('utf-8')
                 else:
+                    print(something) # to cause undefined error so it raise Error
             except Exception as e:
                 if 'Invalid' in str(e).split() or 'defined' in str(e).split():
                     raise Exception("Please pass in a URL with image in it or a file path")
