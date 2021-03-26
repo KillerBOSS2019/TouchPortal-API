@@ -69,7 +69,10 @@ class Client(BaseEventEmitter):
         self.emit(TYPES.allMessage, client, data)
 
     def isActionBeingHeld(self, actionId):
-        return self.__heldActions[actionId]
+        try:
+            return self.__heldActions[actionId]
+        except:
+            return False
 
     def createState(self, stateId, description, value):
         if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
