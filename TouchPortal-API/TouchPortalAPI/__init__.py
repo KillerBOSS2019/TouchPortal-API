@@ -83,9 +83,9 @@ class Client(BaseEventEmitter):
         else:
             raise Exception(f'values argument needs to be a list not a {type(values)}')
 
-    def choiceUpdateSpecific(self, id, values, instanceId):
+    def choiceUpdateSpecific(self, stateId, values, instanceId):
         if type(values) == type(['a','b','c']):
-            self.send({"type": "choiceUpdate", "id": id, "instanceId": instanceId, "value": values})
+            self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
         else:
             raise Exception(f"values argument needs to be a list not a {type(values)}")
 
