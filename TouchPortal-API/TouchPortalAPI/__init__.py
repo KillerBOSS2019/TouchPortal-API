@@ -25,10 +25,10 @@ class Client(BaseEventEmitter):
         super().__init__()
         self.pluginId = pluginId
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._timerParseReceive = None
+        self.__timerParseReceive = None
         self.currentStates = {}
         self.currentSettings = {}
-        self._running = False
+        self.__running = False
 
     def __buffered_readLine(self, socket):
         line = bytearray()
@@ -46,10 +46,11 @@ class Client(BaseEventEmitter):
             if self._onReceiveCallback:
                 self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
                 self.__timerParseReceive = Timer(0, self.__onAllMessage, args=(self, rxData)).start()
-            if self._running:
+            if self.__running:
                 self.__parseReceiveData()
 
         except Exception as e:
+            print(e)
             if 'timed out' or "[WinError 10054]" in str(e):
                 self.disconnect()
                 pass
