@@ -106,11 +106,11 @@ class Client(BaseEventEmitter):
         else:
             raise Exception(f'StateUpdateMany() takes in a list Not a {type(states)}')
         
-    def updateActionData(self, instanceId, id, minValue, maxValue):
+    def updateActionData(self, instanceId, stateId, minValue, maxValue):
         '''
         TouchPortal currently only supports data.type "number"
         '''
-        self.send({"type": "updateActionData", "instanceId": instanceId, data: {"minValue": minValue, "maxValue": maxValue, "id": Id, "type": "number"}})
+        self.send({"type": "updateActionData", "instanceId": instanceId, data: {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
         
         
     def send(self, data):
@@ -130,7 +130,7 @@ class Client(BaseEventEmitter):
         except ConnectionRefusedError:
             raise Exception("Failed to connect to TouchPortal")
         self.send({"type":"pair", "id": self.pluginId})
-        self.__ParseReceiveData()
+        self.__parseReceiveData()
 
     def disconnect(self):
         '''
