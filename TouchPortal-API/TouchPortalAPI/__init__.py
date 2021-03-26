@@ -60,7 +60,7 @@ class Client(BaseEventEmitter):
 
     def __onAllMessage(self, client, rawData):
         data = json.loads(rawData.decode())
-        self.emit('any', client, data)
+        self.emit(TYPES.allMessage, client, data)
 
     def createState(self, stateId, description, value):
         if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
@@ -70,12 +70,12 @@ class Client(BaseEventEmitter):
             else:
                 self.stateUpdate(stateId, value)
 
-    def removestate(self, StateId):
+    def removeState(self, stateId):
         if StateId in self.currentStates:
-            self.send({"type": "removeState", "id": StateId})
-            self.currentStates.remove(StateId)
+            self.send({"type": "removeState", "id": stateId})
+            self.currentStates.remove(stateId)
         else:
-            raise Exception(f"{StateId} Does not exist.")
+            raise Exception(f"{stateId} Does not exist.")
 
     def choiceUpdate(self, choiceId, values):
         if type(values) == type(['a','b','c']):
@@ -83,9 +83,9 @@ class Client(BaseEventEmitter):
         else:
             raise Exception(f'values argument needs to be a list not a {type(values)}')
 
-    def choiceUpdateSpecific(self, Id, values, instanceId):
+    def choiceUpdateSpecific(self, id, values, instanceId):
         if type(values) == type(['a','b','c']):
-            self.send({"type": "choiceUpdate", "id": Id, "instanceId": instanceId, "value": values})
+            self.send({"type": "choiceUpdate", "id": id, "instanceId": instanceId, "value": values})
         else:
             raise Exception(f"values argument needs to be a list not a {type(values)}")
 
