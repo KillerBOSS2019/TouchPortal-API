@@ -118,7 +118,6 @@ class Client(BaseEventEmitter):
         This manages the massage to send
         '''
         self.client.sendall((json.dumps(data)+'\n').encode())
-        self._running = True
         
         
     def connect(self):
@@ -127,6 +126,7 @@ class Client(BaseEventEmitter):
         '''
         try:
             self.client.connect((self.TPHOST, self.TPPORT))
+            self._running = True
         except ConnectionRefusedError:
             raise Exception("Failed to connect to TouchPortal")
         self.send({"type":"pair", "id": self.pluginId})
