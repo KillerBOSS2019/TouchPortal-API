@@ -40,14 +40,14 @@ class Client(BaseEventEmitter):
                 break
         return line
         
-    def __ParseReceiveData(self):
+    def __parseReceiveData(self):
         try:
-            rxData = self._buffered_readLine(self.client)
+            rxData = self.__buffered_readLine(self.client)
             if self._onReceiveCallback:
                 self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
                 self.__timerParseReceive = Timer(0, self.__onAllMessage, args=(self, rxData)).start()
             if self._running:
-                self.__ParseReceiveData()
+                self.__parseReceiveData()
 
         except Exception as e:
             if 'timed out' or "[WinError 10054]" in str(e):
@@ -126,18 +126,18 @@ class Client(BaseEventEmitter):
         '''
         try:
             self.client.connect((self.TPHOST, self.TPPORT))
-            self._running = True
+            self.__running = True
         except ConnectionRefusedError:
             raise Exception("Failed to connect to TouchPortal")
         self.send({"type":"pair", "id": self.pluginId})
-        self._ParseReceiveData()
+        self.__ParseReceiveData()
 
     def disconnect(self):
         '''
         This closes the Socket
         '''
         self.client.close()
-        self._running = False
+        self.__running = False
 
 
 class Tools():
