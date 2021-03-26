@@ -29,6 +29,7 @@ class Client(BaseEventEmitter):
         self.currentStates = {}
         self.currentSettings = {}
         self.__running = False
+        self.__heldActions = {}
 
     def __buffered_readLine(self, socket):
         line = bytearray()
@@ -43,9 +44,9 @@ class Client(BaseEventEmitter):
     def __parseReceiveData(self):
         try:
             rxData = self.__buffered_readLine(self.client)
-            if self._onReceiveCallback:
-                self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
-                self.__timerParseReceive = Timer(0, self.__onAllMessage, args=(self, rxData)).start()
+            if self.__onReceiveCallback:
+                Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
+                Timer(0, self.__onAllMessage, args=(self, rxData)).start()
             if self.__running:
                 self.__parseReceiveData()
 
@@ -57,11 +58,18 @@ class Client(BaseEventEmitter):
 
     def __onReceiveCallback(self, data, rawData: bytes):
         data = json.loads(rawData.decode())
+        if data['type'] == "up":
+            self.__heldActions[data['actionId']] = True
+        elif data['type'] == 'down':
+            self.__heldActions.remove(data['actionId'])
         self.emit(data["type"], self.client, data)
 
     def __onAllMessage(self, client, rawData):
         data = json.loads(rawData.decode())
         self.emit(TYPES.allMessage, client, data)
+
+    def isActionBeingHeld(self, actionId):
+        return self.__heldActions[actionId]
 
     def createState(self, stateId, description, value):
         if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
@@ -99,7 +107,7 @@ class Client(BaseEventEmitter):
         if stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
             self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
             self.currentStates[stateId] = stateValue
-
+    
     def stateUpdateMany(self, states):
         if type(states) == type(['a','b','c']):
             for state in states:
