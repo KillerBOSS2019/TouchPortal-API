@@ -15,7 +15,7 @@ class TYPES:
     onShutdown = 'closePlugin'
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
-    allMessage = 'message'
+    allMessage = 'any'
 
 class Client(BaseEventEmitter):
     TPHOST = '127.0.0.1'
@@ -30,7 +30,7 @@ class Client(BaseEventEmitter):
         self.currentSettings = {}
         self._running = False
 
-    def _buffered_readLine(self, socket):
+    def __buffered_readLine(self, socket):
         line = bytearray()
         while True:
             part = self.client.recv(1)
@@ -40,27 +40,27 @@ class Client(BaseEventEmitter):
                 break
         return line
         
-    def _ParseReceiveData(self):
+    def __ParseReceiveData(self):
         try:
             rxData = self._buffered_readLine(self.client)
             if self._onReceiveCallback:
-                self._timerParseReceive = Timer(0, self._onReceiveCallback, args=(self, rxData)).start()
-                self._timerParseReceive = Timer(0, self._onAllMessage, args=(self, rxData)).start()
+                self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
+                self.__timerParseReceive = Timer(0, self.__onAllMessage, args=(self, rxData)).start()
             if self._running:
-                self._ParseReceiveData()
+                self.__ParseReceiveData()
 
         except Exception as e:
             if 'timed out' or "[WinError 10054]" in str(e):
                 self.disconnect()
                 pass
 
-    def _onReceiveCallback(self, data, rawData: bytes):
+    def __onReceiveCallback(self, data, rawData: bytes):
         data = json.loads(rawData.decode())
         self.emit(data["type"], self.client, data)
 
-    def _onAllMessage(self, client, rawData):
+    def __onAllMessage(self, client, rawData):
         data = json.loads(rawData.decode())
-        self.emit('message', client, data)
+        self.emit('any', client, data)
 
     def createState(self, stateId, description, value):
         if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
@@ -106,11 +106,11 @@ class Client(BaseEventEmitter):
         else:
             raise Exception(f'StateUpdateMany() takes in a list Not a {type(states)}')
         
-    def updateActionData(self, instanceId, minValue, maxValue, Id, types):
+    def updateActionData(self, instanceId, id, minValue, maxValue):
         '''
         TouchPortal currently only supports data.type "number"
         '''
-        self.send({"type": "updateActionData", "instanceId": instanceId, data: {"minValue": minValue, "maxValue": maxValue, "id": Id, "type": types}})
+        self.send({"type": "updateActionData", "instanceId": instanceId, data: {"minValue": minValue, "maxValue": maxValue, "id": Id, "type": "number"}})
         
         
     def send(self, data):
