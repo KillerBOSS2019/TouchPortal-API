@@ -35,7 +35,7 @@ def OnStart(client, data):
 def Actions(client, data):
     print(data)
 
-@TPClient.on('settings) # This Function will get called Everytime when someone changes something in your plugin settings
+@TPClient.on('settings') # This Function will get called Everytime when someone changes something in your plugin settings
 def Settings(client, data):
     print('received data from settings!')
     
