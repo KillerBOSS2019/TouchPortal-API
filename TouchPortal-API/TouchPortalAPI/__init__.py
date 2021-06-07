@@ -1,6 +1,6 @@
 import socket
 import json
-from pyee import BaseEventEmitter
+from pyee import EventEmitter
 from threading import Timer
 import requests
 import os
@@ -17,15 +17,14 @@ class TYPES:
     onSettingUpdate = 'settings'
     allMessage = 'any'
 
-class Client(BaseEventEmitter):
+class Client(EventEmitter):
     TPHOST = '127.0.0.1'
     TPPORT = 12136
-    
+
     def __init__(self, pluginId):
         super().__init__()
         self.pluginId = pluginId
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__timerParseReceive = None
         self.currentStates = {}
         self.currentSettings = {}
         self.__running = False
@@ -40,23 +39,23 @@ class Client(BaseEventEmitter):
             else:
                 break
         return line
-        
+
     def __parseReceiveData(self):
         try:
             rxData = self.__buffered_readLine(self.client)
             if self.__onReceiveCallback:
-                self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
-                self.__timerParseReceive = Timer(0, self.__onAllMessage, args=(self, rxData)).start()
+                Timer(0, self.__onReceiveCallback, args=[rxData]).start()
+                Timer(0, self.__onAllMessage, args=[rxData]).start()
             if self.__running:
                 self.__parseReceiveData()
 
         except Exception as e:
             print(e)
             if 'timed out' or "[WinError 10054]" or '[WinError 10038]' in str(e):
-                self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, b'{"type":"closePlugin"}')).start()
+                Timer(0, self.__onReceiveCallback, args=[b'{"type":"closePlugin"}']).start()
                 pass
 
-    def __onReceiveCallback(self, data, rawData: bytes):
+    def __onReceiveCallback(self, rawData: bytes):
         data = json.loads(rawData.decode())
         try:
             if data['type'] == "down":
@@ -67,15 +66,12 @@ class Client(BaseEventEmitter):
             pass
         self.emit(data["type"], self.client, data)
 
-    def __onAllMessage(self, client, rawData):
+    def __onAllMessage(self, rawData):
         data = json.loads(rawData.decode())
-        self.emit(TYPES.allMessage, client, data)
+        self.emit(TYPES.allMessage, self.client, data)
 
     def isActionBeingHeld(self, actionId):
-        if actionId in self.__heldActions:
-            return True
-        else:
-            return False
+        return actionId in self.__heldActions
 
     def createState(self, stateId, description, value):
         if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
@@ -113,28 +109,28 @@ class Client(BaseEventEmitter):
         if stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
             self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
             self.currentStates[stateId] = stateValue
-    
+
     def stateUpdateMany(self, states):
         if type(states) == type(['a','b','c']):
             for state in states:
                 self.stateUpdate(state['id'], state['value'])
         else:
             raise Exception(f'StateUpdateMany() takes in a list Not a {type(states)}')
-        
+
     def updateActionData(self, instanceId, stateId, minValue, maxValue):
         '''
         TouchPortal currently only supports data.type "number"
         '''
-        self.send({"type": "updateActionData", "instanceId": instanceId, data: {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
-        
-        
+        self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
+
+
     def send(self, data):
         '''
         This manages the massage to send
         '''
         self.client.sendall((json.dumps(data)+'\n').encode())
-        
-        
+
+
     def connect(self):
         '''
         This is mainly used for connecting to TP Server
@@ -175,7 +171,7 @@ class Tools():
             except Exception as e:
                 if 'Invalid' in str(e).split() or 'defined' in str(e).split():
                     raise Exception("Please pass in a URL with image in it or a file path")
-        
+
     def updateCheck(name, repository, thisversion):
         baselink = f'https://api.github.com/repos/{name}/{repository}/tags'
         try:
