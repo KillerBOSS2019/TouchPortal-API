@@ -45,23 +45,26 @@ class Client(BaseEventEmitter):
         try:
             rxData = self.__buffered_readLine(self.client)
             if self.__onReceiveCallback:
-                Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
-                Timer(0, self.__onAllMessage, args=(self, rxData)).start()
+                self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, rxData)).start()
+                self.__timerParseReceive = Timer(0, self.__onAllMessage, args=(self, rxData)).start()
             if self.__running:
                 self.__parseReceiveData()
 
         except Exception as e:
             print(e)
-            if 'timed out' or "[WinError 10054]" in str(e):
-                self.disconnect()
+            if 'timed out' or "[WinError 10054]" or '[WinError 10038]' in str(e):
+                self.__timerParseReceive = Timer(0, self.__onReceiveCallback, args=(self, b'{"type":"closePlugin"}')).start()
                 pass
 
     def __onReceiveCallback(self, data, rawData: bytes):
         data = json.loads(rawData.decode())
-        if data['type'] == "up":
-            self.__heldActions[data['actionId']] = True
-        elif data['type'] == 'down':
-            self.__heldActions.remove(data['actionId'])
+        try:
+            if data['type'] == "down":
+                self.__heldActions[data['actionId']] = True
+            elif data['type'] == "up":
+                del self.__heldActions[data['actionId']]
+        except KeyError:
+            pass
         self.emit(data["type"], self.client, data)
 
     def __onAllMessage(self, client, rawData):
@@ -69,9 +72,9 @@ class Client(BaseEventEmitter):
         self.emit(TYPES.allMessage, client, data)
 
     def isActionBeingHeld(self, actionId):
-        try:
-            return self.__heldActions[actionId]
-        except:
+        if actionId in self.__heldActions:
+            return True
+        else:
             return False
 
     def createState(self, stateId, description, value):
@@ -83,9 +86,9 @@ class Client(BaseEventEmitter):
                 self.stateUpdate(stateId, value)
 
     def removeState(self, stateId):
-        if StateId in self.currentStates:
+        if stateId in self.currentStates:
             self.send({"type": "removeState", "id": stateId})
-            self.currentStates.remove(stateId)
+            self.currentStates.pop(stateId)
         else:
             raise Exception(f"{stateId} Does not exist.")
 
@@ -148,6 +151,7 @@ class Client(BaseEventEmitter):
         '''
         This closes the Socket
         '''
+        self.client.shutdown(1)
         self.client.close()
         self.__running = False
 
