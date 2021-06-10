@@ -84,6 +84,30 @@ and there is another class in this API which is called TYPES it has all the type
 - TYPES.onSettingUpdate  - "settings"
 - TYPES.allMessage  - "message" # This one is not build in to TouchPortal it's a custom one that it send at any message from TP
 
+## List of Methods
+- isActionBeingHeld(actionId)
+  - This returns True or False for a Action ID If you have an Action that can be held And When you hold it, Then This would be True
+- createStates(stateId, description, value)
+  - This will create a States in runtime stateId, description, value are all Required
+- removeState(stateId)
+  - This removes a States that has been created in RunTime. StateId needs to be a string
+- choiceUpdateSpecific(stateId, values, instanceId)
+  - This Updates a Specific Item in the drop Down menu
+- settingUpdate(settingName, settingValue)
+  - This updates a value in Your Plugin Settings.
+- stateUpdate(stateId, stateValue)
+  - This Updates a value in ether a pre created States or States created in RunTime
+- stateUpdateMany(states)
+  - This is the same as `stateUpdate(stateId, stateValue)` but you can put in a list for example `TPClient.stateUpdateMany([{"id": "StateId", "value": "The New Value"}])` You can put as many as you want
+- updateActionData(instanceId, stateId, minValue, MaxValue)
+  - This allows you to update Action Data in one of your Action. Currently TouchPortal Only Supports data type Number
+- send(data)
+  - Normally You dont need to Touch This but this is how It sends data to it If this API missing Anything from https://www.touch-portal.com/api/ you can still use this Library
+- Connect()
+  - This is When you have setup PluginID like `TPClient = TouchPortalAPI.Client("YourPluginID")` after all the callbacks and things are setup you can run this method normally this is used at the end of your script
+- disconnect()
+  - This is how you shutDown your Plugin normally is used in `@TPClient.on("closePlugin")` callback but it can be used any way you like only after you've connected to TouchPortal
+
 ## Touch Portal api documentation
 https://www.touch-portal.com/api
 
