@@ -175,12 +175,29 @@ class Client(EventEmitter):
             else:
                 self.stateUpdate(stateId, value)
 
+    def createStateMany(self, states:list):
+        try:
+            for state in states:
+                if isinstance(state, dict):
+                    self.createState(state.get('id', ""), state.get('desc', ""), state.get('value', ""))
+                else:
+                    raise TypeError(f'createStateMany() requires a list of dicts, got {type(state)} instead.')
+        except:
+            raise TypeError(f'createStateMany() requires an iteratable, got {type(states)} instead.')
+
     def removeState(self, stateId:str, validateExists = True):
         if stateId and stateId in self.currentStates:
             self.send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
         elif validateExists:
             raise Exception(f"{stateId} Does not exist.")
+
+    def removeStateMany(self, states:list):
+        try:
+            for state in states:
+                self.removeState(state, False)
+        except TypeError:
+            raise TypeError(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
 
     def choiceUpdate(self, choiceId:str, values:list):
         if choiceId:
