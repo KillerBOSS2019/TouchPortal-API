@@ -102,13 +102,11 @@ class Client(EventEmitter):
 
     def __onReceiveCallback(self, rawData: bytes):
         data = json.loads(rawData.decode())
-        try:
-            if data['type'] == "down":
+        if (act_type := data.get('type')):
+            if act_type == "down":
                 self.__heldActions[data['actionId']] = True
-            elif data['type'] == "up":
+            elif act_type == "up":
                 del self.__heldActions[data['actionId']]
-        except KeyError:
-            pass
         self.emit(data["type"], self.client, data)
 
     def __onAllMessage(self, rawData):
@@ -166,54 +164,59 @@ class Client(EventEmitter):
         self.__die(exc=RuntimeError("Send buffer mutex deadlock, cannot continue."))
         return False
 
-    def isActionBeingHeld(self, actionId):
+    def isActionBeingHeld(self, actionId:str):
         return actionId in self.__heldActions
 
-    def createState(self, stateId, description, value):
-        if stateId != None and stateId != "" and description != None and description != "" and value != None and value != "":
+    def createState(self, stateId:str, description:str, value:str):
+        if stateId and description and value != None:
             if stateId not in self.currentStates:
                 self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
                 self.currentStates[stateId] = value
             else:
                 self.stateUpdate(stateId, value)
 
-    def removeState(self, stateId):
-        if stateId in self.currentStates:
+    def removeState(self, stateId:str, validateExists = True):
+        if stateId and stateId in self.currentStates:
             self.send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
-        else:
+        elif validateExists:
             raise Exception(f"{stateId} Does not exist.")
 
-    def choiceUpdate(self, choiceId, values):
-        if type(values) == type(['a','b','c']):
-            self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
-        else:
-            raise Exception(f'values argument needs to be a list not a {type(values)}')
+    def choiceUpdate(self, choiceId:str, values:list):
+        if choiceId:
+            if isinstance(values, list):
+                self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+            else:
+                raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
-    def choiceUpdateSpecific(self, stateId, values, instanceId):
-        if type(values) == type(['a','b','c']):
-            self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
-        else:
-            raise Exception(f"values argument needs to be a list not a {type(values)}")
+    def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
+        if stateId and instanceId:
+            if isinstance(values, list):
+                self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
+            else:
+                raise TypeError(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
 
-    def settingUpdate(self, settingName, settingValue):
-        if settingName not in self.currentSettings or self.currentSettings[settingName] != settingValue:
+    def settingUpdate(self, settingName:str, settingValue):
+        if settingName and settingName not in self.currentSettings or self.currentSettings[settingName] != settingValue:
             self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
             self.currentSettings[settingName] = settingValue
 
-    def stateUpdate(self, stateId, stateValue):
-        if stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
+    def stateUpdate(self, stateId:str, stateValue:str):
+        if stateId and stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
             self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
             self.currentStates[stateId] = stateValue
 
-    def stateUpdateMany(self, states):
-        if type(states) == type(['a','b','c']):
+    def stateUpdateMany(self, states:list):
+        try:
             for state in states:
-                self.stateUpdate(state['id'], state['value'])
-        else:
-            raise Exception(f'StateUpdateMany() takes in a list Not a {type(states)}')
+                if isinstance(state, dict):
+                    self.stateUpdate(state.get('id', ""), state.get('value', ""))
+                else:
+                    raise TypeError(f'StateUpdateMany() requires a list of dicts, got {type(state)} instead.')
+        except TypeError:
+            raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
 
-    def updateActionData(self, instanceId, stateId, minValue, maxValue):
+    def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
         '''
         TouchPortal currently only supports data.type "number"
         '''
