@@ -49,31 +49,92 @@ TPClient.connect() # Connect to Touch Portal
 
 ```
 
+## Example Plugin
+Make a Folder in `%appdata%/TouchPortal/plugins/` called `ExamplePlugin`
+and make a file called entry.tp and paste this json data inside.
+```json
+{
+  "sdk": 3,
+  "version": 100,
+  "name": "Example Plugin",
+  "id": "ExamplePlugin",
+  "configuration": {
+    "colorDark": "#222423",
+    "colorLight": "#020202"
+  },
+  "categories": [
+    {
+      "id": "Main",
+      "name": "Example Plugin",
+      "actions": [
+      	{
+      	  "id": "ExampleAction",
+          "name": "This is Example Action",
+          "prefix": "plugin",
+          "type": "communicate",
+          "tryInline": true,
+          "format": "Print({$ExampleTextData$})",
+          "data": [
+       	 	  {
+        	    "id": "ExampleTextData",
+              "type": "text",
+              "label": "text",
+              "default": "Hello World"
+		        }
+	         ]
+	      }
+      ],
+      "events": [],
+      "states": [
+	      {
+          "id": "ExampleStates",
+          "type": "text",
+          "desc": "Example States",
+          "default": "None"
+        }
+      ]
+    }
+  ]
+}
+```
 
-You can also do this
+Save this somewhere and also Make sure you've Setup the entry.tp file as well then reboot TouchPortal
+you should see your plugin. Without This script the Plugin wont do anything right? lets run this file
+and Use one of the action! Note This is just a Example Plugin
 ```python
 import TouchPortalAPI
+from TouchPortalAPI import TYPES
 
-TPClient = TouchPortalAPI.Client('YourPluginId')
+# Setup callbacks and connection
+TPClient = TouchPortalAPI.Client("ExamplePlugin")
 
-@TPClient.on('message') # This means it will run this on any message come from socket so you dont need to do multiple.
-def TPMessage(client, data):
+@TPClient.on(TYPES.onConnect) # Or replace TYPES.onConnect with 'info'
+def onStart(client, data):
+    print("Connected!", data)
+
+@TPClient.on(TYPES.onAction) # Or 'action'
+def Actions(client, data):
     print(data)
+    if data['actionId'] == "ExampleAction": # we filter the Action we wanted to tigger when User Press it
+        print(data['data'][0]['value']) # We grab the Value from the Action and print out
+    TPClient.stateUpdate("ExampleStates", data['data'][0]['value']) # We can also update our ExampleStates with the Action Value
 
+@TPClient.on(TYPES.onShutDown) # or 'closePlugin'
+def shutDown(client, data):
+    print("Got Shutdown Message! Shutting Down the Plugin!")
+    TPClient.disconnect() # This stops the connection to TouchPortal
+
+# After Callback setup like we did then we can connect
 TPClient.connect()
 ```
 
-There is also some tools that you can use not 2 many atm but here it is
-```python
-from TouchPortal import Tools
 
-Tools.convertImage_to_base64('pathtoyourimage.png') # This can be a url or a image that is stored on your pc if is url just need to pass in the Url
+## TouchPortalAPI.Tools
+`from TouchPortalAPI import Tools`
+- Tools.convertImage_to_base64() # This can be both Url based Image or Local Image from your pc
+- Tools.updateCheck(githubUser, githubRepoName, CurrentVersion)
 
-Tools.updateCheck('KillerBOSS2019', 'TP-YTDM-Plugin', 'V1.0') # This only works with github the first parm is your github account and 2nd parm is your plugin #repository and the 3rd one is the current version that your going to upload it. If there is a update it will return the json data of your repository and If theres #No # updates it will return you False
-```
-
-the `TPClient.on()` uses "type" for example "info" `{"type":"pair","id":"(plugin_id)"}` which is from that so you would put `TPClient.on('info')`
-and there is another class in this API which is called TYPES it has all the types (atleast i think so) you can access it by doing
+## TouchPortalAPI.TYPES
 - TYPES.onHold_up  - "up"
 - TYPES.onHold_down  - "down"
 - TYPES.onConnect  - "info"
