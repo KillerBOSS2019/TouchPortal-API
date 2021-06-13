@@ -272,24 +272,30 @@ class Client(EventEmitter):
 
 
 class Tools():
-    def convertImage_to_base64(image):
+    def convertImage_to_base64(image, type="Auto"):
         '''
         It can be URL or Image path
         '''
-        if os.path.isfile(image):
+        if type == "Auto"
+            if os.path.isfile(image):
+                with open(image, "rb") as img_file:
+                    return base64.b64encode(img_file.read()).decode('utf-8')
+            else:
+                try:
+                    image_formats = ("image/png", "image/jpeg", "image/jpg")
+                    r = requests.head(image)
+                    if r.headers['content-type'] in image_formats:
+                        return base64.b64encode(requests.get(image).content).decode('utf-8')
+                    else:
+                        print(something) # to cause undefined error so it raise Error
+                except Exception as e:
+                    if 'Invalid' in str(e).split() or 'defined' in str(e).split():
+                        raise Exception("Please pass in a URL with image in it or a file path")
+        elif type == "Web":
+            return base64.b64encode(requests.get(image).content).decode('utf-8')
+        elif type == "Local":
             with open(image, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode('utf-8')
-        else:
-            try:
-                image_formats = ("image/png", "image/jpeg", "image/jpg")
-                r = requests.head(image)
-                if r.headers['content-type'] in image_formats:
-                    return base64.b64encode(requests.get(image).content).decode('utf-8')
-                else:
-                    print(something) # to cause undefined error so it raise Error
-            except Exception as e:
-                if 'Invalid' in str(e).split() or 'defined' in str(e).split():
-                    raise Exception("Please pass in a URL with image in it or a file path")
 
     def updateCheck(name, repository, thisversion):
         baselink = f'https://api.github.com/repos/{name}/{repository}/tags'
