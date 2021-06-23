@@ -302,12 +302,18 @@ class Tools():
             return base64.b64encode(data).decode('ascii')
         raise ValueError(f"'{image}' is neither a valid URL nor an existing file.")
 
-    def updateCheck(name, repository, thisversion):
+    @staticmethod
+    def updateCheck(name, repository):
+        '''
+        Returns the newest tag name from a GitHub repository.
+        `name` is the GitHub user name for the URL path.
+        `repository` is the GitHub repository name for the URL path.
+        May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
+        '''
         baselink = f'https://api.github.com/repos/{name}/{repository}/tags'
-        try:
-            if requests.get(baselink).json()[0] == thisversion:
-                return 'No updates'
-            else:
-                return requests.get(baselink).json()[0]
-        except:
-            raise Exception('Invalid Profile or Repository. Please enter your name, Repository, and the current version')
+        if (r := requests.get(baselink)) and r.ok:
+            if (js := r.json()):
+                return js[0].get('name', "")
+            raise ValueError(f'No tags found in repository: {baselink}')
+        else:
+            raise ValueError(f'Invalid repository URL or response: {baselink}')
