@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name='TouchPortal API',
-  version='1.1.1',
+  version='1.3',
   description='Touch Portal API for Python',
   long_description=open('README.txt').read() + '\n\n' + open('CHANGELOG.txt').read(),
   long_description_content_type="text/markdown",
