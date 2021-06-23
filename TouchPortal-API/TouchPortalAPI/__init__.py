@@ -272,30 +272,35 @@ class Client(EventEmitter):
 
 
 class Tools():
-    def convertImage_to_base64(image, type="Auto"):
+
+    @staticmethod
+    def convertImage_to_base64(image, type="Auto", image_formats=["image/png", "image/jpeg", "image/jpg"]):
         '''
-        It can be URL or Image path
+        `image` can be a URL or file path.
+        `type` can be "Auto", "Web" (for URL), or "Local" (for file path).
+        `image_formats` is a list of one or more MIME types to accept, used only with URLs to confirm the response is valid.
+        May raise a `TypeError` if URL request returns an invalid MIME type.
+        May raise a `ValueError` in other cases such as invalid URL or file path.
         '''
-        if type == "Auto"
-            if os.path.isfile(image):
-                with open(image, "rb") as img_file:
-                    return base64.b64encode(img_file.read()).decode('utf-8')
-            else:
-                try:
-                    image_formats = ("image/png", "image/jpeg", "image/jpg")
-                    r = requests.head(image)
-                    if r.headers['content-type'] in image_formats:
-                        return base64.b64encode(requests.get(image).content).decode('utf-8')
-                    else:
-                        print(something) # to cause undefined error so it raise Error
-                except Exception as e:
-                    if 'Invalid' in str(e).split() or 'defined' in str(e).split():
-                        raise Exception("Please pass in a URL with image in it or a file path")
-        elif type == "Web":
-            return base64.b64encode(requests.get(image).content).decode('utf-8')
-        elif type == "Local":
+        data = None
+        if type == "Auto" or type == "Web":
+            try:
+                r = requests.head(image)
+                if r.headers['content-type'] in image_formats:
+                    data = requests.get(image).content
+                else:
+                    raise TypeError(f"Returned image content type ({r.headers['content-type']}) is not one of: {image_formats}")
+            except ValueError:  # raised by requests module for invalid URLs, less generic than requests.RequestException
+                if type == "Auto":
+                    pass
+                else:
+                    raise
+        if not data and (type == "Auto" or type == "Local") and os.path.isfile(image):
             with open(image, "rb") as img_file:
-                return base64.b64encode(img_file.read()).decode('utf-8')
+                data = img_file.read()
+        if data:
+            return base64.b64encode(data).decode('ascii')
+        raise ValueError(f"'{image}' is neither a valid URL nor an existing file.")
 
     def updateCheck(name, repository, thisversion):
         baselink = f'https://api.github.com/repos/{name}/{repository}/tags'
