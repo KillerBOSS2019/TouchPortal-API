@@ -29,6 +29,7 @@ class Client(ExecutorEventEmitter):
         `pluginId`      (str): ID string of the TouchPortal plugin using this client.
         `sleepPeriod` (float): Seconds to sleep the event loop between socket read events (default: 0.01).
         `autoClose`    (bool): If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
+        `checkPluginId` (bool): Validate that `pluginId` matches ours in any messages from TP which contain one (such as actions). Default is `True`.
         `maxWorkers`    (int): Maximum worker threads to run concurrently for event handlers. Default of `None` creates a default-constructed `ThreadPoolExecutor`.
         `executor`   (object): Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
                                [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
@@ -40,13 +41,14 @@ class Client(ExecutorEventEmitter):
     SND_BUFFER_SZ = 32**4  # [B] maximum size of send data buffer (1MB)
     SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
 
-    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, maxWorkers=None, executor=None):
+    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, checkPluginId=True, maxWorkers=None, executor=None):
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
         super(Client, self).__init__(executor=executor)
         self.pluginId = pluginId
         self.sleepPeriod = sleepPeriod
         self.autoClose = autoClose
+        self.checkPluginId = checkPluginId
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -120,6 +122,8 @@ class Client(ExecutorEventEmitter):
     def __processMessage(self, message: bytes):
         data = json.loads(message.decode())
         if data and (act_type := data.get('type')):
+            if self.checkPluginId and (pid := data.get('pluginId')) and pid != self.pluginId:
+                return
             if act_type == TYPES.onShutdown:
                 if self.autoClose: self.__close()
             elif act_type == TYPES.onHold_down and (aid := data.get('actionId')):
