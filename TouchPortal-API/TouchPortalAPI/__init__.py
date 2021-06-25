@@ -1,8 +1,9 @@
 import socket
 import selectors
 import json
-from pyee import EventEmitter
-from threading import Timer, Event, Lock
+from pyee import ExecutorEventEmitter
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Lock
 import requests
 import os
 import base64
@@ -17,18 +18,32 @@ class TYPES:
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
     allMessage = 'any'
+    onError = 'error'  # from ExecutorEventEmitter, emitted when an event callback raises an exception
 
-class Client(EventEmitter):
+class Client(ExecutorEventEmitter):
+    '''
+    A client for TouchPortal plugin integration.
+    Implements a [pyee.ExecutorEventEmitter](https://pyee.readthedocs.io/en/latest/#pyee.ExecutorEventEmitter).
+
+    Args:
+        `pluginId`      (str): ID string of the TouchPortal plugin using this client.
+        `sleepPeriod` (float): Seconds to sleep the event loop between socket read events (default: 0.01).
+        `autoClose`    (bool): If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
+        `maxWorkers`    (int): Maximum worker threads to run concurrently for event handlers. Default of `None` creates a default-constructed `ThreadPoolExecutor`.
+        `executor`   (object): Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
+                               [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
+                               optionally using `maxWorkers` concurrent threads.
+    '''
     TPHOST = '127.0.0.1'
     TPPORT = 12136
     RCV_BUFFER_SZ = 4096   # [B] incoming data buffer size
     SND_BUFFER_SZ = 32**4  # [B] maximum size of send data buffer (1MB)
     SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
 
-    # sleepPeriod: [s] event loop sleep between socket read events
-    # autoClose: automatically disconnect when a `closePlugin` message is received from TP
-    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False):
-        super().__init__()
+    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, maxWorkers=None, executor=None):
+        if not executor and maxWorkers:
+            executor = ThreadPoolExecutor(max_workers=maxWorkers)
+        super(Client, self).__init__(executor=executor)
         self.pluginId = pluginId
         self.sleepPeriod = sleepPeriod
         self.autoClose = autoClose
@@ -90,8 +105,7 @@ class Client(EventEmitter):
                 for _, mask in events:
                     if (mask & selectors.EVENT_READ):
                         for line in self.__buffered_readLine():
-                            Timer(0, self.__onReceiveCallback, args=[line]).start()
-                            Timer(0, self.__onAllMessage, args=[line]).start()
+                            self.__processMessage(line)
                     if (mask & selectors.EVENT_WRITE):
                         self.__write()
                 # Sleep for period or until there is data in the write buffer.
@@ -103,19 +117,19 @@ class Client(EventEmitter):
         except Exception as e:
             self.__die(f"Exception in client event loop: {repr(e)}", e)
 
-    def __onReceiveCallback(self, rawData: bytes):
-        data = json.loads(rawData.decode())
-        if (act_type := data.get('type')):
+    def __processMessage(self, message: bytes):
+        data = json.loads(message.decode())
+        if data and (act_type := data.get('type')):
             if act_type == TYPES.onShutdown:
                 if self.autoClose: self.__close()
             elif act_type == TYPES.onHold_down and (aid := data.get('actionId')):
                 self.__heldActions[aid] = True
             elif act_type == TYPES.onHold_up and (aid := data.get('actionId')):
                 del self.__heldActions[aid]
-        self.emit(data["type"], self.client, data)
+            self.__emitEvent(act_type, data)
 
-    def __onAllMessage(self, rawData):
-        data = json.loads(rawData.decode())
+    def __emitEvent(self, ev, data):
+        self.emit(ev, self.client, data)
         self.emit(TYPES.allMessage, self.client, data)
 
     def __open(self):
@@ -156,7 +170,7 @@ class Client(EventEmitter):
 
     def __die(self, msg=None, exc=None):
         if msg: print(msg)
-        Timer(0, self.__onReceiveCallback, args=[b'{"type":"closePlugin"}']).start()
+        self.__emitEvent(TYPES.onShutdown, {"type": TYPES.onShutdown})
         self.__close()
         if exc: raise exc
 
