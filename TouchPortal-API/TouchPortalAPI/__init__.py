@@ -23,12 +23,13 @@ class Client(EventEmitter):
     TPPORT = 12136
     RCV_BUFFER_SZ = 4096   # [B] incoming data buffer size
     SND_BUFFER_SZ = 32**4  # [B] maximum size of send data buffer (1MB)
-    SLEEP_PERIOD = 0.01    # [s] event loop sleep between socket read events
     SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
 
-    def __init__(self, pluginId):
+    # sleepPeriod: [s] event loop sleep between socket read events
+    def __init__(self, pluginId, sleepPeriod=0.01):
         super().__init__()
         self.pluginId = pluginId
+        self.sleepPeriod = sleepPeriod
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -94,7 +95,7 @@ class Client(EventEmitter):
                 # Sleep for period or until there is data in the write buffer.
                 # In theory if data is constantly avaiable, this could block,
                 # in which case it may be better to self.__stopEvent.wait()
-                if self.__dataReadyEvent.wait(self.SLEEP_PERIOD):
+                if self.__dataReadyEvent.wait(self.sleepPeriod):
                     continue
                 continue
         except Exception as e:
