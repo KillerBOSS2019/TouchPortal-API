@@ -292,6 +292,25 @@ class Client(ExecutorEventEmitter):
         if self.isConnected():
             self.__close()
 
+    @staticmethod
+    def getActionDataValue(data:list, valueId:str=None):
+        '''
+        Utility for processing action messages from TP. For example:
+            {"type": "action", "data": [{ "id": "data object id", "value": "user specified value" }, ...]}
+
+        Returns the `value` with specific `id` from a list of action data,
+        or `None` if the `id` wasn't found. If a null id is passed in `valueId`
+        then the first entry which has a `value` key, if any, will be returned.
+
+        Args:
+            `data`: the "data" array from a TP "action", "on", or "off" message
+            `valueId`: the "id" to look for in `data`. `None` or blank to return the first value found.
+        '''
+        if not data: return None
+        if valueId:
+            return next((x.get('value') for x in data if x.get('id', '') == valueId), None)
+        return next((x.get('value') for x in data if x.get('value') != None), None)
+
 
 class Tools():
     def convertImage_to_base64(image, type="Auto"):
