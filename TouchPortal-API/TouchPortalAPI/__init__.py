@@ -133,8 +133,8 @@ class Client(ExecutorEventEmitter):
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
-        self.emit(ev, self.client, data)
-        self.emit(TYPES.allMessage, self.client, data)
+        self.emit(ev, data)
+        self.emit(TYPES.allMessage, data)
 
     def __open(self):
         try:
