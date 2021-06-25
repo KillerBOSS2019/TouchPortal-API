@@ -26,10 +26,12 @@ class Client(EventEmitter):
     SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
 
     # sleepPeriod: [s] event loop sleep between socket read events
-    def __init__(self, pluginId, sleepPeriod=0.01):
+    # autoClose: automatically disconnect when a `closePlugin` message is received from TP
+    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False):
         super().__init__()
         self.pluginId = pluginId
         self.sleepPeriod = sleepPeriod
+        self.autoClose = autoClose
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -104,10 +106,12 @@ class Client(EventEmitter):
     def __onReceiveCallback(self, rawData: bytes):
         data = json.loads(rawData.decode())
         if (act_type := data.get('type')):
-            if act_type == "down":
-                self.__heldActions[data['actionId']] = True
-            elif act_type == "up":
-                del self.__heldActions[data['actionId']]
+            if act_type == TYPES.onShutdown:
+                if self.autoClose: self.__close()
+            elif act_type == TYPES.onHold_down and (aid := data.get('actionId')):
+                self.__heldActions[aid] = True
+            elif act_type == TYPES.onHold_up and (aid := data.get('actionId')):
+                del self.__heldActions[aid]
         self.emit(data["type"], self.client, data)
 
     def __onAllMessage(self, rawData):
@@ -131,7 +135,7 @@ class Client(EventEmitter):
         if self.__writeLock.locked():
             self.__writeLock.release()
         self.__sendBuffer.clear()
-        if not self.client:
+        if not self.selector:
             return
         if self.selector.get_map():
             try:
@@ -164,6 +168,9 @@ class Client(EventEmitter):
             return True
         self.__die(exc=RuntimeError("Send buffer mutex deadlock, cannot continue."))
         return False
+
+    def isConnected(self):
+        return not self.__stopEvent.is_set()
 
     def isActionBeingHeld(self, actionId:str):
         return actionId in self.__heldActions
@@ -258,7 +265,7 @@ class Client(EventEmitter):
         If successful, it starts the main processing loop of this client.
         Does nothing if client is already connected.
         '''
-        if self.__stopEvent.is_set():
+        if not self.isConnected():
             self.__open()
             self.send({"type":"pair", "id": self.pluginId})
             self.__run()  # start the event loop
@@ -268,7 +275,7 @@ class Client(EventEmitter):
         This closes the connection to TP and terminates the client processing loop.
         Does nothing if client is already disconnected.
         '''
-        if not self.__stopEvent.is_set():
+        if self.isConnected():
             self.__close()
 
 
