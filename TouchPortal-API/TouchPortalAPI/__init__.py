@@ -1,8 +1,9 @@
 import socket
 import selectors
 import json
-from pyee import EventEmitter
-from threading import Timer, Event, Lock
+from pyee import ExecutorEventEmitter
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Lock
 import requests
 import os
 import base64
@@ -17,18 +18,37 @@ class TYPES:
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
     allMessage = 'any'
+    onError = 'error'  # from ExecutorEventEmitter, emitted when an event callback raises an exception
 
-class Client(EventEmitter):
+class Client(ExecutorEventEmitter):
+    '''
+    A client for TouchPortal plugin integration.
+    Implements a [pyee.ExecutorEventEmitter](https://pyee.readthedocs.io/en/latest/#pyee.ExecutorEventEmitter).
+
+    Args:
+        `pluginId`      (str): ID string of the TouchPortal plugin using this client.
+        `sleepPeriod` (float): Seconds to sleep the event loop between socket read events (default: 0.01).
+        `autoClose`    (bool): If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
+        `checkPluginId` (bool): Validate that `pluginId` matches ours in any messages from TP which contain one (such as actions). Default is `True`.
+        `maxWorkers`    (int): Maximum worker threads to run concurrently for event handlers. Default of `None` creates a default-constructed `ThreadPoolExecutor`.
+        `executor`   (object): Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
+                               [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
+                               optionally using `maxWorkers` concurrent threads.
+    '''
     TPHOST = '127.0.0.1'
     TPPORT = 12136
     RCV_BUFFER_SZ = 4096   # [B] incoming data buffer size
     SND_BUFFER_SZ = 32**4  # [B] maximum size of send data buffer (1MB)
-    SLEEP_PERIOD = 0.01    # [s] event loop sleep between socket read events
     SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
 
-    def __init__(self, pluginId):
-        super().__init__()
+    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, checkPluginId=True, maxWorkers=None, executor=None):
+        if not executor and maxWorkers:
+            executor = ThreadPoolExecutor(max_workers=maxWorkers)
+        super(Client, self).__init__(executor=executor)
         self.pluginId = pluginId
+        self.sleepPeriod = sleepPeriod
+        self.autoClose = autoClose
+        self.checkPluginId = checkPluginId
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -87,30 +107,33 @@ class Client(EventEmitter):
                 for _, mask in events:
                     if (mask & selectors.EVENT_READ):
                         for line in self.__buffered_readLine():
-                            Timer(0, self.__onReceiveCallback, args=[line]).start()
-                            Timer(0, self.__onAllMessage, args=[line]).start()
+                            self.__processMessage(line)
                     if (mask & selectors.EVENT_WRITE):
                         self.__write()
                 # Sleep for period or until there is data in the write buffer.
                 # In theory if data is constantly avaiable, this could block,
                 # in which case it may be better to self.__stopEvent.wait()
-                if self.__dataReadyEvent.wait(self.SLEEP_PERIOD):
+                if self.__dataReadyEvent.wait(self.sleepPeriod):
                     continue
                 continue
         except Exception as e:
             self.__die(f"Exception in client event loop: {repr(e)}", e)
 
-    def __onReceiveCallback(self, rawData: bytes):
-        data = json.loads(rawData.decode())
-        if (act_type := data.get('type')):
-            if act_type == "down":
-                self.__heldActions[data['actionId']] = True
-            elif act_type == "up":
-                del self.__heldActions[data['actionId']]
-        self.emit(data["type"], self.client, data)
+    def __processMessage(self, message: bytes):
+        data = json.loads(message.decode())
+        if data and (act_type := data.get('type')):
+            if self.checkPluginId and (pid := data.get('pluginId')) and pid != self.pluginId:
+                return
+            if act_type == TYPES.onShutdown:
+                if self.autoClose: self.__close()
+            elif act_type == TYPES.onHold_down and (aid := data.get('actionId')):
+                self.__heldActions[aid] = True
+            elif act_type == TYPES.onHold_up and (aid := data.get('actionId')):
+                del self.__heldActions[aid]
+            self.__emitEvent(act_type, data)
 
-    def __onAllMessage(self, rawData):
-        data = json.loads(rawData.decode())
+    def __emitEvent(self, ev, data):
+        self.emit(ev, self.client, data)
         self.emit(TYPES.allMessage, self.client, data)
 
     def __open(self):
@@ -130,7 +153,7 @@ class Client(EventEmitter):
         if self.__writeLock.locked():
             self.__writeLock.release()
         self.__sendBuffer.clear()
-        if not self.client:
+        if not self.selector:
             return
         if self.selector.get_map():
             try:
@@ -151,7 +174,7 @@ class Client(EventEmitter):
 
     def __die(self, msg=None, exc=None):
         if msg: print(msg)
-        Timer(0, self.__onReceiveCallback, args=[b'{"type":"closePlugin"}']).start()
+        self.__emitEvent(TYPES.onShutdown, {"type": TYPES.onShutdown})
         self.__close()
         if exc: raise exc
 
@@ -163,6 +186,9 @@ class Client(EventEmitter):
             return True
         self.__die(exc=RuntimeError("Send buffer mutex deadlock, cannot continue."))
         return False
+
+    def isConnected(self):
+        return not self.__stopEvent.is_set()
 
     def isActionBeingHeld(self, actionId:str):
         return actionId in self.__heldActions
@@ -257,7 +283,7 @@ class Client(EventEmitter):
         If successful, it starts the main processing loop of this client.
         Does nothing if client is already connected.
         '''
-        if self.__stopEvent.is_set():
+        if not self.isConnected():
             self.__open()
             self.send({"type":"pair", "id": self.pluginId})
             self.__run()  # start the event loop
@@ -267,42 +293,72 @@ class Client(EventEmitter):
         This closes the connection to TP and terminates the client processing loop.
         Does nothing if client is already disconnected.
         '''
-        if not self.__stopEvent.is_set():
+        if self.isConnected():
             self.__close()
+
+    @staticmethod
+    def getActionDataValue(data:list, valueId:str=None):
+        '''
+        Utility for processing action messages from TP. For example:
+            {"type": "action", "data": [{ "id": "data object id", "value": "user specified value" }, ...]}
+
+        Returns the `value` with specific `id` from a list of action data,
+        or `None` if the `id` wasn't found. If a null id is passed in `valueId`
+        then the first entry which has a `value` key, if any, will be returned.
+
+        Args:
+            `data`: the "data" array from a TP "action", "on", or "off" message
+            `valueId`: the "id" to look for in `data`. `None` or blank to return the first value found.
+        '''
+        if not data: return None
+        if valueId:
+            return next((x.get('value') for x in data if x.get('id', '') == valueId), None)
+        return next((x.get('value') for x in data if x.get('value') != None), None)
 
 
 class Tools():
-    def convertImage_to_base64(image, type="Auto"):
-        '''
-        It can be URL or Image path
-        '''
-        if type == "Auto"
-            if os.path.isfile(image):
-                with open(image, "rb") as img_file:
-                    return base64.b64encode(img_file.read()).decode('utf-8')
-            else:
-                try:
-                    image_formats = ("image/png", "image/jpeg", "image/jpg")
-                    r = requests.head(image)
-                    if r.headers['content-type'] in image_formats:
-                        return base64.b64encode(requests.get(image).content).decode('utf-8')
-                    else:
-                        print(something) # to cause undefined error so it raise Error
-                except Exception as e:
-                    if 'Invalid' in str(e).split() or 'defined' in str(e).split():
-                        raise Exception("Please pass in a URL with image in it or a file path")
-        elif type == "Web":
-            return base64.b64encode(requests.get(image).content).decode('utf-8')
-        elif type == "Local":
-            with open(image, "rb") as img_file:
-                return base64.b64encode(img_file.read()).decode('utf-8')
 
-    def updateCheck(name, repository, thisversion):
+    @staticmethod
+    def convertImage_to_base64(image, type="Auto", image_formats=["image/png", "image/jpeg", "image/jpg"]):
+        '''
+        `image` can be a URL or file path.
+        `type` can be "Auto", "Web" (for URL), or "Local" (for file path).
+        `image_formats` is a list of one or more MIME types to accept, used only with URLs to confirm the response is valid.
+        May raise a `TypeError` if URL request returns an invalid MIME type.
+        May raise a `ValueError` in other cases such as invalid URL or file path.
+        '''
+        data = None
+        if type == "Auto" or type == "Web":
+            try:
+                r = requests.head(image)
+                if r.headers['content-type'] in image_formats:
+                    data = requests.get(image).content
+                else:
+                    raise TypeError(f"Returned image content type ({r.headers['content-type']}) is not one of: {image_formats}")
+            except ValueError:  # raised by requests module for invalid URLs, less generic than requests.RequestException
+                if type == "Auto":
+                    pass
+                else:
+                    raise
+        if not data and (type == "Auto" or type == "Local") and os.path.isfile(image):
+            with open(image, "rb") as img_file:
+                data = img_file.read()
+        if data:
+            return base64.b64encode(data).decode('ascii')
+        raise ValueError(f"'{image}' is neither a valid URL nor an existing file.")
+
+    @staticmethod
+    def updateCheck(name, repository):
+        '''
+        Returns the newest tag name from a GitHub repository.
+        `name` is the GitHub user name for the URL path.
+        `repository` is the GitHub repository name for the URL path.
+        May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
+        '''
         baselink = f'https://api.github.com/repos/{name}/{repository}/tags'
-        try:
-            if requests.get(baselink).json()[0] == thisversion:
-                return 'No updates'
-            else:
-                return requests.get(baselink).json()[0]
-        except:
-            raise Exception('Invalid Profile or Repository. Please enter your name, Repository, and the current version')
+        if (r := requests.get(baselink)) and r.ok:
+            if (js := r.json()):
+                return js[0].get('name', "")
+            raise ValueError(f'No tags found in repository: {baselink}')
+        else:
+            raise ValueError(f'Invalid repository URL or response: {baselink}')
