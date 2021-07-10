@@ -2,23 +2,30 @@
 Easy way to Build Plugins for TouchPortal with little understanding of Python.
 
 ## Installation
-Simply run this in your command line `pip install TouchPortal-API` if your not able to you can download [here](https://pypi.org/project/TouchPortal-API/#files) and do `pip install [fileyoudownloaded]`
-Make Sure your on latest version of TouchPortal current Version of TouchPortal API supports TP V2.3
+Simply run this in your command line `pip install TouchPortal-API`. Or you can download
+[here](https://pypi.org/project/TouchPortal-API/#files) and do `pip install [fileyoudownloaded]`.
+Or, download/clone the source code from this repository and place the `TouchPortalAPI/TouchPortalAPI` folder
+from here into your plugin project's folder.
+
+Make sure to use the latest version of Touch Portal. This Python API supports Touch Portal API version 3.0, as used in TP V2.3+.
 
 ## Usage
 ```python
 import TouchPortalAPI # Import the api
 
-TPClient = TouchPortalAPI.Client('YourPluginID') # Initiate the client (replace YourPluginID with your ID)
+# Initiate the client (replace YourPluginID with your ID)
+TPClient = TouchPortalAPI.Client('YourPluginID')
 
-@TPClient.on('info')  # This Will run once You've connected to TouchPortal
-def OnStart(client, data):
-    # You must provide 2 parm in the function or else it will give error
+# This Will run once You've connected to TouchPortal
+@TPClient.on('info')
+def OnStart(data):
+    # `data` is a Python `dict` object created from de-serialized JSON data sent by TP.
     print('I am Connected!', data)
 
+    # This if you want to update a dynamic states in TouchPortal
+    TPClient.stateUpdate("(Your State ID)", "State Value")
 
-    TPClient.stateUpdate("(Your State ID)", "State Value") # This if you want to update a dymic states in TouchPortal
-
+    # Or You can create an list with however many state you want and use this function to send them all
     updateStates = [
         {
             "id": "(Your State ID)",
@@ -29,24 +36,26 @@ def OnStart(client, data):
             "value": "(The Value You wanted)"
         }
     ]
-    TPClient.stateUpdateMany(updateStates) # Or You can create an list with however many state you want and use this function to send them all
+    TPClient.stateUpdateMany(updateStates)
 
-@TPClient.on('action')  # This manages when you press a button in TouchPortal it will send here in json format
-def Actions(client, data):
+# This manages when you press a button in TouchPortal it will send here in json format
+@TPClient.on('action')
+def Actions(data):
     print(data)
 
-@TPClient.on('settings') # This Function will get called Everytime when someone changes something in your plugin settings
-def Settings(client, data):
+# This Function will get called every time when someone changes something in your plugin settings
+@TPClient.on('settings')
+def Settings(data):
     print('received data from settings!')
 
-@TPClient.on('closePlugin') # When TouchPortal sends close Plugin message it will run this function
-def shutDown(client, data):
+# When TouchPortal sends close Plugin message it will run this function
+@TPClient.on('closePlugin')
+def shutDown(data):
     print('Received shutdown message!')
     TPClient.disconnect() # This is how you disconnect once you received the closePlugin message
 
 
 TPClient.connect() # Connect to Touch Portal
-
 ```
 
 ## Example Plugin
@@ -102,84 +111,138 @@ Save this somewhere and also Make sure you've Setup the entry.tp file as well th
 you should see your plugin. Without This script the Plugin wont do anything right? lets run this file
 and Use one of the action! Note This is just a Example Plugin
 ```python
-import TouchPortalAPI
-from TouchPortalAPI import TYPES
+import TouchPortalAPI AS TP
 
 # Setup callbacks and connection
-TPClient = TouchPortalAPI.Client("ExamplePlugin")
+TPClient = TP.Client("ExamplePlugin")
 
-@TPClient.on(TYPES.onConnect) # Or replace TYPES.onConnect with 'info'
-def onStart(client, data):
+@TPClient.on(TP.TYPES.onConnect) # Or replace TYPES.onConnect with 'info'
+def onStart(data):
     print("Connected!", data)
 
-@TPClient.on(TYPES.onAction) # Or 'action'
-def Actions(client, data):
+@TPClient.on(TP.TYPES.onAction) # Or 'action'
+def Actions(data):
     print(data)
-    if data['actionId'] == "ExampleAction": # we filter the Action we wanted to tigger when User Press it
-        print(data['data'][0]['value']) # We grab the Value from the Action and print out
-    TPClient.stateUpdate("ExampleStates", data['data'][0]['value']) # We can also update our ExampleStates with the Action Value
+    # do something based on the action ID and the data value
+    if data['actionId'] == "ExampleAction":
+        # get the value from the action data (a string the user specified)
+        action_value = getActionDataValue(data, 'ExampleTextData')
+        print(action_value)
+        # We can also update our ExampleStates with the Action Value
+        TPClient.stateUpdate("ExampleStates", action_value)
 
-@TPClient.on(TYPES.onShutDown) # or 'closePlugin'
-def shutDown(client, data):
+@TPClient.on(TP.TYPES.onShutDown) # or 'closePlugin'
+def shutDown(data):
     print("Got Shutdown Message! Shutting Down the Plugin!")
     TPClient.disconnect() # This stops the connection to TouchPortal
 
 # After Callback setup like we did then we can connect
+# Note that `connect()` blocks further execution until
+# `disconnect()` is called in an event handler, or an
+# internal error occurs.
 TPClient.connect()
 ```
 
+## API Documentation
 
-## TouchPortalAPI.Tools
-`from TouchPortalAPI import Tools`
-- Tools.convertImage_to_base64() # This can be both Url based Image or Local Image from your pc
-- Tools.updateCheck(githubUser, githubRepoName, CurrentVersion)
+### `TouchPortalAPI.TYPES`
+- `onHold_up`  - "up"
+- `onHold_down`  - "down"
+- `onConnect`  - "info"
+- `onAction`  - "action"
+- `onListChange`  - "listChange"
+- `onShutdown`  - "closePlugin"
+- `onBroadcast`  - "broadcast"
+- `onSettingUpdate`  - "settings"
+- `allMessage`  - "message"
+  - Special event handler which will receive **all** messages from TouchPortal.
+- `onError` - "error"
+  - Special event emitted when any other event callback raises an exception. For this particular event, the parameter
+  passed to the callback handler will be an `Exception` object. See also `pyee.ExecutorEventEmitter.error` event.
 
-## TouchPortalAPI.TYPES
-- TYPES.onHold_up  - "up"
-- TYPES.onHold_down  - "down"
-- TYPES.onConnect  - "info"
-- TYPES.onAction  - "action"
-- TYPES.onListChange  - "listChange"
-- TYPES.onShutdown  - "closePlugin"
-- TYPES.onBroadcast  - "broadcast"
-- TYPES.onSettingUpdate  - "settings"
-- TYPES.allMessage  - "message" # This one is not build in to TouchPortal it's a custom one that it send at any message from TP
 
-## List of Methods
-- isActionBeingHeld(actionId)
+### `TouchPortalAPI.Client()`
+  A client for TouchPortal plugin integration using event listener callbacks.
+  Implements a [pyee.ExecutorEventEmitter](https://pyee.readthedocs.io/en/latest/#pyee.ExecutorEventEmitter).
+
+  Arguments:
+  - `pluginId`       (str): ID string of the TouchPortal plugin using this client. **Required**.
+  - `sleepPeriod`  (float): Seconds to sleep the event loop between socket read events (default: 0.01).
+  - `autoClose`     (bool): If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
+  - `checkPluginId` (bool): Validate that `pluginId` matches ours in any messages from TP which contain one (such as actions). Default is `True`.
+  - `maxWorkers`     (int): Maximum worker threads to run concurrently for event handlers. Default of `None` creates a default-constructed `ThreadPoolExecutor`.
+  - `executor`    (object): Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
+                          [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
+                          optionally using `maxWorkers` concurrent threads.
+
+
+#### List of Methods
+- `isActionBeingHeld(actionId)`
   - This returns `True` or `False` for an Action ID. If you have an Action that can be held, this nethod would return `True` while it is being held, and `False` otherwise.
-- createState(stateId, description, value)
+- `createState(stateId, description, value)`
   - This will create a TP State at runtime. `stateId`, `description`, and `value` are all required (`value` becomes the State's default value).
   If the State already exists, it will be updated with `value` instead of being re-created.
-- createStateMany(stateId, states:list)
+- `createStateMany(stateId, states:list)`
   - Convenience function to create several States at once. `states` should be an iteratable of `dict` types in the form of `{'id': "StateId", 'desc': "Description", 'value': "Default Value"}`.
-- removeState(stateId)
+- `removeState(stateId)`
   - This removes a State that has been created at runtime. `stateId` needs to be a string.
-- removeStateMany(states)
+- `removeStateMany(states)`
   - Convenience function to remove several States at once. `states` should be an iteratable of state ID strings.
-- choiceUpdate(stateId, values)
+- `choiceUpdate(stateId, values)`
   - This updates the list of choices in a previously-declared TP State with id `stateId`. See TP API reference for details on updating list values.
-- choiceUpdateSpecific(stateId, values, instanceId)
+- `choiceUpdateSpecific(stateId, values, instanceId)`
   - This updates a list of choices in a specific TP Item Instance, specified in `instanceId`. See TP API reference for details on updating specific instances.
-- settingUpdate(settingName, settingValue)
+- `settingUpdate(settingName, settingValue)`
   - This updates a value in your plugin's Settings.
-- stateUpdate(stateId, stateValue)
+- `stateUpdate(stateId, stateValue)`
   - This updates a value in ether a pre-defined static State or a dynamic State created in runtime.
-- stateUpdateMany(states)
+- `stateUpdateMany(states)`
   - Convenience function to update serveral states at once. `states` should be an iteratable of `dict` types in the form of `{'id': "StateId", 'value': "The New Value"}`.
-- updateActionData(instanceId, stateId, minValue, maxValue)
+- `updateActionData(instanceId, stateId, minValue, maxValue)`
   - This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
-- send(data)
-  - This will try to send any arbitrary Python object in `data` (presumably something `dict`-like) to TouchPortal after serializing it as JSON and adding a `\n`.
-  Normally there is no need to use this method directly, but if the Python API doesn't cover something from the TP API, this could be used instead.
-- connect()
-  - Call this method to connect to TouchPortal after all your setups are complete. Normally this is used at the end of your script.
-  Does nothing if the client is already connected.
-- disconnect()
-  - Trigger the client to disconnect from TouchPortal. Normally this is used in `@TPClient.on("closePlugin")` callback but it can be used any way you like only
-  after you've connected to TouchPortal. Does nothing if client is not currently connected.
+- `send(data)`
+  - This will try to send any arbitrary Python object in `data` (presumably something `dict`-like) to TouchPortal
+  after serializing it as JSON and adding a `\n`. Normally there is no need to use this method directly, but if the
+  Python API doesn't cover something from the TP API, this could be used instead.
+- `connect()`
+  - Call this method to connect to TouchPortal after all your setups are complete. Normally this is used at the end of
+  your script.  Does nothing if the client is already connected.
+  - If connection is successful, it starts the main processing loop of the TP network client.
+  - **Note** that `connect()` blocks further execution of your script until `disconnect()` is called in an event handler,
+  (when `autoClose` is `False`), TP sends `closePlugin` message and `autoClose` is `True`, or an internal error occurs
+  (for example Touch Portal disconnects unexpectedly).
+- `disconnect()`
+  - Trigger the client to disconnect from TouchPortal. Normally this is used in `@TPClient.on("closePlugin")`
+  callback but it can be used any way you like. Does nothing if client is not currently connected.
+  - It is not necessary to call this method if `autoClose` was set to `True` in the `Client()` constructor.
+- `getActionDataValue(data:list, valueId:str=None)`
+  - Utility for processing action messages from TP. For example:<br/>
+      `{"type": "action", "data": [{ "id": "data object id", "value": "user specified value" }, ...]}`
 
-## Touch Portal api documentation
+  - Returns the `value` with specific `id` from a list of action data,
+  or `None` if the `id` wasn't found. If a null id is passed in `valueId`
+  then the first entry which has a `value` key, if any, will be returned.
+
+  - Arguments:
+    - `data`: the "data" array from a TP "action", "on", or "off" message
+    - `valueId`: the "id" to look for in `data`. `None` or blank to return the first value found.
+
+
+### `TouchPortalAPI.Tools`
+- `convertImage_to_base64(image, type="Auto", image_formats=["image/png", "image/jpeg", "image/jpg"])`
+  - `image` can be a URL or local file path.
+  - `type` can be "Auto", "Web" (for URL), or "Local" (for file path).
+  - `image_formats` is a list of one or more MIME types to accept, used only with URLs to confirm the response is valid.
+  - May raise a `TypeError` if URL request returns an invalid MIME type.
+  - May raise a `ValueError` in other cases such as invalid URL or file path.
+- `updateCheck(name, repository)`
+  - Returns the newest tag name from a GitHub repository.
+  - `name` is the GitHub user name for the URL path.
+  - `repository` is the GitHub repository name for the URL path.
+  - May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
+
+
+## Touch Portal API documentation
 https://www.touch-portal.com/api
 
 ## Bugs
