@@ -14,6 +14,7 @@ class TYPES:
     onConnect = 'info'
     onAction = 'action'
     onListChange = 'listChange'
+    onConnectorChange = 'connectorChange'
     onShutdown = 'closePlugin'
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
