@@ -42,7 +42,7 @@ class Client(ExecutorEventEmitter):
     SND_BUFFER_SZ = 32**4  # [B] maximum size of send data buffer (1MB)
     SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
 
-    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, checkPluginId=True, maxWorkers=None, executor=None):
+    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, checkPluginId=True, updateStatesOnBroadcast=True, maxWorkers=None, executor=None):
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
         super(Client, self).__init__(executor=executor)
@@ -50,6 +50,7 @@ class Client(ExecutorEventEmitter):
         self.sleepPeriod = sleepPeriod
         self.autoClose = autoClose
         self.checkPluginId = checkPluginId
+        self.updateStatesOnBroadcast = updateStatesOnBroadcast
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -131,6 +132,9 @@ class Client(ExecutorEventEmitter):
                 self.__heldActions[aid] = True
             elif act_type == TYPES.onHold_up and (aid := data.get('actionId')):
                 del self.__heldActions[aid]
+            elif act_type == TYPES.onBroadcast and self.updateStatesOnBroadcast:
+                for key, value in self.currentStates.items():
+                    self.__stateUpdate(key, value, True)
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
@@ -246,8 +250,14 @@ class Client(ExecutorEventEmitter):
             self.currentSettings[settingName] = settingValue
 
     def stateUpdate(self, stateId:str, stateValue:str):
-        if stateId and stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
-            self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
+        self.__stateUpdate(stateId, stateValue, False)
+        
+    def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
+        if stateId:
+            if not forced and stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
+                self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
+            elif forced:
+                self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
             self.currentStates[stateId] = stateValue
 
     def stateUpdateMany(self, states:list):
