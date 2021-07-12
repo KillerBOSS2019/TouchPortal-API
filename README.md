@@ -244,6 +244,7 @@ TPClient.connect()
 
 ### Change Log
 ==========
+```
 1.4 (7/12/2021)
 -------------------
 - Removed Socket Object from callback (v1.3 or older required to remove `client` from callback.)
@@ -290,7 +291,7 @@ Fix: updateSetting now only updates when value has changed
 - State Update Many
 - Converting image to base64
 - Update check
-
+```
 
 ## Touch Portal API documentation
 https://www.touch-portal.com/api
