@@ -169,6 +169,7 @@ TPClient.connect()
   - `pluginId`       (str): ID string of the TouchPortal plugin using this client. **Required**.
   - `sleepPeriod`  (float): Seconds to sleep the event loop between socket read events (default: 0.01).
   - `autoClose`     (bool): If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
+  - `updateStatesOnBroadcast` (bool): Default `True` Which means when user switch page It will auto update all the states to get fresh data.
   - `checkPluginId` (bool): Validate that `pluginId` matches ours in any messages from TP which contain one (such as actions). Default is `True`.
   - `maxWorkers`     (int): Maximum worker threads to run concurrently for event handlers. Default of `None` creates a default-constructed `ThreadPoolExecutor`.
   - `executor`    (object): Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
