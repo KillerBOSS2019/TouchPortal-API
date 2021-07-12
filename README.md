@@ -242,6 +242,55 @@ TPClient.connect()
   - `repository` is the GitHub repository name for the URL path.
   - May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
 
+###Change Log
+==========
+1.4 (7/12/2021)
+-------------------
+- Removed Socket Object from callback (v1.3 or older required to remove `client` from callback.)
+- Added updateStatesOnBroadcast (automatically send all states on Broadcast message.)
+
+1.3 (6/12/2021)
+-------------------
+Pull requests from [#5](https://github.com/KillerBOSS2019/TouchPortal-API/pull/5) and [#6](https://github.com/KillerBOSS2019/TouchPortal-API/pull/6)
+- Minor cleanups
+- Refactor Client to use selectors and non-blocking sockets.
+- Sync __init__.py with PyPi version.
+- Optimize validations and key safety
+- Added createStateMany()
+- Added removeStateMany()
+
+1.2 (4/12/2021)
+-------------------
+- Added isActionBeingHeld(actionId) returns True or False
+
+1.1.1 (3/24/2021)
+-------------------
+Fixes
+
+Fix: fixed the readme for typo's
+Fix: keywords
+Fix: updateStates now only updates when value changed
+Fix: createState now update the state if it already exists
+Fix: updateSetting now only updates when value has changed
+
+1.1.0 (3/23/2021)
+-------------------
+- Fixed some typos
+
+1.0 (3/23/2021)
+-------------------
+# Feautres
+- Easy to use
+- createState
+- removeState
+- choice Update
+- choice Update Specific
+- setting Update
+- state Update
+- State Update Many
+- Converting image to base64
+- Update check
+
 
 ## Touch Portal API documentation
 https://www.touch-portal.com/api
