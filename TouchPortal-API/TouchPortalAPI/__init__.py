@@ -254,9 +254,7 @@ class Client(ExecutorEventEmitter):
         
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
         if stateId:
-            if not forced and stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
-                self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
-            elif forced:
+            if forced or stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
                 self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
             self.currentStates[stateId] = stateValue
 
