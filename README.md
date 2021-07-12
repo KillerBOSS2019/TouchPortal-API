@@ -242,7 +242,7 @@ TPClient.connect()
   - `repository` is the GitHub repository name for the URL path.
   - May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
 
-###Change Log
+### Change Log
 ==========
 1.4 (7/12/2021)
 -------------------
