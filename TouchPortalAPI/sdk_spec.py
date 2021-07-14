@@ -88,7 +88,7 @@ TPSDK_ATTRIBS_CONNECTOR = {
 TPSDK_ATTRIBS_CATEGORY = {
 # key name              sdk V   required    [type(s)]    [default value]   [valid value list]   [lookup table]
   'id':               { 'v': 1, 'r': True,  't': str },  # dynamic default id based on plugin id?
-  'name':             { 'v': 1, 'r': True,  't': str },
+  'name':             { 'v': 1, 'r': True,  't': str },  # dynamic default based on plugin name?
   'imagepath':        { 'v': 1, 'r': False, 't': str },
   'actions':          { 'v': 1, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_ACTION },
   'connectors':       { 'v': 4, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_CONNECTOR },
@@ -104,6 +104,6 @@ TPSDK_ATTRIBS_ROOT = {
   'id':               { 'v': 1, 'r': True,  't': str },
   'configuration':    { 'v': 1, 'r': False, 't': dict },
   'plugin_start_cmd': { 'v': 1, 'r': False, 't': str },
-  'settings':         { 'v': 3, 'r': False, 't': list,           'l': TPSDK_ATTRIBS_SETTINGS },
   'categories':       { 'v': 1, 'r': True,  't': list,  'd': [], 'l': TPSDK_ATTRIBS_CATEGORY },
+  'settings':         { 'v': 3, 'r': False, 't': list,  'd': [], 'l': TPSDK_ATTRIBS_SETTINGS },
 }

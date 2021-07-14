@@ -4,22 +4,23 @@ Touch Portal Python SDK Tools
 
 Functions:
 	* Generates an entry.tp file for a Touch Portal plugin based
-	on variables specified in the plugin source code.
+	on variables specified in the plugin source code (`generateEntryFromScript()`)
+	or specified by value (`generateEntryFromDeclaration()`).
 	* Validate an entry.tp attribute value against the minimum
-	SDK version, value type, value content, etc.
+	SDK version, value type, value content, etc. (`validateAttribValue()`).
 	* ... ?
 
 
 TODO/Ideas:
 
-* Validate that IDs are unique.
+* Validate that IDs for states/actions/etc are unique.
+# Dynamic default values, eg. for action prefix or category id/name (see notes in sdk_spec tables).
 * Allow plugin author to set their own defaults?
-* Allow for multiple Categories.
 * Automatic id substitution in action `format` attributes using placeholders.
 '''
 
 import sys
-import os
+import os.path
 import importlib.util
 import json
 # from argparse import ArgumentParser
@@ -80,18 +81,16 @@ def dictFromItem(item, table, sdk_v = TPSDK_DEFAULT_VERSION):
 	return ret
 
 
-def arrayFromDict(d, table, sdk_v = TPSDK_DEFAULT_VERSION):
+def arrayFromDict(d, table, sdk_v = TPSDK_DEFAULT_VERSION, category=None):
 	ret = []
 	for item in d.values():
-		ret.append(dictFromItem(item, table, sdk_v))
+		if not category or not (cat := item.get('category')) or cat == category:
+			ret.append(dictFromItem(item, table, sdk_v))
 	return ret
 
 
 def getPluginVar(plugin, vname):
-	try:
-		return getattr(plugin, vname)
-	except:
-		return {}
+	return getattr(plugin, vname, {})
 
 
 def generateEntryFromScript(script_path):
@@ -120,42 +119,68 @@ def generateEntryFromScript(script_path):
 	if not info:
 		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_INFO variable from plugin source.")
 
-	cat = getPluginVar(plugin, "TP_PLUGIN_CATEGORY")
-	if not cat:
-		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_CATEGORY variable from plugin source.")
+	cats = getPluginVar(plugin, "TP_PLUGIN_CATEGORIES")
+	if not cats:
+		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_CATEGORIES variable from plugin source.")
 
-	settings = getPluginVar(plugin, "TP_PLUGIN_SETTINGS")
-	actions = getPluginVar(plugin, "TP_PLUGIN_ACTIONS")
-	states = getPluginVar(plugin, "TP_PLUGIN_STATES")
-	events = getPluginVar(plugin, "TP_PLUGIN_EVENTS")
-	connectors = getPluginVar(plugin, "TP_PLUGIN_CONNECTORS")
-	# print(info, cat, settings, actions, states, events)
+	return generateEntryFromDeclaration(
+		info, cats,
+		settings=getPluginVar(plugin, "TP_PLUGIN_SETTINGS"),
+		actions=getPluginVar(plugin, "TP_PLUGIN_ACTIONS"),
+		states=getPluginVar(plugin, "TP_PLUGIN_STATES"),
+		events=getPluginVar(plugin, "TP_PLUGIN_EVENTS"),
+		connectors=getPluginVar(plugin, "TP_PLUGIN_CONNECTORS")
+	)
+
+
+def generateEntryFromDeclaration(info:dict, categories:dict, **kwargs):
+	"""
+	Returns an "entry.tp" Python `dict` which is suitable for direct conversion to JSON format.
+	Arguments should contain SDK declaration dict values, for example as specified for `TP_PLUGIN_INFO`,
+	etc.  The `info` and `category` values are required, the rest are optional.
+	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
+	`kwargs` can be one or more of:
+		settings:dict={},
+		actions:dict={},
+		states:dict={},
+		events:dict={},
+		connectors:dict={}
+	"""
+	settings = kwargs.get('settings', {})
+	actions = kwargs.get('actions', {})
+	states = kwargs.get('states', {})
+	events = kwargs.get('events', {})
+	connectors = kwargs.get('connectors', {})
+	# print(info, categories, settings, actions, states, events, connectors)
 
 	# Start the root entry.tp object using basic plugin metadata
+	# This will also create an empty `categories` array in the root of the entry.
 	entry = dictFromItem(info, TPSDK_ATTRIBS_ROOT)
 
 	# Get the target SDK version (was either specified in plugin or is TPSDK_DEFAULT_VERSION)
 	tgt_sdk_v = entry['sdk']
 
+	# Loop over each plugin category and set up actions, states, events, and connectors.
+	for cat, data in categories.items():
+		category = dictFromItem(data, TPSDK_ATTRIBS_CATEGORY, tgt_sdk_v)
+		category['actions'] = arrayFromDict(actions, TPSDK_ATTRIBS_ACTION, tgt_sdk_v, cat)
+		category['states'] = arrayFromDict(states, TPSDK_ATTRIBS_STATE, tgt_sdk_v, cat)
+		category['events'] = arrayFromDict(events, TPSDK_ATTRIBS_EVENT, tgt_sdk_v, cat)
+		if tgt_sdk_v >= 4:
+			category['connectors'] = arrayFromDict(connectors, TPSDK_ATTRIBS_CONNECTOR, tgt_sdk_v, cat)
+		# add the category to entry's categories array
+		entry['categories'].append(category)
+
 	# Add Settings to root
 	if tgt_sdk_v >= 3:
 		entry['settings'] = arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v)
-
-	# Now we add actions, states, events to the Category object
-	cat['actions'] = arrayFromDict(actions, TPSDK_ATTRIBS_ACTION, tgt_sdk_v)
-	cat['states'] = arrayFromDict(states, TPSDK_ATTRIBS_STATE, tgt_sdk_v)
-	cat['events'] = arrayFromDict(events, TPSDK_ATTRIBS_EVENT, tgt_sdk_v)
-	if tgt_sdk_v >= 4:
-		cat['connectors'] = arrayFromDict(connectors, TPSDK_ATTRIBS_CONNECTOR, tgt_sdk_v)
-
-	# And finally add the built category structure to the root entry.tp object.
-	entry['categories'] = [dictFromItem(cat, TPSDK_ATTRIBS_CATEGORY, tgt_sdk_v)] # [cat]
 
 	return entry
 
 
 ## main
 
+# for now main() just runs the entry.tp generator routine, but this could be controlled with CLI arguments
 def main():
 	# Get the plugin script name from command line (default is "main.py")
 	script_path = sys.argv[1] if len(sys.argv) > 1 else "main.py"
@@ -173,7 +198,7 @@ def main():
 	try:
 		entry = generateEntryFromScript(script_path)
 	except Exception as e:
-		return repr(e)
+		return str(e)
 
 	if (messages := getMessages()):
 		print(messages)

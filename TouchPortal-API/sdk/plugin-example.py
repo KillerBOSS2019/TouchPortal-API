@@ -6,7 +6,9 @@ Touch Portal Plugin Example
 import sys
 
 # load the TP Python API
-sys.path.append("../")  # FIXME
+# FIXME awkward import because of sibling folder structure
+import os.path
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 import TouchPortalAPI as TP
 
 # imports below are optional, to provide argument parsing and logging functionality
@@ -35,13 +37,6 @@ TP_PLUGIN_INFO = {
 	}
 }
 
-# This example only supports one Category for actions/etc.
-TP_PLUGIN_CATEGORY = {
-	'id': PLUGIN_ID + ".Main",
-	'name' : "Python Examples",
-	'imagepath' : "icon-24.png"
-}
-
 # Setting(s) for this plugin. These could be either for users to
 # set, or to persist data between plugin runs (as read-only settings).
 TP_PLUGIN_SETTINGS = {
@@ -54,12 +49,22 @@ TP_PLUGIN_SETTINGS = {
 	},
 }
 
+# This example only uses one Category for actions/etc., but multiple categories are supported also.
+TP_PLUGIN_CATEGORIES = {
+	"main": {
+		'id': PLUGIN_ID + ".Main",
+		'name' : "Python Examples",
+		'imagepath' : "icon-24.png"
+	}
+}
+
 # Action(s) which this plugin supports.
 TP_PLUGIN_ACTIONS = {
 	'example': {
+		'category': "main",  # this is optional, if omitted then action will be added to all categories
 		'id': PLUGIN_ID + ".act.example",
 		'name': "Set Example State",
-		'prefix': TP_PLUGIN_CATEGORY['name'],
+		'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
 		'type': "communicate",
 		'format': "Set Example State text to {$" + PLUGIN_ID + ".act.example.data$}",
 		'data': {
@@ -77,6 +82,7 @@ TP_PLUGIN_ACTIONS = {
 # vs. dynamic states which would be created/removed at runtime.
 TP_PLUGIN_STATES = {
 	'example': {
+		# 'category': "main",  # this is optional, if omitted then state will be added to all categories
 		'id': PLUGIN_ID + ".state.example",
 		'type': "text",
 		'desc': "Example State",
