@@ -150,7 +150,7 @@ def onAction(data):
 		text = TP.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['example_data'])
 		TPClient.stateUpdate(TP_PLUGIN_STATES['example']['id'], text)
 	else:
-		g_log.warn("Got unknown action ID: " + aid)
+		g_log.warning("Got unknown action ID: " + aid)
 
 # Shutdown handler
 @TPClient.on(TP.TYPES.onShutdown)
@@ -166,10 +166,10 @@ def onError(exc):
 	g_log.error(f'Error in TP Client event handler: {repr(exc)}')
 	# ... do something ?
 
-
 ## main
 
 def main():
+	global TPClient, g_log
 	ret = 0  # sys.exit() value
 
 	# handle CLI arguments
@@ -194,7 +194,7 @@ def main():
 	else:
 		fmt = Formatter(
 			fmt="{asctime:s}.{msecs:03.0f} [{levelname:.1s}] [{filename:s}:{lineno:d}] {message:s}",
-			datefmt="%m%dT%H%M%S", style="{"
+			datefmt="%H:%M:%S", style="{"
 		)
 		if opts.d:
 			g_log.setLevel(DEBUG)
@@ -220,10 +220,12 @@ def main():
 	g_log.info(f"Starting {TP_PLUGIN_INFO['name']} v{__version__} on {sys.platform}.")
 
 	try:
-		TPClient.connect()  # blocking
+		# Connect to Touch Portal desktop application.
+		# If connection succeeds, this method will not return (blocks) until the client is disconnected.
+		TPClient.connect()
 		g_log.info('TP Client closed.')
 	except KeyboardInterrupt:
-		g_log.warn("Caught keyboard interrupt, exiting.")
+		g_log.warning("Caught keyboard interrupt, exiting.")
 	except Exception:
 		# This will catch and report any critical exceptions in the base TPClient code,
 		# _not_ excpetions in this plugin's event handlers (use onError(), above, for that).

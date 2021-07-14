@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 '''
-Generates an entry.tp file for a Touch Portal plugin based
-on variables specified in the plugin source code.
-'''
+Touch Portal Python SDK Tools
 
-import sys
-import importlib.util
-import json
-# from argparse import ArgumentParser
+Functions:
+	* Generates an entry.tp file for a Touch Portal plugin based
+	on variables specified in the plugin source code.
+	* Validate an entry.tp attribute value against the minimum
+	SDK version, value type, value content, etc.
+	* ... ?
 
-from .sdk_spec import *
 
-'''
 TODO/Ideas:
 
 * Validate that IDs are unique.
@@ -20,7 +18,14 @@ TODO/Ideas:
 * Automatic id substitution in action `format` attributes using placeholders.
 '''
 
-########
+import sys
+import os
+import importlib.util
+import json
+# from argparse import ArgumentParser
+
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+from sdk_spec import *
 
 # globals
 g_messages = []
