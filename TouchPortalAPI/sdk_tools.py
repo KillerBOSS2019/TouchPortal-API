@@ -9,8 +9,7 @@ import importlib.util
 import json
 # from argparse import ArgumentParser
 
-sys.path.append("../")  # FIXME
-from TouchPortalAPI.sdk_spec import *
+from .sdk_spec import *
 
 '''
 TODO/Ideas:
