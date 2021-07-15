@@ -60,10 +60,12 @@ def _clearMessages():
 def _normPath(path):
 	return os.path.normpath(os.path.join(os.getcwd(), path))
 
+def _keyPath(path, key):
+	return ":".join(filter(None, [path, key]))
 
 ## Generator functions
 
-def _dictFromItem(item, table, sdk_v = TPSDK_DEFAULT_VERSION):
+def _dictFromItem(item, table, sdk_v, path=""):
 	ret = {}
 	for k, data in table.items():
 		# try get explicit value from item
@@ -72,17 +74,17 @@ def _dictFromItem(item, table, sdk_v = TPSDK_DEFAULT_VERSION):
 			v = data.get('d')
 		# check if there is nested data, eg. in an Action
 		if isinstance(v, dict) and data.get('t') is list:
-			v = _arrayFromDict(v, data.get('l', {}), sdk_v)
-		if validateAttribValue(k, v, data, sdk_v):
+			v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k))
+		if validateAttribValue(k, v, data, sdk_v, path):
 			ret[k] = v
 	return ret
 
 
-def _arrayFromDict(d, table, sdk_v = TPSDK_DEFAULT_VERSION, category=None):
+def _arrayFromDict(d, table, sdk_v, category=None, path=""):
 	ret = []
-	for item in d.values():
+	for key, item in d.items():
 		if not category or not (cat := item.get('category')) or cat == category:
-			ret.append(_dictFromItem(item, table, sdk_v))
+			ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]"))
 	return ret
 
 
@@ -152,76 +154,82 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 
 	# Start the root entry.tp object using basic plugin metadata
 	# This will also create an empty `categories` array in the root of the entry.
-	entry = _dictFromItem(info, TPSDK_ATTRIBS_ROOT)
+	entry = _dictFromItem(info, TPSDK_ATTRIBS_ROOT, TPSDK_DEFAULT_VERSION, "info")
 
 	# Get the target SDK version (was either specified in plugin or is TPSDK_DEFAULT_VERSION)
 	tgt_sdk_v = entry['sdk']
 
 	# Loop over each plugin category and set up actions, states, events, and connectors.
 	for cat, data in categories.items():
-		category = _dictFromItem(data, TPSDK_ATTRIBS_CATEGORY, tgt_sdk_v)
-		category['actions'] = _arrayFromDict(actions, TPSDK_ATTRIBS_ACTION, tgt_sdk_v, cat)
-		category['states'] = _arrayFromDict(states, TPSDK_ATTRIBS_STATE, tgt_sdk_v, cat)
-		category['events'] = _arrayFromDict(events, TPSDK_ATTRIBS_EVENT, tgt_sdk_v, cat)
+		path = f"category[{cat}]"
+		category = _dictFromItem(data, TPSDK_ATTRIBS_CATEGORY, tgt_sdk_v, path)
+		category['actions'] = _arrayFromDict(actions, TPSDK_ATTRIBS_ACTION, tgt_sdk_v, cat, "actions")
+		category['states'] = _arrayFromDict(states, TPSDK_ATTRIBS_STATE, tgt_sdk_v, cat, "states")
+		category['events'] = _arrayFromDict(events, TPSDK_ATTRIBS_EVENT, tgt_sdk_v, cat, "events")
 		if tgt_sdk_v >= 4:
-			category['connectors'] = _arrayFromDict(connectors, TPSDK_ATTRIBS_CONNECTOR, tgt_sdk_v, cat)
+			category['connectors'] = _arrayFromDict(connectors, TPSDK_ATTRIBS_CONNECTOR, tgt_sdk_v, cat, "connectors")
 		# add the category to entry's categories array
 		entry['categories'].append(category)
 
 	# Add Settings to root
 	if tgt_sdk_v >= 3:
-		entry['settings'] = _arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v)
+		entry['settings'] = _arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings")
 
 	return entry
 
 
 ## Validation functions
 
-def validateAttribValue(key, value, attrib_data, sdk_v):
+def validateAttribValue(key, value, attrib_data, sdk_v, path=""):
 	"""
 	`key` is the attribute name;
 	`value` is what to validate;
 	`action_data` is the lookup table data for the given key (eg. `TPSDK_ATTRIBS_INFO[key]` );
 	`sdk_v` is the TP SDK version being used (for validation).
+	`path` is just extra information to print before the key name in warning messages (to show where attribute is in the tree).
 	"""
+	keypath = _keyPath(path, key)
 	if value is None:
 		if attrib_data.get('r'):
-			_addMessage(f"WARNING: Missing required attribute '{key}'!")
+			_addMessage(f"WARNING: Missing required attribute '{keypath}'.")
 		return False
 	if not isinstance(value, (exp_typ := attrib_data.get('t', str))):
-		_addMessage(f"WARNING: Wrong data type for attribute '{key}'! Expected {exp_typ} but got {type(value)}")
+		_addMessage(f"WARNING: Wrong data type for attribute '{keypath}'. Expected {exp_typ} but got {type(value)}")
 		return False
 	if sdk_v < (min_sdk := attrib_data.get('v', sdk_v)):
-		_addMessage(f"WARNING: Wrong SDK version for attribute '{key}'! Minimum is v{min_sdk} but using v{sdk_v}")
+		_addMessage(f"WARNING: Wrong SDK version for attribute '{keypath}'. Minimum is v{min_sdk} but using v{sdk_v}")
 		return False
 	if (choices := attrib_data.get('c')) and value not in choices:
-		_addMessage(f"WARNING: Value error for attribute '{key}'! Got '{value}' but expected one of {choices}")
+		_addMessage(f"WARNING: Value error for attribute '{keypath}'. Got '{value}' but expected one of {choices}")
 		return False
 	return True
 
-def _validateDefinitionDict(d, table, sdk_v):
+def _validateDefinitionDict(d, table, sdk_v, path=""):
 	# iterate over existing attributes to validate them
 	for k, v in d.items():
 		adata = table.get(k)
+		keypath = _keyPath(path, k)
 		if not adata:
-			_addMessage(f"WARNING: Attribute '{k}' is unknown.")
+			_addMessage(f"WARNING: Attribute '{keypath}' is unknown.")
 			continue
-		if not validateAttribValue(k, v, adata, sdk_v):
+		if not validateAttribValue(k, v, adata, sdk_v, path):
 			continue
 		# print(k, v, type(v))
 		if isinstance(v, list) and (ltable := adata.get('l')):
-			_validateDefinitionArray(v, ltable, sdk_v)
+			_validateDefinitionArray(v, ltable, sdk_v, keypath)
 	# iterate over table entries to check if all required attribs are present
 	for k, data in table.items():
 		if data.get('r') and k not in d.keys():
-			_addMessage(f"WARNING: Missing required attribute '{k}'.")
+			_addMessage(f"WARNING: Missing required attribute '{_keyPath(path, k)}'.")
 
-def _validateDefinitionArray(a, table, sdk_v):
+def _validateDefinitionArray(a, table, sdk_v, path=""):
+	i = 0
 	for item in a:
 		if isinstance(item, dict):
-			_validateDefinitionDict(item, table, sdk_v)
+			_validateDefinitionDict(item, table, sdk_v, f"{path}[{i:d}]")
 		else:
-			_addMessage(f"WARNING: Unable to handle array member '{item}'.")
+			_addMessage(f"WARNING: Unable to handle array member '{item}' in '{path}'.")
+		i += 1
 
 
 def validateDefinitionObject(data):
