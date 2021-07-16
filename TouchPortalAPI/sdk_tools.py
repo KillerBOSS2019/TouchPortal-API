@@ -4,8 +4,8 @@ Touch Portal Python SDK Tools
 
 Functions:
 	* Generates an entry.tp definition file for a Touch Portal plugin based
-	on variables specified in the plugin source code (`generateDefinitionFromScript()`)
-	or specified by value (`generateDefinitionFromDeclaration()`).
+	on variables specified in the plugin source code (`generateDefinitionFromScript()`),
+	from a loaded module (`generateDefinitionFromModule()`) or specified by value (`generateDefinitionFromDeclaration()`).
 	* Validate an entire plugin definition (entry.tp) file (`validateDefinitionFile()`),
 	string (`validateDefinitionString()`), or object (`validateDefinitionObject()`).
 	* Validate an entry.tp attribute value against the minimum
@@ -15,11 +15,12 @@ Functions:
 Command-line Usage:
 	sdk_tools.py [-h] [action] [target] [output]
 
-	* `action` : "--generate" (default) to generate definition file or "--validate" to validate definition file.
+	* `action` : "--generate" (default) to generate definition file or "--validate" to validate an existing definition file.
 	* `target` : path to file, type depending on action.
-	           Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current
-						 working directory. Defaults to "./main.py" and "./entry.tp" respectively.
-	* `output` : optional output file path for generated definition JSON, or "stdout" to print to console.
+	             Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current
+	             working directory. Defaults to "./main.py" and "./entry.tp" respectively.
+	* `output` : output file path for generated definition JSON, or "stdout" to print to console.
+	             Default will be a file named 'entry.tp' in the same folder as the input script.
 
 TODO/Ideas:
 
@@ -32,7 +33,8 @@ import sys
 import os.path
 import importlib.util
 import json
-import re
+from types import ModuleType
+from re import compile as re_compile
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
@@ -45,9 +47,9 @@ g_messages = []
 def getMessages():
 	return g_messages
 
-def printMessages(message_array):
-	for msg in message_array:
-		print(msg)
+def _printMessages(messages:list):
+	for msg in messages:
+		_printToErr(msg)
 
 def _addMessage(msg):
 	global g_messages
@@ -57,6 +59,9 @@ def _clearMessages():
 	global g_messages
 	g_messages.clear()
 
+def _printToErr(msg):
+	sys.stderr.write(msg + "\n")
+
 def _normPath(path):
 	return os.path.normpath(os.path.join(os.getcwd(), path))
 
@@ -65,7 +70,7 @@ def _keyPath(path, key):
 
 ## Generator functions
 
-def _dictFromItem(item, table, sdk_v, path=""):
+def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str=""):
 	ret = {}
 	for k, data in table.items():
 		# try get explicit value from item
@@ -75,12 +80,13 @@ def _dictFromItem(item, table, sdk_v, path=""):
 		# check if there is nested data, eg. in an Action
 		if isinstance(v, dict) and data.get('t') is list:
 			v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k))
+		# check that the value is valid and add it to the dict if it is
 		if validateAttribValue(k, v, data, sdk_v, path):
 			ret[k] = v
 	return ret
 
 
-def _arrayFromDict(d, table, sdk_v, category=None, path=""):
+def _arrayFromDict(d:dict, table:dict, sdk_v:int, category:str=None, path:str=""):
 	ret = []
 	for key, item in d.items():
 		if not category or not (cat := item.get('category')) or cat == category:
@@ -101,7 +107,7 @@ def _replaceFormatTokens(items:list):
 		if not data_ids:
 			continue
 		fmt = d.get('format')
-		rx = re.compile(r'\$\[(\w+)\]')
+		rx = re_compile(r'\$\[(\w+)\]')
 		begin = 0
 		while (m := rx.search(fmt, begin)):
 			idx = m.group(1)
@@ -122,7 +128,7 @@ def _getPluginVar(plugin, vname):
 	return getattr(plugin, vname, {})
 
 
-def generateDefinitionFromScript(script_path):
+def generateDefinitionFromScript(script_path:str):
 	"""
 	Returns an "entry.tp" Python `dict` which is suitable for direct conversion to JSON format.
 	`script_path` should be a valid python script file which contains "SDK declaration variables" like
@@ -140,15 +146,23 @@ def generateDefinitionFromScript(script_path):
 		# print(plugin.TP_PLUGIN_INFO)
 	except Exception as e:
 		raise ImportError(f"ERROR while trying to import plugin code from '{script_path}': {repr(e)}")
+	return generateDefinitionFromModule(plugin)
 
+
+def generateDefinitionFromModule(plugin:ModuleType):
+	"""
+	Returns an "entry.tp" Python module, which is suitable for direct conversion to JSON format.
+	`plugin` should be a loaded Python "module" which contains "SDK declaration variables" like
+	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc. From within a plugin script this could be called like:
+	`generateDefinitionFromModule(sys.modules[__name__]).
+	May raise an `ImportError` if the plugin script is missing required variables TP_PLUGIN_INFO and TP_PLUGIN_CATEGORIES.
+	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
+	"""
 	# Load the "standard SDK declaration variables" from plugin script into local scope
 	# INFO and CATEGORY are required, rest are optional.
-	info = _getPluginVar(plugin, "TP_PLUGIN_INFO")
-	if not info:
+	if not (info := _getPluginVar(plugin, "TP_PLUGIN_INFO")):
 		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_INFO variable from plugin source.")
-
-	cats = _getPluginVar(plugin, "TP_PLUGIN_CATEGORIES")
-	if not cats:
+	if not (cats := _getPluginVar(plugin, "TP_PLUGIN_CATEGORIES")):
 		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_CATEGORIES variable from plugin source.")
 	return generateDefinitionFromDeclaration(
 		info, cats,
@@ -209,7 +223,7 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 
 ## Validation functions
 
-def validateAttribValue(key, value, attrib_data, sdk_v, path=""):
+def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""):
 	"""
 	`key` is the attribute name;
 	`value` is what to validate;
@@ -233,7 +247,7 @@ def validateAttribValue(key, value, attrib_data, sdk_v, path=""):
 		return False
 	return True
 
-def _validateDefinitionDict(d, table, sdk_v, path=""):
+def _validateDefinitionDict(d:dict, table:dict, sdk_v:int, path:str=""):
 	# iterate over existing attributes to validate them
 	for k, v in d.items():
 		adata = table.get(k)
@@ -251,7 +265,7 @@ def _validateDefinitionDict(d, table, sdk_v, path=""):
 		if data.get('r') and k not in d.keys():
 			_addMessage(f"WARNING: Missing required attribute '{_keyPath(path, k)}'.")
 
-def _validateDefinitionArray(a, table, sdk_v, path=""):
+def _validateDefinitionArray(a:list, table:dict, sdk_v:int, path:str=""):
 	i = 0
 	for item in a:
 		if isinstance(item, dict):
@@ -261,7 +275,7 @@ def _validateDefinitionArray(a, table, sdk_v, path=""):
 		i += 1
 
 
-def validateDefinitionObject(data):
+def validateDefinitionObject(data:dict):
 	"""
 	Validates a TP plugin definition structure from a Python `dict` object.
 	`data` is a de-serialzed entry.tp JSON object (eg. json.load('entry.tp'))
@@ -273,7 +287,7 @@ def validateDefinitionObject(data):
 	_validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
 	return len(g_messages) == 0
 
-def validateDefinitionString(data):
+def validateDefinitionString(data:str):
 	"""
 	Validates a TP plugin definition structure from JSON string.
 	`data` is an entry.tp JSON string
@@ -282,7 +296,7 @@ def validateDefinitionString(data):
 	"""
 	return validateDefinitionObject(json.loads(data))
 
-def validateDefinitionFile(file_path):
+def validateDefinitionFile(file_path:str):
 	"""
 	Validates a TP plugin definition structure from JSON file.
 	`file_path` is a valid system path to an entry.tp JSON file
@@ -299,31 +313,31 @@ def _generateDefinition(script_path, output_path):
 	if len(script_path.split(".")) < 2:
 		script_path = script_path + ".py"
 
-	print(f"Generating plugin definition JSON from {script_path} \n")
+	_printToErr(f"Generating plugin definition JSON from {script_path} \n")
 	entry = generateDefinitionFromScript(script_path)
 	if (messages := getMessages()):
-		printMessages(messages)
-		print("")
+		_printMessages(messages)
+		_printToErr("")
 	# output
 	if output_path:
 		# write it to a file
 		with open(output_path, "w") as entry_file:
 			entry_file.write(json.dumps(entry, indent=2))
-			print(f"Saved generated JSON to {output_path}\n")
+		_printToErr(f"Saved generated JSON to {output_path}\n")
 	else:
 		# see what we got
 		print(json.dumps(entry, indent=2))
-		print("")
-	print(f"Finished generating plugin definition JSON.\n")
+		_printToErr("")
+	_printToErr(f"Finished generating plugin definition JSON.\n")
 
 
 def _validateDefinition(entry_path):
-	print(f"Validating {entry_path}, any errors or warnings will be printed below.\n")
+	_printToErr(f"Validating {entry_path}, any errors or warnings will be printed below.\n")
 	if validateDefinitionFile(entry_path):
-		print("No problems found!")
+		_printToErr("No problems found!")
 	else:
-		printMessages(getMessages())
-	print(f"\nFinished validating {entry_path}\n")
+		_printMessages(getMessages())
+	_printToErr(f"\nFinished validating {entry_path}\n")
 
 
 def main():
@@ -345,7 +359,7 @@ def main():
 	# default action
 	opts.generate = opts.generate or not opts.validate
 
-	print("")
+	_printToErr("")
 
 	try:
 
