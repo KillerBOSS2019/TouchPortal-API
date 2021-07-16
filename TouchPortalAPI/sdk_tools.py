@@ -26,13 +26,13 @@ TODO/Ideas:
 * Validate that IDs for states/actions/etc are unique.
 # Dynamic default values, eg. for action prefix or category id/name (see notes in sdk_spec tables).
 * Allow plugin author to set their own defaults?
-* Automatic id substitution in action `format` attributes using placeholders.
 '''
 
 import sys
 import os.path
 import importlib.util
 import json
+import re
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
@@ -85,7 +85,37 @@ def _arrayFromDict(d, table, sdk_v, category=None, path=""):
 	for key, item in d.items():
 		if not category or not (cat := item.get('category')) or cat == category:
 			ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]"))
+	if path in ["actions","connectors"]:
+		_replaceFormatTokens(ret)
 	return ret
+
+
+def _replaceFormatTokens(items:list):
+	for d in items:
+		if not isinstance(d, dict) or not 'format' in d.keys() or not 'data' in d.keys():
+			continue
+		data_ids = {}
+		for data in d.get('data'):
+			if (did := data.get('id')):
+				data_ids[did.rsplit(".", 1)[-1]] = did
+		if not data_ids:
+			continue
+		fmt = d.get('format')
+		rx = re.compile(r'\$\[(\w+)\]')
+		begin = 0
+		while (m := rx.search(fmt, begin)):
+			idx = m.group(1)
+			if idx in data_ids.keys():
+				val = data_ids.get(idx)
+			elif idx.isdigit() and (i := int(idx) - 1) >= 0 and i < len(data_ids):
+				val = list(data_ids.values())[i]
+			else:
+				begin = m.end()
+				continue
+			# print(m.span(), val)
+			fmt = fmt[:m.start()] + "{$" + val + "$}" + fmt[m.end():]
+			begin = m.start() + len(val) + 4
+		d['format'] = fmt
 
 
 def _getPluginVar(plugin, vname):
@@ -120,7 +150,6 @@ def generateDefinitionFromScript(script_path):
 	cats = _getPluginVar(plugin, "TP_PLUGIN_CATEGORIES")
 	if not cats:
 		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_CATEGORIES variable from plugin source.")
-
 	return generateDefinitionFromDeclaration(
 		info, cats,
 		settings=_getPluginVar(plugin, "TP_PLUGIN_SETTINGS"),

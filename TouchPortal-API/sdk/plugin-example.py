@@ -19,6 +19,7 @@ from logging import (getLogger, Formatter, NullHandler, FileHandler, StreamHandl
 # Version string of this plugin (in Python style).
 __version__ = "1.0"
 # The unique plugin ID string is used in multiple places.
+# It also forms the base for all other ID strings (for states, actions, etc).
 PLUGIN_ID = "tp.plugin.example.python"
 
 ## Start Python SDK declarations
@@ -52,7 +53,7 @@ TP_PLUGIN_SETTINGS = {
 # This example only uses one Category for actions/etc., but multiple categories are supported also.
 TP_PLUGIN_CATEGORIES = {
 	"main": {
-		'id': PLUGIN_ID + ".Main",
+		'id': PLUGIN_ID + ".main",
 		'name' : "Python Examples",
 		'imagepath' : "icon-24.png"
 	}
@@ -61,18 +62,28 @@ TP_PLUGIN_CATEGORIES = {
 # Action(s) which this plugin supports.
 TP_PLUGIN_ACTIONS = {
 	'example': {
-		'category': "main",  # this is optional, if omitted then action will be added to all categories
+		# 'category' is optional, if omitted then action will be added to all, or the only, category(ies)
+		'category': "main",
 		'id': PLUGIN_ID + ".act.example",
 		'name': "Set Example State",
 		'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
 		'type': "communicate",
-		'format': "Set Example State text to {$" + PLUGIN_ID + ".act.example.data$}",
+		# 'format' tokens like $[1] will be replaced in the generated JSON with the corresponding data id wrapped with "{$...$}"
+		# Numeric token values correspond to the order in which the data items are listed here, while text tokens correspond
+		# to the last part of a dotted data ID (the part after the last period; letters, numbers, and underscore allowed).
+		'format': "Set Example State Text to $[text] and Color to $[2]",
 		'data': {
-			'example_data': {
-				'id': PLUGIN_ID + ".act.example.data",
+			'text': {
+				'id': PLUGIN_ID + ".act.example.data.text",
 				'type': "text",
 				'label': "Text",
 				'default': "Hello World!"
+			},
+			'color': {
+				'id': PLUGIN_ID + ".act.example.data.color",
+				'type': "color",
+				'label': "Color",
+				'default': "#818181FF"
 			},
 		}
 	},
@@ -81,12 +92,18 @@ TP_PLUGIN_ACTIONS = {
 # Plugin static state(s). These are listed in the entry.tp file,
 # vs. dynamic states which would be created/removed at runtime.
 TP_PLUGIN_STATES = {
-	'example': {
+	'text': {
 		# 'category': "main",  # this is optional, if omitted then state will be added to all categories
-		'id': PLUGIN_ID + ".state.example",
+		'id': PLUGIN_ID + ".state.text",
 		'type': "text",
-		'desc': "Example State",
-		'default': "Set me!"
+		'desc': "Example State Text",
+		'default': TP_PLUGIN_ACTIONS['example']['data']['text']['default']
+	},
+	'color': {
+		'id': PLUGIN_ID + ".state.color",
+		'type': "text",
+		'desc': "Example State Color",
+		'default': TP_PLUGIN_ACTIONS['example']['data']['color']['default']
 	},
 }
 
@@ -152,9 +169,11 @@ def onAction(data):
 	if not (action_data := data.get('data')) or not (aid := data.get('actionId')):
 		return
 	if aid == TP_PLUGIN_ACTIONS['example']['id']:
-		# set our example State value with the data from this action
-		text = TP.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['example_data'])
-		TPClient.stateUpdate(TP_PLUGIN_STATES['example']['id'], text)
+		# set our example State text and color values with the data from this action
+		text = TP.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['text'])
+		color = TP.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['color'])
+		TPClient.stateUpdate(TP_PLUGIN_STATES['text']['id'], text)
+		TPClient.stateUpdate(TP_PLUGIN_STATES['color']['id'], color)
 	else:
 		g_log.warning("Got unknown action ID: " + aid)
 
