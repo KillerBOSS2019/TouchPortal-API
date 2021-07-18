@@ -1,1 +1,0 @@
-This is TouchPortal API made for easily create TouchPortal Plugin
