@@ -13,14 +13,25 @@ Functions:
 	* ... ?
 
 Command-line Usage:
-	sdk_tools.py [-h] [action] [target] [output]
+	sdk_tools.py [-h] [-g] [-v] [-o <file>] [-s] [-i <n>] [target]
 
-	* `action` : "--generate" (default) to generate definition file or "--validate" to validate an existing definition file.
-	* `target` : path to file, type depending on action.
-	             Either a plugin script for `generate` or an entry.tp file for `validate`. Or use 'stdin' (or '-') to read from input stream.
-               Paths are relative to current working directory. Defaults to "./main.py" and "./entry.tp" respectively.
-	* `output` : output file path for generated definition JSON, or 'stdout' (or '-') to print to console.
-	             Default will be a file named 'entry.tp' in the same folder as the input script.
+	positional arguments:
+		target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory. Defaults to './main.py' and
+		                      './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead.
+
+	optional arguments:
+		-h, --help            show this help message and exit
+		-g, --generate        Generate a definition file from plugin script data. This is the default action.
+		-v, --validate        Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output.
+
+	Generator arguments:
+		-o <file>             Output file for `generate` action. Default will be a file named 'entry.tp' in the same folder as the input script. Paths are relative to current working
+		                      directory. Use 'stdout' (or '-') to print the output to the console/stream instead.
+		-s, --skip-invalid    Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.
+		-i <n>, --indent <n>  Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.
+
+	  This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data.
+		All progress and warning messages are printed to stderr stream.
 
 TODO/Ideas:
 
@@ -41,6 +52,9 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
 
 ## globals
+
+# whether to exclude attributes with invalid values from generated JSON
+g_skip_invalid_attributes = False
 g_messages = []  # validation reporting
 g_seen_ids = {}  # for validating unique IDs
 
@@ -48,7 +62,16 @@ g_seen_ids = {}  # for validating unique IDs
 ## Utils
 
 def getMessages():
+	""" Gets a list of messages which may have been generated during generation/validation.
+	"""
 	return g_messages
+
+def clearMessages():
+	""" Clears the list of validation warning messages.
+	Do this before invoking `validateAttribValue()` directly (outside of the other functions provided here).
+	"""
+	global g_messages
+	g_messages.clear()
 
 def _printMessages(messages:list):
 	for msg in messages:
@@ -57,10 +80,6 @@ def _printMessages(messages:list):
 def _addMessage(msg):
 	global g_messages
 	g_messages.append(msg)
-
-def _clearMessages():
-	global g_messages
-	g_messages.clear()
 
 
 def _seenIds():
@@ -100,7 +119,7 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str=""):
 		if isinstance(v, dict) and data.get('t') is list:
 			v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k))
 		# check that the value is valid and add it to the dict if it is
-		if validateAttribValue(k, v, data, sdk_v, path):
+		if validateAttribValue(k, v, data, sdk_v, path) or (not g_skip_invalid_attributes and v != None):
 			ret[k] = v
 	return ret
 
@@ -136,6 +155,7 @@ def _replaceFormatTokens(items:list):
 				val = list(data_ids.values())[i]
 			else:
 				begin = m.end()
+				_addMessage(f"WARNING: Could not find replacement for token '{idx}' in 'format' attribute for element `{d.get('id')}`. The data arry does not contain this name/index.")
 				continue
 			# print(m.span(), val)
 			fmt = fmt[:m.start()] + "{$" + val + "$}" + fmt[m.end():]
@@ -217,7 +237,7 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 		connectors:dict={}
 	"""
 	_clearSeenIds()
-	_clearMessages()
+	clearMessages()
 	settings = kwargs.get('settings', {})
 	actions = kwargs.get('actions', {})
 	states = kwargs.get('states', {})
@@ -262,7 +282,7 @@ def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""
 	`path` is just extra information to print before the key name in warning messages (to show where attribute is in the tree).
 
 	Returns `False` if any validation fails or `value` is `None`, `True` otherwise.
-	Error description message(s) can be retrieved with `getMessages()`.
+	Error description message(s) can be retrieved with `getMessages()` and cleared with `clearMessages()`.
 	"""
 	global g_seen_ids
 	keypath = _keyPath(path, key)
@@ -323,7 +343,7 @@ def validateDefinitionObject(data:dict):
 	Use `getMessages()` to check for any validation warnings which may be generated.
 	"""
 	_clearSeenIds()
-	_clearMessages()
+	clearMessages()
 	sdk_v = data.get('sdk', TPSDK_DEFAULT_VERSION)
 	_validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
 	return len(g_messages) == 0
@@ -366,7 +386,9 @@ def _generateDefinition(script, output_path, indent):
 	_printToErr(f"Generating plugin definition JSON from '{input_name}'...\n")
 	entry = generateDefinitionFromScript(script)
 	entry_str = json.dumps(entry, indent=indent) + "\n"
+	valid = True
 	if (messages := getMessages()):
+		valid = False
 		_printMessages(messages)
 		_printToErr("")
 	# output
@@ -379,7 +401,7 @@ def _generateDefinition(script, output_path, indent):
 		# send to stdout
 		print(entry_str)
 	_printToErr(f"Finished generating plugin definition JSON from '{input_name}'.\n")
-	return entry_str
+	return entry_str, valid
 
 
 def _validateDefinition(entry, as_str=False):
@@ -394,23 +416,29 @@ def _validateDefinition(entry, as_str=False):
 	else:
 		_printMessages(getMessages())
 	_printToErr(f"\nFinished validating '{name}'.\n")
+	return res
 
 
 def main():
+	global g_skip_invalid_attributes
 	from argparse import (ArgumentParser, FileType)
-	parser = ArgumentParser()
+	parser = ArgumentParser(epilog="This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data. "
+	                               "All progress and warning messages are printed to stderr stream.")
 	parser.add_argument("-g", "--generate", action='store_true',
 	                    help="Generate a definition file from plugin script data. This is the default action.")
 	parser.add_argument("-v", "--validate", action='store_true',
 	                    help="Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output.")
-	parser.add_argument("-o", metavar="<file_path>",
-	                    help="Output file for `generate` action. Default will be a file named 'entry.tp' in the same folder as the input script. "
-                           "Paths are relative to current working directory. Use 'stdout' (or '-') to print the output to the console/stream instead.")
-	parser.add_argument("-i", "--indent", metavar="<n>", type=int, default=2,
-	                    help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.")
 	parser.add_argument("target", metavar="target", nargs="?", default="",
 	                    help="Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory. "
 	                         "Defaults to './main.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead. ")
+	gen_grp = parser.add_argument_group("Generator arguments")
+	gen_grp.add_argument("-o", metavar="<file>",
+	                     help="Output file for `generate` action. Default will be a file named 'entry.tp' in the same folder as the input script. "
+                           "Paths are relative to current working directory. Use 'stdout' (or '-') to print the output to the console/stream instead.")
+	gen_grp.add_argument("-s", "--skip-invalid", action='store_true', dest="skip_invalid", default=g_skip_invalid_attributes,
+	                     help="Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.")
+	gen_grp.add_argument("-i", "--indent", metavar="<n>", type=int, default=2,
+	                     help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is %(default)s spaces.")
 	opts = parser.parse_args()
 	del parser
 
@@ -422,8 +450,10 @@ def main():
 	if opts.target in ("-","stdin"):
 		opts.target = sys.stdin
 
+	valid = True
 	entry_str = ""
 	if opts.generate:
+		g_skip_invalid_attributes = opts.skip_invalid
 		opts.target = _normPath(opts.target or "main.py")
 		output_path = None
 		if opts.o:
@@ -431,18 +461,18 @@ def main():
 				output_path = opts.o
 		else:
 			output_path = os.path.join(os.path.dirname(opts.target), "entry.tp")
-		entry_str = _generateDefinition(opts.target, output_path, opts.indent)
+		entry_str, valid = _generateDefinition(opts.target, output_path, opts.indent)
 		if opts.validate and output_path:
 			opts.target = output_path
 
 	if opts.validate:
 		if entry_str:
-			_validateDefinition(entry_str, True)
+			valid = _validateDefinition(entry_str, True)
 		else:
 			opts.target = _normPath(opts.target or "entry.tp")
-			_validateDefinition(opts.target)
+			valid = _validateDefinition(opts.target)
 
-	return 0
+	return 0 if valid else -1
 
 
 if __name__ == "__main__":
