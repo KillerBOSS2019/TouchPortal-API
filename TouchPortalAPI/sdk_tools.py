@@ -17,9 +17,9 @@ Command-line Usage:
 
 	* `action` : "--generate" (default) to generate definition file or "--validate" to validate an existing definition file.
 	* `target` : path to file, type depending on action.
-	             Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current
-	             working directory. Defaults to "./main.py" and "./entry.tp" respectively.
-	* `output` : output file path for generated definition JSON, or "stdout" to print to console.
+	             Either a plugin script for `generate` or an entry.tp file for `validate`. Or use 'stdin' (or '-') to read from input stream.
+               Paths are relative to current working directory. Defaults to "./main.py" and "./entry.tp" respectively.
+	* `output` : output file path for generated definition JSON, or 'stdout' (or '-') to print to console.
 	             Default will be a file named 'entry.tp' in the same folder as the input script.
 
 TODO/Ideas:
@@ -34,6 +34,7 @@ import os.path
 import importlib.util
 import json
 from types import ModuleType
+from typing import (Union, TextIO)
 from re import compile as re_compile
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
@@ -63,6 +64,8 @@ def _printToErr(msg):
 	sys.stderr.write(msg + "\n")
 
 def _normPath(path):
+	if not isinstance(path, str):
+		return path
 	return os.path.normpath(os.path.join(os.getcwd(), path))
 
 def _keyPath(path, key):
@@ -124,53 +127,63 @@ def _replaceFormatTokens(items:list):
 		d['format'] = fmt
 
 
-def _getPluginVar(plugin, vname):
-	return getattr(plugin, vname, {})
-
-
-def generateDefinitionFromScript(script_path:str):
+def generateDefinitionFromScript(script:Union[str, TextIO]):
 	"""
 	Returns an "entry.tp" Python `dict` which is suitable for direct conversion to JSON format.
-	`script_path` should be a valid python script file which contains "SDK declaration variables" like
-	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc. Note that the script is interpreted, so any actual
-	"business" logic (like connecting to TP) should be in "__main__".
+	`script` should be a valid python script, either a file path (ending in .py), string, or open file handle (like stdin).
+	The script should contain "SDK declaration variables" like	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc.
+
+	Note that the script is interpreted (executed), so any actual "business" logic (like connecting to TP) should be in "__main__".
+
 	May raise an `ImportError` if the plugin script could not be loaded or is missing required variables.
 	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
 	"""
-	# try to load the plugin script (business logic *must be* in __main__)
+	input_name = "input string"
+	script_str = ""
+	if hasattr(script, "read"):
+		script_str = script.read()
+		input_name = "input stream"
+	elif script.endswith(".py"):
+		with open(script, 'r') as script_file:
+			script_str = script_file.read()
+		input_name = script
+	else:
+		script_str = script
+
 	try:
-		# plugin = importlib.import_module(script_path)
-		spec = importlib.util.spec_from_file_location("plugin", script_path)
+		# spec = importlib.util.spec_from_file_location("plugin", script)
+		spec = importlib.util.spec_from_loader("plugin", loader=None)
 		plugin = importlib.util.module_from_spec(spec)
-		spec.loader.exec_module(plugin)
+		# spec.loader.exec_module(plugin)
+		exec(script_str, plugin.__dict__)
 		# print(plugin.TP_PLUGIN_INFO)
 	except Exception as e:
-		raise ImportError(f"ERROR while trying to import plugin code from '{script_path}': {repr(e)}")
+		raise ImportError(f"ERROR while trying to import plugin code from '{input_name}': {repr(e)}")
 	return generateDefinitionFromModule(plugin)
 
 
 def generateDefinitionFromModule(plugin:ModuleType):
 	"""
-	Returns an "entry.tp" Python module, which is suitable for direct conversion to JSON format.
+	Returns an "entry.tp" Python `dict`, which is suitable for direct conversion to JSON format.
 	`plugin` should be a loaded Python "module" which contains "SDK declaration variables" like
 	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc. From within a plugin script this could be called like:
-	`generateDefinitionFromModule(sys.modules[__name__]).
+	`generateDefinitionFromModule(sys.modules[__name__])`.
 	May raise an `ImportError` if the plugin script is missing required variables TP_PLUGIN_INFO and TP_PLUGIN_CATEGORIES.
 	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
 	"""
 	# Load the "standard SDK declaration variables" from plugin script into local scope
 	# INFO and CATEGORY are required, rest are optional.
-	if not (info := _getPluginVar(plugin, "TP_PLUGIN_INFO")):
+	if not (info := getattr(plugin, "TP_PLUGIN_INFO", {})):
 		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_INFO variable from plugin source.")
-	if not (cats := _getPluginVar(plugin, "TP_PLUGIN_CATEGORIES")):
+	if not (cats := getattr(plugin, "TP_PLUGIN_CATEGORIES", {})):
 		raise ImportError(f"ERROR: Could not import required TP_PLUGIN_CATEGORIES variable from plugin source.")
 	return generateDefinitionFromDeclaration(
 		info, cats,
-		settings=_getPluginVar(plugin, "TP_PLUGIN_SETTINGS"),
-		actions=_getPluginVar(plugin, "TP_PLUGIN_ACTIONS"),
-		states=_getPluginVar(plugin, "TP_PLUGIN_STATES"),
-		events=_getPluginVar(plugin, "TP_PLUGIN_EVENTS"),
-		connectors=_getPluginVar(plugin, "TP_PLUGIN_CONNECTORS")
+		settings = getattr(plugin, "TP_PLUGIN_SETTINGS", {}),
+		actions = getattr(plugin, "TP_PLUGIN_ACTIONS", {}),
+		states = getattr(plugin, "TP_PLUGIN_STATES", {}),
+		events = getattr(plugin, "TP_PLUGIN_EVENTS", {}),
+		connectors = getattr(plugin, "TP_PLUGIN_CONNECTORS", {})
 	)
 
 
@@ -216,7 +229,7 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 
 	# Add Settings to root
 	if tgt_sdk_v >= 3:
-		entry['settings'] = _arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings")
+		entry['settings'].extend(_arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings"))
 
 	return entry
 
@@ -296,25 +309,35 @@ def validateDefinitionString(data:str):
 	"""
 	return validateDefinitionObject(json.loads(data))
 
-def validateDefinitionFile(file_path:str):
+def validateDefinitionFile(file:Union[str, TextIO]):
 	"""
 	Validates a TP plugin definition structure from JSON file.
-	`file_path` is a valid system path to an entry.tp JSON file
+	`file` is a valid system path to an entry.tp JSON file _or_ an already-opened file handle (eg. sys.stdin).
 	Returns `True` if no problems were found, `False` otherwise.
 	Use `getMessages()` to check for any validation warnings which may be generated.
 	"""
-	with open(file_path, 'r') as tpfile:
-		return validateDefinitionObject(json.load(tpfile))
+	fh = file
+	if isinstance(fh, str):
+		fh = open(file, 'r')
+	ret = validateDefinitionObject(json.load(fh))
+	if fh != file:
+		fh.close()
+	return ret
 
 
 ## CLI handlers
 
-def _generateDefinition(script_path, output_path):
-	if len(script_path.split(".")) < 2:
-		script_path = script_path + ".py"
+def _generateDefinition(script, output_path, indent):
+	input_name = "input stream"
+	if isinstance(script, str):
+		if len(script.split(".")) < 2:
+			script = script + ".py"
+		input_name = script
+	indent = None if indent is None or int(indent) < 0 else indent
 
-	_printToErr(f"Generating plugin definition JSON from {script_path} \n")
-	entry = generateDefinitionFromScript(script_path)
+	_printToErr(f"Generating plugin definition JSON from '{input_name}'...\n")
+	entry = generateDefinitionFromScript(script)
+	entry_str = json.dumps(entry, indent=indent) + "\n"
 	if (messages := getMessages()):
 		_printMessages(messages)
 		_printToErr("")
@@ -322,37 +345,44 @@ def _generateDefinition(script_path, output_path):
 	if output_path:
 		# write it to a file
 		with open(output_path, "w") as entry_file:
-			entry_file.write(json.dumps(entry, indent=2))
-		_printToErr(f"Saved generated JSON to {output_path}\n")
+			entry_file.write(entry_str)
+		_printToErr(f"Saved generated JSON to '{output_path}'\n")
 	else:
-		# see what we got
-		print(json.dumps(entry, indent=2))
-		_printToErr("")
-	_printToErr(f"Finished generating plugin definition JSON.\n")
+		# send to stdout
+		print(entry_str)
+	_printToErr(f"Finished generating plugin definition JSON from '{input_name}'.\n")
+	return entry_str
 
 
-def _validateDefinition(entry_path):
-	_printToErr(f"Validating {entry_path}, any errors or warnings will be printed below.\n")
-	if validateDefinitionFile(entry_path):
+def _validateDefinition(entry, as_str=False):
+	name = entry if isinstance(entry, str) and not as_str else "input stream"
+	_printToErr(f"Validating '{name}', any errors or warnings will be printed below...\n")
+	if as_str:
+		res = validateDefinitionString(entry)
+	else:
+		res = validateDefinitionFile(entry)
+	if res:
 		_printToErr("No problems found!")
 	else:
 		_printMessages(getMessages())
-	_printToErr(f"\nFinished validating {entry_path}\n")
+	_printToErr(f"\nFinished validating '{name}'.\n")
 
 
 def main():
-	from argparse import ArgumentParser
+	from argparse import (ArgumentParser, FileType)
 	parser = ArgumentParser()
-	parser.add_argument("--generate", action='store_true',
+	parser.add_argument("-g", "--generate", action='store_true',
 	                    help="Generate a definition file from plugin script data. This is the default action.")
-	parser.add_argument("--validate", action='store_true',
-	                    help="Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output file.")
+	parser.add_argument("-v", "--validate", action='store_true',
+	                    help="Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output.")
 	parser.add_argument("-o", metavar="<file_path>",
 	                    help="Output file for `generate` action. Default will be a file named 'entry.tp' in the same folder as the input script. "
-											"Use 'stdout' to print the output to the console instead.")
+                           "Paths are relative to current working directory. Use 'stdout' (or '-') to print the output to the console/stream instead.")
+	parser.add_argument("-i", "--indent", metavar="<n>", type=int, default=2,
+	                    help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.")
 	parser.add_argument("target", metavar="target", nargs="?", default="",
-	                    help="Either a plugin script for `generate` or an entry.tp file for `validate`. "
-	                         "Paths are relative to current working directory. Defaults to './main.py' and './entry.tp' respectively.")
+	                    help="Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory. "
+	                         "Defaults to './main.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead. ")
 	opts = parser.parse_args()
 	del parser
 
@@ -361,29 +391,28 @@ def main():
 
 	_printToErr("")
 
-	try:
+	if opts.target in ("-","stdin"):
+		opts.target = sys.stdin
 
-		if opts.generate:
-			opts.target = _normPath(opts.target or "main.py")
-			output_path = None
-			if opts.o:
-				if opts.o != "stdout":
-					output_path = opts.o
-			else:
-				output_path = os.path.join(os.path.dirname(opts.target), "entry.tp")
-			_generateDefinition(opts.target, output_path)
-			if opts.validate:
-				if output_path:
-					opts.target = output_path
-				else:
-					opts.validate = False  # output sent to stdout, nothing to validate
+	entry_str = ""
+	if opts.generate:
+		opts.target = _normPath(opts.target or "main.py")
+		output_path = None
+		if opts.o:
+			if opts.o not in ("-","stdout"):
+				output_path = opts.o
+		else:
+			output_path = os.path.join(os.path.dirname(opts.target), "entry.tp")
+		entry_str = _generateDefinition(opts.target, output_path, opts.indent)
+		if opts.validate and output_path:
+			opts.target = output_path
 
-		if opts.validate:
+	if opts.validate:
+		if entry_str:
+			_validateDefinition(entry_str, True)
+		else:
 			opts.target = _normPath(opts.target or "entry.tp")
 			_validateDefinition(opts.target)
-
-	except Exception as e:
-		return str(e)
 
 	return 0
 
