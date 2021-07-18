@@ -24,9 +24,9 @@ Command-line Usage:
 
 TODO/Ideas:
 
-* Validate that IDs for states/actions/etc are unique.
-# Dynamic default values, eg. for action prefix or category id/name (see notes in sdk_spec tables).
-* Allow plugin author to set their own defaults?
+* Dynamic default values, eg. for action prefix or category id/name (see notes in sdk_spec tables).
+* Dynamic ID generation and write-back to plugin at runtime.
+* Allow plugin author to set their own defaults.
 '''
 
 import sys
@@ -41,7 +41,9 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
 
 ## globals
-g_messages = []
+g_messages = []  # validation reporting
+g_seen_ids = {}  # for validating unique IDs
+
 
 ## Utils
 
@@ -59,6 +61,20 @@ def _addMessage(msg):
 def _clearMessages():
 	global g_messages
 	g_messages.clear()
+
+
+def _seenIds():
+	global g_seen_ids
+	return g_seen_ids.keys()
+
+def _addSeenId(id, path):
+	global g_seen_ids
+	g_seen_ids[id] = path
+
+def _clearSeenIds():
+	global g_seen_ids
+	g_seen_ids.clear()
+
 
 def _printToErr(msg):
 	sys.stderr.write(msg + "\n")
@@ -200,6 +216,7 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 		events:dict={},
 		connectors:dict={}
 	"""
+	_clearSeenIds()
 	_clearMessages()
 	settings = kwargs.get('settings', {})
 	actions = kwargs.get('actions', {})
@@ -243,7 +260,11 @@ def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""
 	`action_data` is the lookup table data for the given key (eg. `TPSDK_ATTRIBS_INFO[key]` );
 	`sdk_v` is the TP SDK version being used (for validation).
 	`path` is just extra information to print before the key name in warning messages (to show where attribute is in the tree).
+
+	Returns `False` if any validation fails or `value` is `None`, `True` otherwise.
+	Error description message(s) can be retrieved with `getMessages()`.
 	"""
+	global g_seen_ids
 	keypath = _keyPath(path, key)
 	if value is None:
 		if attrib_data.get('r'):
@@ -258,6 +279,12 @@ def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""
 	if (choices := attrib_data.get('c')) and value not in choices:
 		_addMessage(f"WARNING: Value error for attribute '{keypath}'. Got '{value}' but expected one of {choices}")
 		return False
+	if key == "id":
+		if not value in _seenIds():
+			_addSeenId(value, keypath)
+		else:
+			_addMessage(f"WARNING: The ID '{value}' in '{keypath}' is not unique. It was previously seen in '{g_seen_ids.get(value)}'")
+			return False
 	return True
 
 def _validateDefinitionDict(d:dict, table:dict, sdk_v:int, path:str=""):
@@ -295,6 +322,7 @@ def validateDefinitionObject(data:dict):
 	Returns `True` if no problems were found, `False` otherwise.
 	Use `getMessages()` to check for any validation warnings which may be generated.
 	"""
+	_clearSeenIds()
 	_clearMessages()
 	sdk_v = data.get('sdk', TPSDK_DEFAULT_VERSION)
 	_validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
