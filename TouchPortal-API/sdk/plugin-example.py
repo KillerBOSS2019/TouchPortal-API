@@ -6,7 +6,7 @@ Touch Portal Plugin Example
 import sys
 
 # load the TP Python API
-# FIXME awkward import because of sibling folder structure
+# FIXME awkward import because of sibling folder structure and we don't know if TP API has been installed
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 import TouchPortalAPI as TP
@@ -18,6 +18,7 @@ from logging import (getLogger, Formatter, NullHandler, FileHandler, StreamHandl
 
 # Version string of this plugin (in Python style).
 __version__ = "1.0"
+
 # The unique plugin ID string is used in multiple places.
 # It also forms the base for all other ID strings (for states, actions, etc).
 PLUGIN_ID = "tp.plugin.example.python"
@@ -25,6 +26,16 @@ PLUGIN_ID = "tp.plugin.example.python"
 ## Start Python SDK declarations
 # These will be used to generate the entry.tp file,
 # and of course can also be used within this plugin's code.
+# These could also live in a separate .py file which is then imported
+# into your plugin's code, and be used directly to generate the entry.tp JSON.
+#
+# Some entries have default values (like "type" for a Setting),
+# which are commented below and could technically be excluded from this code.
+#
+# Note that you may add any arbitrary keys/data to these dictionaries
+# w/out breaking the generation routine. Only known TP SDK attributes
+# (targeting the specified SDK version) will be used in the final entry.tp JSON.
+##
 
 # Basic plugin metadata
 TP_PLUGIN_INFO = {
@@ -43,6 +54,7 @@ TP_PLUGIN_INFO = {
 TP_PLUGIN_SETTINGS = {
 	'example': {
 		'name': "Example Setting",
+		# "text" is the default type and could be omitted here
 		'type': "text",
 		'default': "Example value",
 		'readOnly': False,
@@ -62,19 +74,20 @@ TP_PLUGIN_CATEGORIES = {
 # Action(s) which this plugin supports.
 TP_PLUGIN_ACTIONS = {
 	'example': {
-		# 'category' is optional, if omitted then action will be added to all, or the only, category(ies)
+		# 'category' is optional, if omitted then this action will be added to all, or the only, category(ies)
 		'category': "main",
 		'id': PLUGIN_ID + ".act.example",
 		'name': "Set Example State",
 		'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
 		'type': "communicate",
-		# 'format' tokens like $[1] will be replaced in the generated JSON with the corresponding data id wrapped with "{$...$}"
+		# 'format' tokens like $[1] will be replaced in the generated JSON with the corresponding data id wrapped with "{$...$}".
 		# Numeric token values correspond to the order in which the data items are listed here, while text tokens correspond
 		# to the last part of a dotted data ID (the part after the last period; letters, numbers, and underscore allowed).
 		'format': "Set Example State Text to $[text] and Color to $[2]",
 		'data': {
 			'text': {
 				'id': PLUGIN_ID + ".act.example.data.text",
+				# "text" is the default type and could be omitted here
 				'type': "text",
 				'label': "Text",
 				'default': "Hello World!"
@@ -93,15 +106,17 @@ TP_PLUGIN_ACTIONS = {
 # vs. dynamic states which would be created/removed at runtime.
 TP_PLUGIN_STATES = {
 	'text': {
-		# 'category': "main",  # this is optional, if omitted then state will be added to all categories
+		# 'category' is optional, if omitted then this state will be added to all, or the only, category(ies)
+		'category': "main",
 		'id': PLUGIN_ID + ".state.text",
+		# "text" is the default type and could be omitted here
 		'type': "text",
 		'desc': "Example State Text",
+		# we can conveniently use a value here which we already defined above
 		'default': TP_PLUGIN_ACTIONS['example']['data']['text']['default']
 	},
 	'color': {
 		'id': PLUGIN_ID + ".state.color",
-		'type': "text",
 		'desc': "Example State Color",
 		'default': TP_PLUGIN_ACTIONS['example']['data']['color']['default']
 	},
@@ -110,6 +125,7 @@ TP_PLUGIN_STATES = {
 # Plugin Event(s).
 TP_PLUGIN_EVENTS = {}
 
+##
 ## End Python SDK declarations
 
 
