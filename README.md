@@ -111,7 +111,7 @@ Save this somewhere and also Make sure you've Setup the entry.tp file as well th
 you should see your plugin. Without This script the Plugin wont do anything right? lets run this file
 and Use one of the action! Note This is just a Example Plugin
 ```python
-import TouchPortalAPI AS TP
+import TouchPortalAPI as TP
 
 # Setup callbacks and connection
 TPClient = TP.Client("ExamplePlugin")
