@@ -170,30 +170,33 @@ def generateDefinitionFromScript(script:Union[str, TextIO]):
 	The script should contain "SDK declaration variables" like	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc.
 
 	Note that the script is interpreted (executed), so any actual "business" logic (like connecting to TP) should be in "__main__".
+	Also note that when using input from a file handle or string, the script's "__file__" attribute is set to the current working
+	directory and the file name "tp_plugin.py".
 
 	May raise an `ImportError` if the plugin script could not be loaded or is missing required variables.
 	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
 	"""
-	input_name = "input string"
 	script_str = ""
 	if hasattr(script, "read"):
 		script_str = script.read()
-		input_name = "input stream"
-	elif script.endswith(".py"):
-		with open(script, 'r') as script_file:
-			script_str = script_file.read()
-		input_name = script
-	else:
+	elif not script.endswith(".py"):
 		script_str = script
 
 	try:
-		# spec = importlib.util.spec_from_file_location("plugin", script)
-		spec = importlib.util.spec_from_loader("plugin", loader=None)
-		plugin = importlib.util.module_from_spec(spec)
-		# spec.loader.exec_module(plugin)
-		exec(script_str, plugin.__dict__)
+		if script_str:
+			# load from a string
+			spec = importlib.util.spec_from_loader("plugin", loader=None)
+			plugin = importlib.util.module_from_spec(spec)
+			setattr(plugin, "__file__", os.path.join(os.getcwd(), "tp_plugin.py"))
+			exec(script_str, plugin.__dict__)
+		else:
+			# load directly from a file path
+			spec = importlib.util.spec_from_file_location("plugin", script)
+			plugin = importlib.util.module_from_spec(spec)
+			spec.loader.exec_module(plugin)
 		# print(plugin.TP_PLUGIN_INFO)
 	except Exception as e:
+		input_name = "input stream" if script_str else script
 		raise ImportError(f"ERROR while trying to import plugin code from '{input_name}': {repr(e)}")
 	return generateDefinitionFromModule(plugin)
 
@@ -460,7 +463,8 @@ def main():
 			if opts.o not in ("-","stdout"):
 				output_path = opts.o
 		else:
-			output_path = os.path.join(os.path.dirname(opts.target), "entry.tp")
+			out_dir = os.getcwd() if hasattr(opts.target, "read") else os.path.dirname(opts.target)
+			output_path = os.path.join(out_dir, "entry.tp")
 		entry_str, valid = _generateDefinition(opts.target, output_path, opts.indent)
 		if opts.validate and output_path:
 			opts.target = output_path

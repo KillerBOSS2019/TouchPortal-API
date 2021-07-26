@@ -13,6 +13,8 @@ Table attributes:
   `d`: default value, if any
   `c`: optional list of valid value(s) (choices)
   `l`: lookup table for child data structures, if any
+
+TODO: List valid attribute values per SDK version?
 """
 
 TPSDK_DEFAULT_VERSION = 4
@@ -45,7 +47,7 @@ TPSDK_ATTRIBS_EVENT = {
   'format':           { 'v': 1, 'r': True,  't': str },
   'type':             { 'v': 1, 'r': True,  't': str,   'd': "communicate", 'c': ["communicate"] },
   'valueChoices':     { 'v': 1, 'r': True,  't': list,  'd': [] },
-  'valueType':        { 'v': 1, 'r': True,  't': str,   'd': "choice" },
+  'valueType':        { 'v': 1, 'r': True,  't': str,   'd': "choice",      'c': ["choice"] },
   'valueStateId':     { 'v': 1, 'r': True,  't': str },
 }
 
@@ -69,7 +71,7 @@ TPSDK_ATTRIBS_ACTION = {
   'prefix':           { 'v': 1, 'r': True,  't': str },  # dynamic default? based on category name?
   'type':             { 'v': 1, 'r': True,  't': str,   'd': "communicate", 'c': ["communicate","execute"] },
   'description':      { 'v': 1, 'r': False, 't': str },
-  'format':           { 'v': 1, 'r': False, 't': str },  # dynamic replacement of data IDs?
+  'format':           { 'v': 1, 'r': False, 't': str },
   'executionType':    { 'v': 1, 'r': False, 't': str },
   'execution_cmd':    { 'v': 1, 'r': False, 't': str },
   'tryInline':        { 'v': 1, 'r': False, 't': bool },
@@ -81,12 +83,12 @@ TPSDK_ATTRIBS_CONNECTOR = {
 # key name              sdk V   required    [type(s)]    [default value]    [valid value list]   [lookup table]
   'id':               { 'v': 4, 'r': True,  't': str },
   'name':             { 'v': 4, 'r': True,  't': str },
-  'format':           { 'v': 4, 'r': False, 't': str },  # dynamic replacement of data IDs?
+  'format':           { 'v': 4, 'r': False, 't': str },
   'data':             { 'v': 4, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_ACT_DATA },  # same data as Actions? TP API docs are still vague
 }
 
 TPSDK_ATTRIBS_CATEGORY = {
-# key name              sdk V   required    [type(s)]    [default value]   [valid value list]   [lookup table]
+# key name              sdk V   required    [type(s)]  [lookup table]
   'id':               { 'v': 1, 'r': True,  't': str },  # dynamic default id based on plugin id?
   'name':             { 'v': 1, 'r': True,  't': str },  # dynamic default based on plugin name?
   'imagepath':        { 'v': 1, 'r': False, 't': str },
