@@ -110,6 +110,8 @@ def _keyPath(path, key):
 
 def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str=""):
 	ret = {}
+	if not isinstance(item, dict):
+		return ret
 	for k, data in table.items():
 		# try get explicit value from item
 		if (v := item.get(k)) is None:
@@ -126,6 +128,8 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str=""):
 
 def _arrayFromDict(d:dict, table:dict, sdk_v:int, category:str=None, path:str=""):
 	ret = []
+	if not isinstance(d, dict):
+		return ret
 	for key, item in d.items():
 		if not category or not (cat := item.get('category')) or cat == category:
 			ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]"))
