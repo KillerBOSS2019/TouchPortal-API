@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''
+"""
 Touch Portal Python SDK Tools
 
 Functions:
@@ -38,7 +38,7 @@ TODO/Ideas:
 * Dynamic default values, eg. for action prefix or category id/name (see notes in sdk_spec tables).
 * Dynamic ID generation and write-back to plugin at runtime.
 * Allow plugin author to set their own defaults.
-'''
+"""
 
 import sys
 import os.path
@@ -48,13 +48,10 @@ from types import ModuleType
 from typing import (Union, TextIO)
 from re import compile as re_compile
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
 
 ## globals
-
-# whether to exclude attributes with invalid values from generated JSON
-g_skip_invalid_attributes = False
 g_messages = []  # validation reporting
 g_seen_ids = {}  # for validating unique IDs
 
@@ -108,7 +105,7 @@ def _keyPath(path, key):
 
 ## Generator functions
 
-def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str=""):
+def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bool=False):
 	ret = {}
 	if not isinstance(item, dict):
 		return ret
@@ -119,20 +116,20 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str=""):
 			v = data.get('d')
 		# check if there is nested data, eg. in an Action
 		if isinstance(v, dict) and data.get('t') is list:
-			v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k))
+			v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k), skip_invalid=skip_invalid)
 		# check that the value is valid and add it to the dict if it is
-		if validateAttribValue(k, v, data, sdk_v, path) or (not g_skip_invalid_attributes and v != None):
+		if validateAttribValue(k, v, data, sdk_v, path) or (not skip_invalid and v != None):
 			ret[k] = v
 	return ret
 
 
-def _arrayFromDict(d:dict, table:dict, sdk_v:int, category:str=None, path:str=""):
+def _arrayFromDict(d:dict, table:dict, sdk_v:int, category:str=None, path:str="", skip_invalid:bool=False):
 	ret = []
 	if not isinstance(d, dict):
 		return ret
 	for key, item in d.items():
 		if not category or not (cat := item.get('category')) or cat == category:
-			ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]"))
+			ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]", skip_invalid))
 	if path in ["actions","connectors"]:
 		_replaceFormatTokens(ret)
 	return ret
@@ -167,11 +164,15 @@ def _replaceFormatTokens(items:list):
 		d['format'] = fmt
 
 
-def generateDefinitionFromScript(script:Union[str, TextIO]):
+def generateDefinitionFromScript(script:Union[str, TextIO], skip_invalid:bool=False):
 	"""
 	Returns an "entry.tp" Python `dict` which is suitable for direct conversion to JSON format.
+
 	`script` should be a valid python script, either a file path (ending in .py), string, or open file handle (like stdin).
 	The script should contain "SDK declaration variables" like	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc.
+
+	Setting `skip_invalid` to `True` will skip attributes with invalid values (they will not be included in generated output).
+	Default behavior is to only warn about them.
 
 	Note that the script is interpreted (executed), so any actual "business" logic (like connecting to TP) should be in "__main__".
 	Also note that when using input from a file handle or string, the script's "__file__" attribute is set to the current working
@@ -202,15 +203,19 @@ def generateDefinitionFromScript(script:Union[str, TextIO]):
 	except Exception as e:
 		input_name = "input stream" if script_str else script
 		raise ImportError(f"ERROR while trying to import plugin code from '{input_name}': {repr(e)}")
-	return generateDefinitionFromModule(plugin)
+	return generateDefinitionFromModule(plugin, skip_invalid)
 
 
-def generateDefinitionFromModule(plugin:ModuleType):
+def generateDefinitionFromModule(plugin:ModuleType, skip_invalid:bool=False):
 	"""
 	Returns an "entry.tp" Python `dict`, which is suitable for direct conversion to JSON format.
 	`plugin` should be a loaded Python "module" which contains "SDK declaration variables" like
 	`TP_PLUGIN_INFO`, `TP_PLUGIN_SETTINGS`, etc. From within a plugin script this could be called like:
 	`generateDefinitionFromModule(sys.modules[__name__])`.
+
+	Setting `skip_invalid` to `True` will skip attributes with invalid values (they will not be included in generated output).
+	Default behavior is to only warn about them.
+
 	May raise an `ImportError` if the plugin script is missing required variables TP_PLUGIN_INFO and TP_PLUGIN_CATEGORIES.
 	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
 	"""
@@ -226,22 +231,29 @@ def generateDefinitionFromModule(plugin:ModuleType):
 		actions = getattr(plugin, "TP_PLUGIN_ACTIONS", {}),
 		states = getattr(plugin, "TP_PLUGIN_STATES", {}),
 		events = getattr(plugin, "TP_PLUGIN_EVENTS", {}),
-		connectors = getattr(plugin, "TP_PLUGIN_CONNECTORS", {})
+		connectors = getattr(plugin, "TP_PLUGIN_CONNECTORS", {}),
+		skip_invalid = skip_invalid
 	)
 
 
-def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
+def generateDefinitionFromDeclaration(info:dict, categories:dict, skip_invalid:bool=False, **kwargs):
 	"""
 	Returns an "entry.tp" Python `dict` which is suitable for direct conversion to JSON format.
-	Arguments should contain SDK declaration dict values, for example as specified for `TP_PLUGIN_INFO`,
-	etc.  The `info` and `category` values are required, the rest are optional.
-	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
+	Arguments should contain SDK declaration dict values, for example as specified for `TP_PLUGIN_INFO`, etc.
+
+	The `info` and `category` values are required, the rest are optional.
+
+	Setting `skip_invalid` to `True` will skip attributes with invalid values (they will not be included in generated output).
+	Default behavior is to only warn about them.
+
 	`kwargs` can be one or more of:
 		settings:dict={},
 		actions:dict={},
 		states:dict={},
 		events:dict={},
 		connectors:dict={}
+
+	Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
 	"""
 	_clearSeenIds()
 	clearMessages()
@@ -262,18 +274,18 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 	# Loop over each plugin category and set up actions, states, events, and connectors.
 	for cat, data in categories.items():
 		path = f"category[{cat}]"
-		category = _dictFromItem(data, TPSDK_ATTRIBS_CATEGORY, tgt_sdk_v, path)
-		category['actions'] = _arrayFromDict(actions, TPSDK_ATTRIBS_ACTION, tgt_sdk_v, cat, "actions")
-		category['states'] = _arrayFromDict(states, TPSDK_ATTRIBS_STATE, tgt_sdk_v, cat, "states")
-		category['events'] = _arrayFromDict(events, TPSDK_ATTRIBS_EVENT, tgt_sdk_v, cat, "events")
+		category = _dictFromItem(data, TPSDK_ATTRIBS_CATEGORY, tgt_sdk_v, path, skip_invalid)
+		category['actions'] = _arrayFromDict(actions, TPSDK_ATTRIBS_ACTION, tgt_sdk_v, cat, "actions", skip_invalid)
+		category['states'] = _arrayFromDict(states, TPSDK_ATTRIBS_STATE, tgt_sdk_v, cat, "states", skip_invalid)
+		category['events'] = _arrayFromDict(events, TPSDK_ATTRIBS_EVENT, tgt_sdk_v, cat, "events", skip_invalid)
 		if tgt_sdk_v >= 4:
-			category['connectors'] = _arrayFromDict(connectors, TPSDK_ATTRIBS_CONNECTOR, tgt_sdk_v, cat, "connectors")
+			category['connectors'] = _arrayFromDict(connectors, TPSDK_ATTRIBS_CONNECTOR, tgt_sdk_v, cat, "connectors", skip_invalid)
 		# add the category to entry's categories array
 		entry['categories'].append(category)
 
 	# Add Settings to root
 	if tgt_sdk_v >= 3:
-		entry['settings'].extend(_arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings"))
+		entry['settings'].extend(_arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings", skip_invalid = skip_invalid))
 
 	return entry
 
@@ -282,14 +294,16 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, **kwargs):
 
 def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""):
 	"""
-	`key` is the attribute name;
-	`value` is what to validate;
-	`action_data` is the lookup table data for the given key (eg. `TPSDK_ATTRIBS_INFO[key]` );
-	`sdk_v` is the TP SDK version being used (for validation).
-	`path` is just extra information to print before the key name in warning messages (to show where attribute is in the tree).
-
+	Validates one attribute's value based on provided lookup table and target SDK version.
 	Returns `False` if any validation fails or `value` is `None`, `True` otherwise.
 	Error description message(s) can be retrieved with `getMessages()` and cleared with `clearMessages()`.
+
+	Args:
+		`key` is the attribute name;
+		`value` is what to validate;
+		`attrib_data` is the lookup table data for the given key (eg. `TPSDK_ATTRIBS_INFO[key]` );
+		`sdk_v` is the TP SDK version being used (for validation).
+		`path` is just extra information to print before the key name in warning messages (to show where attribute is in the tree).
 	"""
 	global g_seen_ids
 	keypath = _keyPath(path, key)
@@ -382,7 +396,7 @@ def validateDefinitionFile(file:Union[str, TextIO]):
 
 ## CLI handlers
 
-def _generateDefinition(script, output_path, indent):
+def _generateDefinition(script, output_path, indent, skip_invalid:bool=False):
 	input_name = "input stream"
 	if isinstance(script, str):
 		if len(script.split(".")) < 2:
@@ -391,7 +405,7 @@ def _generateDefinition(script, output_path, indent):
 	indent = None if indent is None or int(indent) < 0 else indent
 
 	_printToErr(f"Generating plugin definition JSON from '{input_name}'...\n")
-	entry = generateDefinitionFromScript(script)
+	entry = generateDefinitionFromScript(script, skip_invalid)
 	entry_str = json.dumps(entry, indent=indent) + "\n"
 	valid = True
 	if (messages := getMessages()):
@@ -427,8 +441,8 @@ def _validateDefinition(entry, as_str=False):
 
 
 def main():
-	global g_skip_invalid_attributes
-	from argparse import (ArgumentParser, FileType)
+	from argparse import ArgumentParser
+
 	parser = ArgumentParser(epilog="This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data. "
 	                               "All progress and warning messages are printed to stderr stream.")
 	parser.add_argument("-g", "--generate", action='store_true',
@@ -442,7 +456,7 @@ def main():
 	gen_grp.add_argument("-o", metavar="<file>",
 	                     help="Output file for `generate` action. Default will be a file named 'entry.tp' in the same folder as the input script. "
                            "Paths are relative to current working directory. Use 'stdout' (or '-') to print the output to the console/stream instead.")
-	gen_grp.add_argument("-s", "--skip-invalid", action='store_true', dest="skip_invalid", default=g_skip_invalid_attributes,
+	gen_grp.add_argument("-s", "--skip-invalid", action='store_true', dest="skip_invalid", default=False,
 	                     help="Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.")
 	gen_grp.add_argument("-i", "--indent", metavar="<n>", type=int, default=2,
 	                     help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is %(default)s spaces.")
@@ -460,7 +474,6 @@ def main():
 	valid = True
 	entry_str = ""
 	if opts.generate:
-		g_skip_invalid_attributes = opts.skip_invalid
 		opts.target = _normPath(opts.target or "main.py")
 		output_path = None
 		if opts.o:
@@ -469,7 +482,7 @@ def main():
 		else:
 			out_dir = os.getcwd() if hasattr(opts.target, "read") else os.path.dirname(opts.target)
 			output_path = os.path.join(out_dir, "entry.tp")
-		entry_str, valid = _generateDefinition(opts.target, output_path, opts.indent)
+		entry_str, valid = _generateDefinition(opts.target, output_path, opts.indent, opts.skip_invalid)
 		if opts.validate and output_path:
 			opts.target = output_path
 
