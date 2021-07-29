@@ -65,49 +65,49 @@ and make a file called entry.tp and paste this json data inside.
 	<summary>Click to expand</summary>
 	
 	```json
+	{
+	  "sdk": 3,
+	  "version": 100,
+	  "name": "Example Plugin",
+	  "id": "ExamplePlugin",
+	  "configuration": {
+	    "colorDark": "#222423",
+	    "colorLight": "#020202"
+	  },
+	  "categories": [
+	    {
+	      "id": "Main",
+	      "name": "Example Plugin",
+	      "actions": [
 		{
-		  "sdk": 3,
-		  "version": 100,
-		  "name": "Example Plugin",
-		  "id": "ExamplePlugin",
-		  "configuration": {
-		    "colorDark": "#222423",
-		    "colorLight": "#020202"
-		  },
-		  "categories": [
-		    {
-		      "id": "Main",
-		      "name": "Example Plugin",
-		      "actions": [
-			{
-			  "id": "ExampleAction",
-			  "name": "This is Example Action",
-			  "prefix": "plugin",
-			  "type": "communicate",
-			  "tryInline": true,
-			  "format": "Print({$ExampleTextData$})",
-			  "data": [
-				  {
-				    "id": "ExampleTextData",
-			      "type": "text",
-			      "label": "text",
-			      "default": "Hello World"
-					}
-				 ]
-			      }
-		      ],
-		      "events": [],
-		      "states": [
-			      {
-			  "id": "ExampleStates",
-			  "type": "text",
-			  "desc": "Example States",
-			  "default": "None"
-			}
-		      ]
-		    }
-		  ]
+		  "id": "ExampleAction",
+		  "name": "This is Example Action",
+		  "prefix": "plugin",
+		  "type": "communicate",
+		  "tryInline": true,
+		  "format": "Print({$ExampleTextData$})",
+		  "data": [
+			  {
+			    "id": "ExampleTextData",
+		      "type": "text",
+		      "label": "text",
+		      "default": "Hello World"
+				}
+			 ]
+		      }
+	      ],
+	      "events": [],
+	      "states": [
+		      {
+		  "id": "ExampleStates",
+		  "type": "text",
+		  "desc": "Example States",
+		  "default": "None"
 		}
+	      ]
+	    }
+	  ]
+	}
 	```
 </details>
 
@@ -148,6 +148,10 @@ and Use one of the action! Note This is just a Example Plugin
 	# `disconnect()` is called in an event handler, or an
 	# internal error occurs.
 	TPClient.connect()
+	```
+	
+	```python
+	print("test")
 	```
 </details>
 
