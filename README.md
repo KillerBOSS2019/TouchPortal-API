@@ -63,9 +63,9 @@ Make a Folder in `%appdata%/TouchPortal/plugins/` called `ExamplePlugin`
 and make a file called entry.tp and paste this json data inside.
 <details>
     <summary>Click to expand</summary>
-	```json
-	{"home":True}
-	```
+    ```py
+    print("Hello world")
+    ```
 </details>
 
 Save this somewhere and also Make sure you've Setup the entry.tp file as well then reboot TouchPortal
