@@ -61,51 +61,90 @@ TPClient.connect() # Connect to Touch Portal
 ## Example Plugin
 Make a Folder in `%appdata%/TouchPortal/plugins/` called `ExamplePlugin`
 and make a file called entry.tp and paste this json data inside.
-<details>
-    <summary>Click to expand</summary>
-    ```py
-    print("Hello world")
-    ```
-</details>
+```json
+{
+  "sdk": 3,
+  "version": 100,
+  "name": "Example Plugin",
+  "id": "ExamplePlugin",
+  "configuration": {
+    "colorDark": "#222423",
+    "colorLight": "#020202"
+  },
+  "categories": [
+    {
+      "id": "Main",
+      "name": "Example Plugin",
+      "actions": [
+	{
+	  "id": "ExampleAction",
+	  "name": "This is Example Action",
+	  "prefix": "plugin",
+	  "type": "communicate",
+	  "tryInline": true,
+	  "format": "Print({$ExampleTextData$})",
+	  "data": [
+		  {
+		    "id": "ExampleTextData",
+	      "type": "text",
+	      "label": "text",
+	      "default": "Hello World"
+			}
+		 ]
+	      }
+      ],
+      "events": [],
+      "states": [
+	      {
+	  "id": "ExampleStates",
+	  "type": "text",
+	  "desc": "Example States",
+	  "default": "None"
+	}
+      ]
+    }
+  ]
+}
+```
 
 Save this somewhere and also Make sure you've Setup the entry.tp file as well then reboot TouchPortal
 you should see your plugin. Without This script the Plugin wont do anything right? lets run this file
 and Use one of the action! Note This is just a Example Plugin
 <details>
-    <summary>Click to expand</summary>
-	
-	```python
-	import TouchPortalAPI as TP
+    <summary>Click to expand!</summary>
+    
+    ```python
+    import TouchPortalAPI as TP
 
-	# Setup callbacks and connection
-	TPClient = TP.Client("ExamplePlugin")
+    # Setup callbacks and connection
+    TPClient = TP.Client("ExamplePlugin")
 
-	@TPClient.on(TP.TYPES.onConnect) # Or replace TYPES.onConnect with 'info'
-	def onStart(data):
-	    print("Connected!", data)
+    @TPClient.on(TP.TYPES.onConnect) # Or replace TYPES.onConnect with 'info'
+    def onStart(data):
+        print("Connected!", data)
 
-	@TPClient.on(TP.TYPES.onAction) # Or 'action'
-	def Actions(data):
-	    print(data)
-	    # do something based on the action ID and the data value
-	    if data['actionId'] == "ExampleAction":
-		# get the value from the action data (a string the user specified)
-		action_value = getActionDataValue(data, 'ExampleTextData')
-		print(action_value)
-		# We can also update our ExampleStates with the Action Value
-		TPClient.stateUpdate("ExampleStates", action_value)
+    @TPClient.on(TP.TYPES.onAction) # Or 'action'
+    def Actions(data):
+        print(data)
+        # do something based on the action ID and the data value
+        if data['actionId'] == "ExampleAction":
+        # get the value from the action data (a string the user specified)
+        action_value = getActionDataValue(data, 'ExampleTextData')
+        print(action_value)
+        # We can also update our ExampleStates with the Action Value
+        TPClient.stateUpdate("ExampleStates", action_value)
 
-	@TPClient.on(TP.TYPES.onShutDown) # or 'closePlugin'
-	def shutDown(data):
-	    print("Got Shutdown Message! Shutting Down the Plugin!")
-	    TPClient.disconnect() # This stops the connection to TouchPortal
+    @TPClient.on(TP.TYPES.onShutDown) # or 'closePlugin'
+    def shutDown(data):
+        print("Got Shutdown Message! Shutting Down the Plugin!")
+        TPClient.disconnect() # This stops the connection to TouchPortal
 
-	# After Callback setup like we did then we can connect
-	# Note that `connect()` blocks further execution until
-	# `disconnect()` is called in an event handler, or an
-	# internal error occurs.
-	TPClient.connect()
-	```
+    # After Callback setup like we did then we can connect
+    # Note that `connect()` blocks further execution until
+    # `disconnect()` is called in an event handler, or an
+    # internal error occurs.
+    TPClient.connect()
+    ```
 </details>
 
 ## API Documentation
