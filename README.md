@@ -63,6 +63,7 @@ Make a Folder in `%appdata%/TouchPortal/plugins/` called `ExamplePlugin`
 and make a file called entry.tp and paste this json data inside.
 <details>
 	<summary>Click to expand</summary>
+	
 	```json
 	{
 	  "sdk": 3,
@@ -115,6 +116,7 @@ you should see your plugin. Without This script the Plugin wont do anything righ
 and Use one of the action! Note This is just a Example Plugin
 <details>
 	<summary>Click to expand</summary>
+	
 	```python
 	import TouchPortalAPI as TP
 
