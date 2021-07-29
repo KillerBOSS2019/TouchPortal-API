@@ -5,10 +5,8 @@ Touch Portal Plugin Example
 
 import sys
 
-# load the TP Python API
-# FIXME awkward import because of sibling folder structure and we don't know if TP API has been installed
-import os.path
-sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
+# Load the TP Python API. Note that TouchPortalAPI must be installed (eg. with pip)
+# _or_ be in a folder directly below this plugin file.
 import TouchPortalAPI as TP
 
 # imports below are optional, to provide argument parsing and logging functionality
@@ -57,7 +55,7 @@ TP_PLUGIN_SETTINGS = {
 		# "text" is the default type and could be omitted here
 		'type': "text",
 		'default': "Example value",
-		'readOnly': False,
+		'readOnly': False,  # this is also the default
 		'value': None  # we can optionally use the settings struct to hold the current value
 	},
 }
@@ -135,8 +133,9 @@ try:
 		pluginId = PLUGIN_ID,  # required ID of this plugin
 		sleepPeriod = 0.05,    # allow more time than default for other processes
 		autoClose = True,      # automatically disconnect when TP sends "closePlugin" message
-		checkPluginId = True,  # validate destincation of messages sent to this plugin
-		maxWorkers = 4         # run up to 4 event handler threads
+		checkPluginId = True,  # validate destination of messages sent to this plugin
+		maxWorkers = 4,        # run up to 4 event handler threads
+		updateStatesOnBroadcast = False,  # do not spam TP with state updates on every page change
 	)
 except Exception as e:
 	sys.exit(f"Could not create TP Client, exiting. Error was:\n{repr(e)}")
@@ -231,18 +230,19 @@ def main():
 
 	# set up logging
 	if opts.q:
+		# no logging at all
 		g_log.addHandler(NullHandler())
 	else:
+		# set up pretty log formatting (similar to TP format)
 		fmt = Formatter(
 			fmt="{asctime:s}.{msecs:03.0f} [{levelname:.1s}] [{filename:s}:{lineno:d}] {message:s}",
 			datefmt="%H:%M:%S", style="{"
 		)
-		if opts.d:
-			g_log.setLevel(DEBUG)
-		elif opts.w:
-			g_log.setLevel(WARNING)
-		else:
-			g_log.setLevel(INFO)
+		# set the logging level
+		if   opts.d: g_log.setLevel(DEBUG)
+		elif opts.w: g_log.setLevel(WARNING)
+		else:        g_log.setLevel(INFO)
+		# set up log destination (file/stdout)
 		if opts.l:
 			try:
 				# note that this will keep appending to any existing log file
@@ -269,12 +269,13 @@ def main():
 		g_log.warning("Caught keyboard interrupt, exiting.")
 	except Exception:
 		# This will catch and report any critical exceptions in the base TPClient code,
-		# _not_ excpetions in this plugin's event handlers (use onError(), above, for that).
+		# _not_ exceptions in this plugin's event handlers (use onError(), above, for that).
 		from traceback import format_exc
 		g_log.error(f"Exception in TP Client:\n{format_exc()}")
 		ret = -1
 	finally:
-		TPClient.disconnect()  # make sure it's stopped, no-op if already stopped.
+		# Make sure TP Client is stopped, this will do nothing if it is already disconnected.
+		TPClient.disconnect()
 
 	# TP disconnected, clean up.
 	del TPClient
