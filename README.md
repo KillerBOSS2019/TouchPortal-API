@@ -125,11 +125,11 @@ def Actions(data):
     print(data)
     # do something based on the action ID and the data value
     if data['actionId'] == "ExampleAction":
-    # get the value from the action data (a string the user specified)
-    action_value = getActionDataValue(data, 'ExampleTextData')
-    print(action_value)
-    # We can also update our ExampleStates with the Action Value
-    TPClient.stateUpdate("ExampleStates", action_value)
+    	# get the value from the action data (a string the user specified)
+    	action_value = getActionDataValue(data, 'ExampleTextData')
+    	print(action_value)
+    	# We can also update our ExampleStates with the Action Value
+    	TPClient.stateUpdate("ExampleStates", action_value)
 
 @TPClient.on(TP.TYPES.onShutDown) # or 'closePlugin'
 def shutDown(data):
