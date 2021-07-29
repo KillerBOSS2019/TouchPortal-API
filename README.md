@@ -64,49 +64,7 @@ and make a file called entry.tp and paste this json data inside.
 <details>
     <summary>Click to expand</summary>
 	```json
-	{
-	  "sdk": 3,
-	  "version": 100,
-	  "name": "Example Plugin",
-	  "id": "ExamplePlugin",
-	  "configuration": {
-	    "colorDark": "#222423",
-	    "colorLight": "#020202"
-	  },
-	  "categories": [
-	    {
-	      "id": "Main",
-	      "name": "Example Plugin",
-	      "actions": [
-		{
-		  "id": "ExampleAction",
-		  "name": "This is Example Action",
-		  "prefix": "plugin",
-		  "type": "communicate",
-		  "tryInline": true,
-		  "format": "Print({$ExampleTextData$})",
-		  "data": [
-			  {
-			    "id": "ExampleTextData",
-		      "type": "text",
-		      "label": "text",
-		      "default": "Hello World"
-				}
-			 ]
-		      }
-	      ],
-	      "events": [],
-	      "states": [
-		      {
-		  "id": "ExampleStates",
-		  "type": "text",
-		  "desc": "Example States",
-		  "default": "None"
-		}
-	      ]
-	    }
-	  ]
-	}
+	{"home":True}
 	```
 </details>
 
