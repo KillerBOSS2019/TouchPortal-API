@@ -13,7 +13,7 @@ classifiers = [
 
 setup(
   name='TouchPortal API',
-  version='1.4',
+  version='1.5',
   description='Touch Portal API for Python',
   long_description=open('README.md').read(),
   long_description_content_type="text/markdown",
@@ -22,11 +22,14 @@ setup(
   author_email='DamienWeiFen@gmail.com',
   license='MIT',
   classifiers=classifiers,
-  keywords='TouchPortal, API, Plugin',
+  keywords='TouchPortal, API, Plugin, SDK',
   packages=['TouchPortalAPI'],
   python_requires='>=3.8',
   install_requires=[
       'pyee',
       'requests'
-      ]
+      ],
+  entry_points = {
+    'console_scripts': ['tppsdk=TouchPortalAPI.sdk_tools:main']
+  }
 )
