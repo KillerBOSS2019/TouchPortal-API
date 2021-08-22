@@ -36,6 +36,7 @@ class TYPES:
     onShutdown = 'closePlugin'
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
+    onNotificationOptionClicked = 'notificationOptionClicked'
     allMessage = 'any'
     onError = 'error'  # from ExecutorEventEmitter, emitted when an event callback raises an exception
 
@@ -219,7 +220,7 @@ class Client(ExecutorEventEmitter):
     def createState(self, stateId:str, description:str, value:str):
         if stateId and description and value != None:
             if stateId not in self.currentStates:
-                self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
+                self.__send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
                 self.currentStates[stateId] = value
             else:
                 self.stateUpdate(stateId, value)
@@ -236,7 +237,7 @@ class Client(ExecutorEventEmitter):
 
     def removeState(self, stateId:str, validateExists = True):
         if stateId and stateId in self.currentStates:
-            self.send({"type": "removeState", "id": stateId})
+            self.__send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
         elif validateExists:
             raise Exception(f"{stateId} Does not exist.")
@@ -251,21 +252,38 @@ class Client(ExecutorEventEmitter):
     def choiceUpdate(self, choiceId:str, values:list):
         if choiceId:
             if isinstance(values, list):
-                self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+                self.__send({"type": "choiceUpdate", "id": choiceId, "value": values})
             else:
                 raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
     def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
         if stateId and instanceId:
             if isinstance(values, list):
-                self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
+                self.__send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
             else:
                 raise TypeError(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
 
     def settingUpdate(self, settingName:str, settingValue):
         if settingName and settingName not in self.currentSettings or self.currentSettings[settingName] != settingValue:
-            self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
+            self.__send({"type": "settingUpdate", "name": settingName, "value": settingValue})
             self.currentSettings[settingName] = settingValue
+
+    def showNotification(self, notificationId:str, title:str, msg:str, options):
+        if notificationId and title and msg and options and options:
+            if isinstance(options, list):
+                jsonOptions = []
+                for option in options:
+                    if isinstance(option, dict):
+                        if option["id"] and option["title"]:
+                            jsonOptions.insert(option)
+                        else:
+                            raise TypeError(f"option need to have both a id and title")       
+                    else: 
+                        raise TypeError(f"option needs to be a Dict")
+ 
+                self.__send({"type": "showNotification", "title": title, "msg": msg, "options": jsonOptions})
+            else:
+                raise TypeError(f"options needs to be a List")
 
     def stateUpdate(self, stateId:str, stateValue:str):
         self.__stateUpdate(stateId, stateValue, False)
@@ -273,7 +291,7 @@ class Client(ExecutorEventEmitter):
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
         if stateId:
             if forced or stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
-                self.send({"type": "stateUpdate", "id": stateId, "value": stateValue})
+                self.__send({"type": "stateUpdate", "id": stateId, "value": stateValue})
             self.currentStates[stateId] = stateValue
 
     def stateUpdateMany(self, states:list):
@@ -286,15 +304,16 @@ class Client(ExecutorEventEmitter):
         except TypeError:
             raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
 
+
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
         '''
         TouchPortal currently only supports data.type "number"
         '''
-        self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
+        self.__send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
 
-    def send(self, data):
+    def __send(self, data):
         '''
-        This manages the massage to send
+        This manages the message to send
         '''
         if self.__getWriteLock():
             if len(self.__sendBuffer) + len(data) > self.SND_BUFFER_SZ:
@@ -312,7 +331,7 @@ class Client(ExecutorEventEmitter):
         '''
         if not self.isConnected():
             self.__open()
-            self.send({"type":"pair", "id": self.pluginId})
+            self.__send({"type":"pair", "id": self.pluginId})
             self.__run()  # start the event loop
 
     def disconnect(self):
