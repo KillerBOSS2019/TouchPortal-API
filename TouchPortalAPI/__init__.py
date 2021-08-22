@@ -36,6 +36,7 @@ class TYPES:
     onShutdown = 'closePlugin'
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
+    onNotificationOptionClicked = 'notificationOptionClicked'
     allMessage = 'any'
     onError = 'error'  # from ExecutorEventEmitter, emitted when an event callback raises an exception
 
@@ -267,6 +268,10 @@ class Client(ExecutorEventEmitter):
             self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
             self.currentSettings[settingName] = settingValue
 
+    def showNotification(self, notificationId:str, title:str, msg:str, options):
+        if notificationId and title and msg and options and options:
+            self.send({"type": "showNotification", "title": title, "msg": msg, "options": options})
+
     def stateUpdate(self, stateId:str, stateValue:str):
         self.__stateUpdate(stateId, stateValue, False)
         
@@ -286,15 +291,16 @@ class Client(ExecutorEventEmitter):
         except TypeError:
             raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
 
+
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
         '''
         TouchPortal currently only supports data.type "number"
         '''
         self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
 
-    def send(self, data):
+    def __send(self, data):
         '''
-        This manages the massage to send
+        This manages the message to send
         '''
         if self.__getWriteLock():
             if len(self.__sendBuffer) + len(data) > self.SND_BUFFER_SZ:
