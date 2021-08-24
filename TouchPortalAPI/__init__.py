@@ -226,7 +226,7 @@ class Client(ExecutorEventEmitter):
 
     def createState(self, stateId:str, description:str, value:str):
         '''
-        createState allows you to create a new states in runtime
+        createState allows you to create a new states at runtime
         '''
         if stateId and description and value != None:
             if stateId not in self.currentStates:
@@ -301,7 +301,7 @@ class Client(ExecutorEventEmitter):
 
     def stateUpdate(self, stateId:str, stateValue:str):
         '''
-        This allow existing states to update with a new value 
+        This allows existing states to update with a new value 
         '''
         self.__stateUpdate(stateId, stateValue, False)
         
@@ -325,6 +325,10 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
 
     def showNotification(self, notificationId:str, title:str, msg:str, options:list):
+        '''
+        This method allows your plugin to send a notification to TouchPortal with custom title and message body SDK.
+        Only TP SDK 4.0 or higher TP 2.4
+        '''
         if notificationId and title and msg and options and isinstance(options, list):
             for option in options:
                 if not 'id' and 'title' in option.keys():
@@ -340,14 +344,25 @@ class Client(ExecutorEventEmitter):
             )
 
     def connectorUpdate(self, connectorId:str, connectorValue:int):
+        '''
+        This allows you to update slider position value
+        connectorId cannot be longer then 200 characters
+        connectorValue has to be a Integer number between 0-100
+        '''
         if isinstance(connectorId, str):
             if isinstance(connectorValue, int):
                 if 0 <= connectorValue <= 100:
-                    pass
+                    self.send(
+                        {
+                            "type": "connectorUpdate",
+                            "connectorId": connectorId,
+                            "value": connectorValue
+                        }
+                    )
                 else:
                     raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
             else:
-                raise TypeError(f"connectorValue require a int not {type(connectorValue)}")
+                raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
         else:
             raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
 
