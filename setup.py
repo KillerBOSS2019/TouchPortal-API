@@ -13,7 +13,7 @@ classifiers = [
 
 setup(
   name='TouchPortal API',
-  version='1.5',
+  version='1.6',
   description='Touch Portal API for Python',
   long_description=open('README.md').read(),
   long_description_content_type="text/markdown",

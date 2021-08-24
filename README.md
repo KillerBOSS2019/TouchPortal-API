@@ -201,6 +201,16 @@ TPClient.connect()
   - Convenience function to update serveral states at once. `states` should be an iteratable of `dict` types in the form of `{'id': "StateId", 'value': "The New Value"}`.
 - `updateActionData(instanceId, stateId, minValue, maxValue)`
   - This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
+- `showNotification(notificationId, title, msg, options)`
+  - This method allows you to send a Notification to TouchPortal with custom title and message body.
+  `notificationId` Type string, this string has to be unique Id.
+  `title` Type string, And this will be the title of the Notification.
+  `msg` Type string. This is the message that is shown in the notifcation to the user.
+  `options` Type list of dict that has Key `id` and `title` And this will be the button in the Notification.
+- `connectorUpdate(connectorId, connectorValue)`
+  - This allows you to update position of the slider.
+- `isConnected()`
+  - This method allows you to check the Client is connected to TouchPortal
 - `send(data)`
   - This will try to send any arbitrary Python object in `data` (presumably something `dict`-like) to TouchPortal
   after serializing it as JSON and adding a `\n`. Normally there is no need to use this method directly, but if the
@@ -245,6 +255,20 @@ TPClient.connect()
 ### Change Log
 ==========
 ```
+1.6 (8/23/2021)
+-------------------
+- Notification (https://www.touch-portal.com/api/index.php?section=notifications)
+  - Added notificationOptionClicked events to class TYPES
+  - Added showNotification() method
+- Connector can be used as silder (https://www.touch-portal.com/api/index.php?section=connectors)
+  - Added connectorChange events to class TYPES
+  - Added connectorUpdate method
+
+
+1.5 (7/28/2021)
+-------------------
+- Added tppsdk (Allows you to create entry.tp within your code.)
+
 1.4 (7/12/2021)
 -------------------
 - Removed Socket Object from callback (v1.3 or older required to remove `client` from callback.)

@@ -19,6 +19,7 @@ __Copyright__ = """
 import socket
 import selectors
 import json
+from typing import Type
 from pyee import ExecutorEventEmitter
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event, Lock
@@ -36,6 +37,7 @@ class TYPES:
     onShutdown = 'closePlugin'
     onBroadcast = 'broadcast'
     onSettingUpdate = 'settings'
+    onNotificationOptionClicked = "notificationOptionClicked"
     allMessage = 'any'
     onError = 'error'  # from ExecutorEventEmitter, emitted when an event callback raises an exception
 
@@ -211,12 +213,21 @@ class Client(ExecutorEventEmitter):
         return False
 
     def isConnected(self):
+        '''
+        Shows if this Python SDK is connected or not
+        '''
         return not self.__stopEvent.is_set()
 
     def isActionBeingHeld(self, actionId:str):
+        '''
+        This returns True/False if the action id that you've passed in is pressed down or not
+        '''
         return actionId in self.__heldActions
 
     def createState(self, stateId:str, description:str, value:str):
+        '''
+        createState allows you to create a new states in runtime
+        '''
         if stateId and description and value != None:
             if stateId not in self.currentStates:
                 self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
@@ -225,6 +236,10 @@ class Client(ExecutorEventEmitter):
                 self.stateUpdate(stateId, value)
 
     def createStateMany(self, states:list):
+        '''
+        createStateMany is the same as createState but it allows you to pass in a list with a dict that has
+        stateId, description, and value
+        '''
         try:
             for state in states:
                 if isinstance(state, dict):
@@ -235,6 +250,9 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f'createStateMany() requires an iteratable, got {type(states)} instead.')
 
     def removeState(self, stateId:str, validateExists = True):
+        '''
+        removeState removes a states that has been created at runtime
+        '''
         if stateId and stateId in self.currentStates:
             self.send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
@@ -242,6 +260,9 @@ class Client(ExecutorEventEmitter):
             raise Exception(f"{stateId} Does not exist.")
 
     def removeStateMany(self, states:list):
+        '''
+        This is the same as removeState except that it allows you to remove multiple at once in a list
+        '''
         try:
             for state in states:
                 self.removeState(state, False)
@@ -249,6 +270,10 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
 
     def choiceUpdate(self, choiceId:str, values:list):
+        '''
+        choiceUpdate(choiceId, values) allows you to update a Action data with a list of values
+        that allows user to pick from 
+        '''
         if choiceId:
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
@@ -256,6 +281,9 @@ class Client(ExecutorEventEmitter):
                 raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
     def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
+        '''
+        This allows you to update a item from a drop-down menu action in TouchPortal
+        '''
         if stateId and instanceId:
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
@@ -263,11 +291,18 @@ class Client(ExecutorEventEmitter):
                 raise TypeError(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
 
     def settingUpdate(self, settingName:str, settingValue):
+        '''
+        settingUpdate(settingName:str, settingValue) allows you to update
+        a specific setting fields with a new value
+        '''
         if settingName and settingName not in self.currentSettings or self.currentSettings[settingName] != settingValue:
             self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
             self.currentSettings[settingName] = settingValue
 
     def stateUpdate(self, stateId:str, stateValue:str):
+        '''
+        This allow existing states to update with a new value 
+        '''
         self.__stateUpdate(stateId, stateValue, False)
         
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
@@ -277,6 +312,9 @@ class Client(ExecutorEventEmitter):
             self.currentStates[stateId] = stateValue
 
     def stateUpdateMany(self, states:list):
+        '''
+        This is the same as stateUpdate() except you can pass a array/list of dict with stateId and stateValues
+        '''
         try:
             for state in states:
                 if isinstance(state, dict):
@@ -285,6 +323,33 @@ class Client(ExecutorEventEmitter):
                     raise TypeError(f'StateUpdateMany() requires a list of dicts, got {type(state)} instead.')
         except TypeError:
             raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
+
+    def showNotification(self, notificationId:str, title:str, msg:str, options:list):
+        if notificationId and title and msg and options and isinstance(options, list):
+            for option in options:
+                if not 'id' and 'title' in option.keys():
+                    raise TypeError("option require id and title keys")
+        self.send(
+            {
+                "type": "showNotification",
+                "notificationId": str(notificationId),
+                "title": str(title),
+                "msg": str(msg),
+                "options": options
+            }
+        )
+
+    def connectorUpdate(self, connectorId:str, connectorValue:int):
+        if isinstance(connectorId, str):
+            if isinstance(connectorValue, int):
+                if 0 <= connectorValue <= 100:
+                    pass
+                else:
+                    raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
+            else:
+                raise TypeError(f"connectorValue require a int not {type(connectorValue)}")
+        else:
+            raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
 
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
         '''
