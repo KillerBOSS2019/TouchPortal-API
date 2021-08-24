@@ -329,15 +329,15 @@ class Client(ExecutorEventEmitter):
             for option in options:
                 if not 'id' and 'title' in option.keys():
                     raise TypeError("option require id and title keys")
-        self.send(
-            {
-                "type": "showNotification",
-                "notificationId": str(notificationId),
-                "title": str(title),
-                "msg": str(msg),
-                "options": options
-            }
-        )
+            self.send(
+                {
+                    "type": "showNotification",
+                    "notificationId": str(notificationId),
+                    "title": str(title),
+                    "msg": str(msg),
+                    "options": options
+                }
+            )
 
     def connectorUpdate(self, connectorId:str, connectorValue:int):
         if isinstance(connectorId, str):
