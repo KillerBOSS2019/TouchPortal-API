@@ -19,7 +19,6 @@ __Copyright__ = """
 import socket
 import selectors
 import json
-from typing import Type
 from pyee import ExecutorEventEmitter
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event, Lock
@@ -331,8 +330,8 @@ class Client(ExecutorEventEmitter):
         '''
         if notificationId and title and msg and options and isinstance(options, list):
             for option in options:
-                if not 'id' and 'title' in option.keys():
-                    raise TypeError("option require id and title keys")
+                if 'id' not in option.keys() or 'title' not in option.keys():
+                    raise TypeError("all options require id and title keys")
             self.send(
                 {
                     "type": "showNotification",
