@@ -1,5 +1,5 @@
-# [TouchPortal](https://touch-portal.com)-API for Python
-Easy way to Build Plugins for TouchPortal with little understanding of Python.
+# Touch Portal API and SDK for Python
+Easy way to build plugins for [Touch Portal](https://touch-portal.com) using Python.
 
 ## Installation
 Simply run this in your command line `pip install TouchPortal-API`. Or you can download
@@ -252,8 +252,8 @@ TPClient.connect()
   - `repository` is the GitHub repository name for the URL path.
   - May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
 
-### Change Log
-==========
+## Change Log
+
 ```
 1.6 (8/23/2021)
 -------------------
