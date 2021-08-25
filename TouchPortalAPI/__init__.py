@@ -271,7 +271,7 @@ class Client(ExecutorEventEmitter):
     def choiceUpdate(self, choiceId:str, values:list):
         '''
         choiceUpdate(choiceId, values) allows you to update a Action data with a list of values
-        that allows user to pick from 
+        that allows user to pick from
         '''
         if choiceId:
             if isinstance(values, list):
@@ -300,10 +300,10 @@ class Client(ExecutorEventEmitter):
 
     def stateUpdate(self, stateId:str, stateValue:str):
         '''
-        This allows existing states to update with a new value 
+        This allows existing states to update with a new value
         '''
         self.__stateUpdate(stateId, stateValue, False)
-        
+
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
         if stateId:
             if forced or stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
@@ -332,15 +332,13 @@ class Client(ExecutorEventEmitter):
             for option in options:
                 if 'id' not in option.keys() or 'title' not in option.keys():
                     raise TypeError("all options require id and title keys")
-            self.send(
-                {
-                    "type": "showNotification",
-                    "notificationId": str(notificationId),
-                    "title": str(title),
-                    "msg": str(msg),
-                    "options": options
-                }
-            )
+            self.send({
+                "type": "showNotification",
+                "notificationId": str(notificationId),
+                "title": str(title),
+                "msg": str(msg),
+                "options": options
+            })
 
     def connectorUpdate(self, connectorId:str, connectorValue:int):
         '''
@@ -348,22 +346,18 @@ class Client(ExecutorEventEmitter):
         connectorId cannot be longer then 200 characters
         connectorValue has to be a Integer number between 0-100
         '''
-        if isinstance(connectorId, str):
-            if isinstance(connectorValue, int):
-                if 0 <= connectorValue <= 100:
-                    self.send(
-                        {
-                            "type": "connectorUpdate",
-                            "connectorId": connectorId,
-                            "value": connectorValue
-                        }
-                    )
-                else:
-                    raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
-            else:
-                raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
-        else:
+        if not isinstance(connectorId, str):
             raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
+        if not isinstance(connectorValue, int):
+            raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
+        if 0 <= connectorValue <= 100:
+            self.send({
+                "type": "connectorUpdate",
+                "connectorId": connectorId,
+                "value": connectorValue
+            })
+        else:
+            raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
 
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
         '''
