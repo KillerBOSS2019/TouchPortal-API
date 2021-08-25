@@ -325,8 +325,14 @@ class Client(ExecutorEventEmitter):
 
     def showNotification(self, notificationId:str, title:str, msg:str, options:list):
         '''
-        This method allows your plugin to send a notification to TouchPortal with custom title and message body SDK.
-        Only TP SDK 4.0 or higher TP 2.4
+        This method allows your plugin to send a notification to Touch Portal with custom title, message body and available user action(s).
+        Requires TP SDK v4.0 or higher.
+
+        Args:
+            `notificationId` (str): Unique ID of this notification.
+            `title`          (str): The notification title.
+            `msg`            (str): The message body text that is shown in the notifcation.
+            `options`       (list): List of options (actions) for the notification. Each option should be a `dict` type with `id` and `title` keys.
         '''
         if notificationId and title and msg and options and isinstance(options, list):
             for option in options:
@@ -342,9 +348,11 @@ class Client(ExecutorEventEmitter):
 
     def connectorUpdate(self, connectorId:str, connectorValue:int):
         '''
-        This allows you to update slider position value
-        connectorId cannot be longer then 200 characters
-        connectorValue has to be a Integer number between 0-100
+        This allows you to update slider position value.
+
+        Args:
+            `connectorId`    (str): Cannot be longer then 200 characters.
+            `connectorValue` (int): Must be an integer between 0-100.
         '''
         if not isinstance(connectorId, str):
             raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")

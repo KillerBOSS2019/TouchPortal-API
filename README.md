@@ -202,13 +202,13 @@ TPClient.connect()
 - `updateActionData(instanceId, stateId, minValue, maxValue)`
   - This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
 - `showNotification(notificationId, title, msg, options)`
-  - This method allows you to send a Notification to TouchPortal with custom title and message body.
-  `notificationId` Type string, this string has to be unique Id.
-  `title` Type string, And this will be the title of the Notification.
-  `msg` Type string. This is the message that is shown in the notifcation to the user.
-  `options` Type list of dict that has Key `id` and `title` And this will be the button in the Notification.
+  - This method allows you to send a Notification to TouchPortal with custom title and message body. (TP API v4+)
+    - `notificationId` (str): Unique ID of this notification.
+    - `title`          (str): The notification title.
+    - `msg`            (str): The message body text that is shown in the notifcation.
+    - `options`       (list): List of options (actions) for the notification. Each option should be a `dict` type with `id` and `title` keys.
 - `connectorUpdate(connectorId, connectorValue)`
-  - This allows you to update position of the slider.
+  - This allows you to update position of the slider.  (TP API v4+)
 - `isConnected()`
   - This method allows you to check the Client is connected to TouchPortal
 - `send(data)`
