@@ -1,0 +1,11 @@
+{% extends "default/module.html.jinja2" %}
+<style>
+	{% block style_layout %}
+		{{ super() }}
+		@media (min-width: 770px) {
+		main, header {
+				width: auto !important;
+		}
+		}
+	{% endblock %}
+</style>

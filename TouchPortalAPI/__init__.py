@@ -1,5 +1,7 @@
 """
 Python API and SDK for Touch Portal.
+
+.. include:: ../README.md
 """
 __copyright__ = """
     This file is part of the TouchPortal-API project.
