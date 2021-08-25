@@ -1,11 +1,14 @@
 {% extends "default/module.html.jinja2" %}
 <style>
-	{% block style_layout %}
-		{{ super() }}
-		@media (min-width: 770px) {
-		main, header {
-				width: auto !important;
-		}
-		}
-	{% endblock %}
+    {% block style_layout %}
+        {{ super() }}
+        /* hide the "module index" link to index.html */
+        .module-list-button:not([href$='.html']) { display: none !important; }
+        @media (min-width: 770px) {
+            main, header {
+                /* use the full available page width for content */
+                width: auto !important;
+            }
+        }
+    {% endblock %}
 </style>
