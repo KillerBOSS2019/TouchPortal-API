@@ -65,7 +65,7 @@ TP_PLUGIN_CATEGORIES = {
 	"main": {
 		'id': PLUGIN_ID + ".main",
 		'name' : "Python Examples",
-		'imagepath' : "icon-24.png"
+		# 'imagepath' : "icon-24.png"
 	}
 }
 
@@ -78,6 +78,7 @@ TP_PLUGIN_ACTIONS = {
 		'name': "Set Example State",
 		'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
 		'type': "communicate",
+		'tryInline': True,
 		# 'format' tokens like $[1] will be replaced in the generated JSON with the corresponding data id wrapped with "{$...$}".
 		# Numeric token values correspond to the order in which the data items are listed here, while text tokens correspond
 		# to the last part of a dotted data ID (the part after the last period; letters, numbers, and underscore allowed).
@@ -185,8 +186,8 @@ def onAction(data):
 		return
 	if aid == TP_PLUGIN_ACTIONS['example']['id']:
 		# set our example State text and color values with the data from this action
-		text = TP.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['text'])
-		color = TP.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['color'])
+		text = TPClient.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['text'])
+		color = TPClient.getActionDataValue(action_data, TP_PLUGIN_ACTIONS['example']['data']['color'])
 		TPClient.stateUpdate(TP_PLUGIN_STATES['text']['id'], text)
 		TPClient.stateUpdate(TP_PLUGIN_STATES['color']['id'], color)
 	else:
