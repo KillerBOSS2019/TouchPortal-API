@@ -5,7 +5,8 @@ from re import search
 base_path = Path(__file__).parent
 
 repo_url = 'https://github.com/KillerBOSS2019/TouchPortal-API/'
-home_url = 'https://KillerBOSS2019.github.io/TouchPortal-API/'
+home_url = repo_url
+docs_url = 'https://KillerBOSS2019.github.io/TouchPortal-API/'
 long_description = (base_path / "README.md").read_text("utf8")
 api_version = search(
   r'__version__ = "(.+?)"', (base_path / "TouchPortalAPI" / "__init__.py").read_text("utf8")
@@ -28,9 +29,9 @@ setup(
   description = 'Touch Portal API and SDK for Python',
   long_description = long_description,
   long_description_content_type = "text/markdown",
-  url = repo_url,
+  url = home_url,
   project_urls = {
-    'Documentation': home_url + "docs/",
+    'Documentation': docs_url,
     'Source': repo_url,
     'Issues': repo_url + "issues",
   },
