@@ -1,0 +1,68 @@
+{% extends "default/module.html.jinja2" %}
+
+{% block style_theme %}
+    {{ super() }}
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --pdoc-background: #212529;
+        }
+        .pdoc {
+            --text: #f7f7f7;
+            --muted: #9d9d9d;
+            --link: #58a6ff;
+            --link-hover: #3989ff;
+            --code: #333;
+            --active: #555;
+            --accent: #343434;
+            --accent2: #555;
+            --nav-hover: rgba(0, 0, 0, 0.1);
+            --name: #77C1FF;
+            --def: #0cdd0c;
+            --annotation: #00c037;
+        }
+    }
+{% endblock %}
+
+{% block style_layout %}
+    {{ super() }}
+    .version_header {
+        font-size: .75rem;
+        float: right;
+        margin-top: -3em;
+        margin-right: 4em;
+    }
+    /* hide the "module index" link to index.html */
+    .module-list-button:not([href$='.html']) { display: none !important; }
+    @media (min-width: 770px) {
+        main, header {
+            /* use the full available page width for content */
+            width: auto !important;
+        }
+    }
+    @media (max-width: 769px) {
+        #navtoggle {
+            /* reposition the menu button to make room for GH corner */
+            top: .5rem !important;
+            right: 3rem !important;
+        }
+        nav.pdoc input[type=search] {
+            /* the search box overlaps the menu button by default, make it narrower */
+            width: calc(100% - 70px - 3rem);
+        }
+        .version_header {
+            /* move version header to left and down a bit */
+            float: left;
+            margin-top: -2em;
+        }
+    }
+{% endblock %}
+
+{% block edit_button %}
+    {% if package_version %}
+        <div class="version_header">{{ package_name }} v{{ package_version }}</div>
+    {% endif %}
+    {% if edit_url %}
+        {% include "github-button.html.jinja2" %}
+        {# <!-- <a class="pdoc-button git-button" href="{{ edit_url }}" target="_blank">View source on GitHub</a> --> #}
+    {% endif %}
+{% endblock %}
