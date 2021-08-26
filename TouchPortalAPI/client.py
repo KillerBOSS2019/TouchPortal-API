@@ -20,45 +20,103 @@ import socket
 import selectors
 import json
 from pyee import ExecutorEventEmitter
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Executor, ThreadPoolExecutor
 from threading import Event, Lock
 
+__all__ = ['Client', 'TYPES']
+
 class TYPES:
+    """
+    Event type enumerations. These correspond to the message types Touch Portal may send.
+    Event handler callbacks receive one parameter, which is the JSON data structure sent
+    from TP and then converted to a corresponding Python object using `json.loads()`.
+    Usage example:
+        ```py
+        import TouchPortalAPI as TP
+
+        client = TP.Client("myplugin")
+
+        @client.on(TP.TYPES.onConnect)
+        # equivalent to: @client.on('info')
+        def onConnect(data):
+            print(data)
+
+        # alternatively, w/out decorators:
+        def onAction(data):
+            print(data)
+
+        client.on(TP.TYPES.onAction, onAction)
+        ```
+    """
     onHold_up = 'up'
+    """ When the action is used in a hold functionality and the user releases the Touch Portal button (Api 3.0+) """
     onHold_down = 'down'
+    """ When the action is used in a hold functionality and the user presses the Touch Portal button down (Api 3.0+) """
     onConnect = 'info'
+    """ Info message returned after successful pairing. """
     onAction = 'action'
+    """ When actions are triggered by the user (Api 1.0+) """
     onListChange = 'listChange'
+    """ When a user makes a change in one of your lists (Api 1.0+) """
     onConnectorChange = 'connectorChange'
+    """ When a connector is used in a slider functionality (connector) (Api 4.0+) """
     onShutdown = 'closePlugin'
+    """ When Touch Portal tries to close your plug-in (Api 2.0+) """
     onBroadcast = 'broadcast'
+    """ When Touch Portal broadcasts a message (Api 3.0+) """
     onSettingUpdate = 'settings'
+    """ When the plugin's Settings have been updated (by user or from the plugin itself) (Api 3.0+) """
     onNotificationOptionClicked = "notificationOptionClicked"
+    """ When a user clicks on a notification action (Api 4.0+) """
     allMessage = 'any'
-    onError = 'error'  # from ExecutorEventEmitter, emitted when an event callback raises an exception
+    """ Special event handler which will receive **all** messages from TouchPortal. """
+    onError = 'error'
+    """ Special event emitted when any other event callback raises an exception.
+        For this particular event, the parameter passed to the callback handler will be an `Exception` object.
+        See also `pyee.ExecutorEventEmitter.error` event.
+    """
 
 class Client(ExecutorEventEmitter):
-    '''
-    A client for TouchPortal plugin integration.
+    """
+    A client for [Touch Portal API](https://www.touch-portal.com/api) plugin integration.
     Implements a [pyee.ExecutorEventEmitter](https://pyee.readthedocs.io/en/latest/#pyee.ExecutorEventEmitter).
-
-    Args:
-        `pluginId`      (str): ID string of the TouchPortal plugin using this client.
-        `sleepPeriod` (float): Seconds to sleep the event loop between socket read events (default: 0.01).
-        `autoClose`    (bool): If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
-        `checkPluginId` (bool): Validate that `pluginId` matches ours in any messages from TP which contain one (such as actions). Default is `True`.
-        `maxWorkers`    (int): Maximum worker threads to run concurrently for event handlers. Default of `None` creates a default-constructed `ThreadPoolExecutor`.
-        `executor`   (object): Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
-                               [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
-                               optionally using `maxWorkers` concurrent threads.
-    '''
+    """
     TPHOST = '127.0.0.1'
+    """ TP plugin server host IPv4 address. """
     TPPORT = 12136
-    RCV_BUFFER_SZ = 4096   # [B] incoming data buffer size
-    SND_BUFFER_SZ = 32**4  # [B] maximum size of send data buffer (1MB)
-    SOCK_EVENT_TO = 1.0    # [s] timeout for selector.select() event monitor
+    """ TP plugin server host IPv4 port number. """
+    RCV_BUFFER_SZ = 4096
+    """ [B] incoming data buffer size. """
+    SND_BUFFER_SZ = 32**4
+    """ [B] maximum size of send data buffer (1MB). """
+    SOCK_EVENT_TO = 1.0
+    """ [s] maximum wait time for socket events (blocking timeout for selector.select()). """
 
-    def __init__(self, pluginId, sleepPeriod=0.01, autoClose=False, checkPluginId=True, updateStatesOnBroadcast=True, maxWorkers=None, executor=None):
+    def __init__(self, pluginId:str,
+                 sleepPeriod:float = 0.01,
+                 autoClose:bool = False,
+                 checkPluginId:bool = True,
+                 updateStatesOnBroadcast:bool = True,
+                 maxWorkers:int = None,
+                 executor:Executor = None):
+        """
+        Creates an instance of the client.
+
+        Args:
+            `pluginId`: ID string of the TouchPortal plugin using this client. **Required.**
+            `sleepPeriod`: Seconds to sleep the event loop between socket read events. Default: 0.01
+            `autoClose`: If `True` then this client will automatically disconnect when a `closePlugin` message is received from TP.
+                Default is `False`.
+            `checkPluginId`: Validate that `pluginId` matches ours in any messages from TP which contain one (such as actions).
+                Default is `True`.
+            `updateStatesOnBroadcast`: Re-send all cached State values whenever user switches TP page.
+                Default is `True`.
+            `maxWorkers`: Maximum worker threads to run concurrently for event handlers.
+                Default of `None` creates a default-constructed `ThreadPoolExecutor`.
+            `executor`: Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
+                [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
+                optionally using `maxWorkers` concurrent threads.
+        """
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
         super(Client, self).__init__(executor=executor)
@@ -209,21 +267,22 @@ class Client(ExecutorEventEmitter):
         return False
 
     def isConnected(self):
-        '''
-        Shows if this Python SDK is connected or not
-        '''
+        """
+        Returns `True` if the Client is connected to Touch Portal, `False` otherwise.
+        """
         return not self.__stopEvent.is_set()
 
     def isActionBeingHeld(self, actionId:str):
-        '''
-        This returns True/False if the action id that you've passed in is pressed down or not
-        '''
+        """
+        For an Action with ID of `actionId` that can be held (`hasHoldFunctionality` is true),
+        this method returns `True` while it is being held and `False` otherwise.
+        """
         return actionId in self.__heldActions
 
     def createState(self, stateId:str, description:str, value:str):
-        '''
-        createState allows you to create a new states at runtime
-        '''
+        """
+        This will create a TP State at runtime. `stateId`, `description`, and `value` are all required (`value` becomes the State's default value).
+        """
         if stateId and description and value != None:
             if stateId not in self.currentStates:
                 self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
@@ -232,10 +291,10 @@ class Client(ExecutorEventEmitter):
                 self.stateUpdate(stateId, value)
 
     def createStateMany(self, states:list):
-        '''
-        createStateMany is the same as createState but it allows you to pass in a list with a dict that has
-        stateId, description, and value
-        '''
+        """
+        Convenience function to create several States at once. `states` should be an iteratable of `dict` types
+        in the form of `{'id': "StateId", 'desc': "Description", 'value': "Default Value"}`.
+        """
         try:
             for state in states:
                 if isinstance(state, dict):
@@ -246,9 +305,11 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f'createStateMany() requires an iteratable, got {type(states)} instead.')
 
     def removeState(self, stateId:str, validateExists = True):
-        '''
-        removeState removes a states that has been created at runtime
-        '''
+        """
+        This removes a State that has been created at runtime. `stateId` is the ID to remove.
+        If `validateExists` is True (default) this method will raise an Exception if the `stateId`
+        does not exist in the current state cache.
+        """
         if stateId and stateId in self.currentStates:
             self.send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
@@ -256,9 +317,10 @@ class Client(ExecutorEventEmitter):
             raise Exception(f"{stateId} Does not exist.")
 
     def removeStateMany(self, states:list):
-        '''
-        This is the same as removeState except that it allows you to remove multiple at once in a list
-        '''
+        """
+        Convenience function to remove several States at once. `states` should be an iteratable of state ID strings.
+        This method does not validate if the states exist in the current state cache. See also: `removeState`.
+        """
         try:
             for state in states:
                 self.removeState(state, False)
@@ -266,10 +328,10 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
 
     def choiceUpdate(self, choiceId:str, values:list):
-        '''
-        choiceUpdate(choiceId, values) allows you to update a Action data with a list of values
-        that allows user to pick from
-        '''
+        """
+        This updates the list of choices in a previously-declared TP State with id `stateId`.
+        See TP API reference for details on updating list values.
+        """
         if choiceId:
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
@@ -277,9 +339,10 @@ class Client(ExecutorEventEmitter):
                 raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
     def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
-        '''
-        This allows you to update a item from a drop-down menu action in TouchPortal
-        '''
+        """
+        This updates a list of choices in a specific TP Item Instance, specified in `instanceId`.
+        See TP API reference for details on updating specific instances.
+        """
         if stateId and instanceId:
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
@@ -287,18 +350,17 @@ class Client(ExecutorEventEmitter):
                 raise TypeError(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
 
     def settingUpdate(self, settingName:str, settingValue):
-        '''
-        settingUpdate(settingName:str, settingValue) allows you to update
-        a specific setting fields with a new value
-        '''
+        """
+        This updates a value named `settingName` in your plugin's Settings to `settingValue`.
+        """
         if settingName and settingName not in self.currentSettings or self.currentSettings[settingName] != settingValue:
             self.send({"type": "settingUpdate", "name": settingName, "value": settingValue})
             self.currentSettings[settingName] = settingValue
 
     def stateUpdate(self, stateId:str, stateValue:str):
-        '''
-        This allows existing states to update with a new value
-        '''
+        """
+        This updates a value in ether a pre-defined static State or a dynamic State created in runtime.
+        """
         self.__stateUpdate(stateId, stateValue, False)
 
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
@@ -308,9 +370,10 @@ class Client(ExecutorEventEmitter):
             self.currentStates[stateId] = stateValue
 
     def stateUpdateMany(self, states:list):
-        '''
-        This is the same as stateUpdate() except you can pass a array/list of dict with stateId and stateValues
-        '''
+        """
+        Convenience function to update several states at once.
+        `states` should be an iteratable of `dict` types in the form of `{'id': "StateId", 'value': "The New Value"}`.
+        """
         try:
             for state in states:
                 if isinstance(state, dict):
@@ -321,16 +384,16 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
 
     def showNotification(self, notificationId:str, title:str, msg:str, options:list):
-        '''
+        """
         This method allows your plugin to send a notification to Touch Portal with custom title, message body and available user action(s).
         Requires TP SDK v4.0 or higher.
 
         Args:
-            `notificationId` (str): Unique ID of this notification.
-            `title`          (str): The notification title.
-            `msg`            (str): The message body text that is shown in the notifcation.
-            `options`       (list): List of options (actions) for the notification. Each option should be a `dict` type with `id` and `title` keys.
-        '''
+            `notificationId`: Unique ID of this notification.
+            `title`: The notification title.
+            `msg`: The message body text that is shown in the notifcation.
+            `options`: List of options (actions) for the notification. Each option should be a `dict` type with `id` and `title` keys.
+        """
         if notificationId and title and msg and options and isinstance(options, list):
             for option in options:
                 if 'id' not in option.keys() or 'title' not in option.keys():
@@ -344,13 +407,13 @@ class Client(ExecutorEventEmitter):
             })
 
     def connectorUpdate(self, connectorId:str, connectorValue:int):
-        '''
+        """
         This allows you to update slider position value.
 
         Args:
-            `connectorId`    (str): Cannot be longer then 200 characters.
-            `connectorValue` (int): Must be an integer between 0-100.
-        '''
+            `connectorId`: Cannot be longer then 200 characters.
+            `connectorValue`: Must be an integer between 0-100.
+        """
         if not isinstance(connectorId, str):
             raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
         if not isinstance(connectorValue, int):
@@ -365,15 +428,17 @@ class Client(ExecutorEventEmitter):
             raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
 
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
-        '''
-        TouchPortal currently only supports data.type "number"
-        '''
+        """
+        This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
+        """
         self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
 
     def send(self, data):
-        '''
-        This manages the massage to send
-        '''
+        """
+        This will try to send any arbitrary Python object in `data` (presumably something `dict`-like) to Touch Portal
+        after serializing it as JSON and adding a `\n`. Normally there is no need to use this method directly, but if the
+        Python API doesn't cover something from the TP API, this could be used instead.
+        """
         if self.__getWriteLock():
             if len(self.__sendBuffer) + len(data) > self.SND_BUFFER_SZ:
                 self.__writeLock.release()
@@ -383,27 +448,32 @@ class Client(ExecutorEventEmitter):
             self.__dataReadyEvent.set()
 
     def connect(self):
-        '''
-        This is mainly used for connecting to TP Server.
+        """
+        Initiate connection to TP Server.
         If successful, it starts the main processing loop of this client.
         Does nothing if client is already connected.
-        '''
+
+        **Note** that `connect()` blocks further execution of your script until one of the following occurs:
+          - `disconnect()` is called in an event handler,
+          - TP sends `closePlugin` message and `autoClose` is `True`
+          - or an internal error occurs (for example Touch Portal disconnects unexpectedly)
+        """
         if not self.isConnected():
             self.__open()
             self.send({"type":"pair", "id": self.pluginId})
             self.__run()  # start the event loop
 
     def disconnect(self):
-        '''
+        """
         This closes the connection to TP and terminates the client processing loop.
         Does nothing if client is already disconnected.
-        '''
+        """
         if self.isConnected():
             self.__close()
 
     @staticmethod
     def getActionDataValue(data:list, valueId:str=None):
-        '''
+        """
         Utility for processing action messages from TP. For example:
             {"type": "action", "data": [{ "id": "data object id", "value": "user specified value" }, ...]}
 
@@ -414,7 +484,7 @@ class Client(ExecutorEventEmitter):
         Args:
             `data`: the "data" array from a TP "action", "on", or "off" message
             `valueId`: the "id" to look for in `data`. `None` or blank to return the first value found.
-        '''
+        """
         if not data: return None
         if valueId:
             return next((x.get('value') for x in data if x.get('id', '') == valueId), None)

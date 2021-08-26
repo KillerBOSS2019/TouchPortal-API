@@ -21,16 +21,24 @@ import os
 import base64
 
 class Tools():
+    """
+    A collection of utilities which may be useful for Touch Portal plugins at runtime.
+    """
 
     @staticmethod
     def convertImage_to_base64(image, type="Auto", image_formats=["image/png", "image/jpeg", "image/jpg"]):
-        '''
-        `image` can be a URL or file path.
-        `type` can be "Auto", "Web" (for URL), or "Local" (for file path).
-        `image_formats` is a list of one or more MIME types to accept, used only with URLs to confirm the response is valid.
-        May raise a `TypeError` if URL request returns an invalid MIME type.
-        May raise a `ValueError` in other cases such as invalid URL or file path.
-        '''
+        """
+        Returns a Base64-encoded representation of an image.
+
+        Args:
+            `image` can be a URL or file path.
+            `type` can be "Auto", "Web" (for URL), or "Local" (for file path).
+            `image_formats` is a list of one or more MIME types to accept, used only with URLs to confirm the response is valid.
+
+        Raises:
+            `TypeError`: If URL request returns an invalid MIME type.
+            `ValueError`: In other cases such as invalid URL or file path.
+        """
         data = None
         if type == "Auto" or type == "Web":
             try:
@@ -53,12 +61,16 @@ class Tools():
 
     @staticmethod
     def updateCheck(name, repository):
-        '''
+        """
         Returns the newest tag name from a GitHub repository.
-        `name` is the GitHub user name for the URL path.
-        `repository` is the GitHub repository name for the URL path.
-        May raise a `ValueError` if the repository URL can't be reached, doesn't exist, or doesn't have any tags.
-        '''
+
+        Args:
+            `name`: the GitHub user name for the URL path.
+            `repository`: the GitHub repository name for the URL path.
+
+        Raises:
+            `ValueError`: If the repository URL can't be reached, doesn't exist, or doesn't have any tags.
+        """
         baselink = f'https://api.github.com/repos/{name}/{repository}/tags'
         if (r := requests.get(baselink)) and r.ok:
             if (js := r.json()):
