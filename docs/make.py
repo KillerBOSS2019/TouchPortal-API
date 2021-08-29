@@ -5,6 +5,8 @@
 import pdoc
 import shutil
 from pathlib import Path
+from datetime import datetime, timezone
+from subprocess import check_output
 
 # from pygments.formatters.html import HtmlFormatter
 # from pygments.lexers.python import PythonLexer
@@ -25,6 +27,14 @@ from TouchPortalAPI import (__version__ as api_version)
 # api_version = search(
 #   r'__version__ = "(.+?)"', (src_dir / "__init__.py").read_text("utf8")
 # ).group(1)
+
+try:    git_version = check_output(["git", "describe", "--tags", "--always", "--abbrev=8"]).strip().decode('ascii')
+except: git_version = ""
+
+footer_text = (f"Documentation for {mod_name} v{api_version}<br/>"
+               f"generated: {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC<br/>")
+if git_version:
+    footer_text += f"git version: <a href='{repo_url}commit/{git_version[-8:]}' class='inline' target='_blank'>{git_version}</a><br/>"
 
 if __name__ == "__main__":
     env = pdoc.render.env
@@ -50,7 +60,7 @@ if __name__ == "__main__":
     pdoc.render.configure(
         template_directory = here,
         docformat = "google",
-        footer_text = f"{mod_name} v{api_version}",
+        footer_text = footer_text,
         edit_url_map={
             mod_name: f"{repo_url}blob/main/{mod_name}/",
             # example: f"{repo_url}blob/main/examples/",

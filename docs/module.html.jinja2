@@ -31,6 +31,8 @@
         margin-top: -3em;
         margin-right: 4em;
     }
+    /* provide a way to have inline links in the left nav column */
+    nav.pdoc a.inline { display: inline-block; }
     /* hide the "module index" link to index.html */
     .module-list-button:not([href$='.html']) { display: none !important; }
     @media (min-width: 770px) {
@@ -57,6 +59,13 @@
     }
 {% endblock %}
 
+{% block style_content %}
+    {{ super() }}
+    /* shrink the attribution a little */
+    .pdoc .attribution { font-size: small; }
+    .pdoc .attribution img { height: 25px; width: auto; }
+{% endblock %}
+
 {% block edit_button %}
     {% if package_version %}
         <div class="version_header">{{ package_name }} v{{ package_version }}</div>
@@ -64,5 +73,11 @@
     {% if edit_url %}
         {% include "github-button.html.jinja2" %}
         {# <!-- <a class="pdoc-button git-button" href="{{ edit_url }}" target="_blank">View source on GitHub</a> --> #}
+    {% endif %}
+{% endblock %}
+
+{% block nav_footer %}
+    {% if footer_text %}
+    <footer>{{ footer_text | safe }}</footer>
     {% endif %}
 {% endblock %}
