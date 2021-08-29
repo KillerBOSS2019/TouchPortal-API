@@ -6,6 +6,43 @@ Easy way to build plugins for [Touch Portal](https://touch-portal.com) using Pyt
 Check the [source repository](https://github.com/KillerBOSS2019/TouchPortal-API/)
 for latest version.
 
+Please also refer to the [Touch Portal API documentation](https://www.touch-portal.com/api/)
+on the Touch Portal site. Most of the documentation for this Python interface assumes at
+least a basic understanding of how Touch Portal plugins work.
+
+
+## Features
+
+### TCP/IP Client
+
+The core of the Python API is the `TouchPortalAPI.client.Client` class. This provides a
+basic TCP/IP sockets-based client to interact with the Touch Portal desktop application
+as the "server." It includes essential basic methods for exchanging messages between
+TP and the plugin (send and receive), as well as many "convenience" methods for specific
+types of messages (as defined by the TP API).
+
+Messages from Touch Portal are delivered to the plugin script via event handler callbacks,
+which can be either individual callbacks per message type, and/or a single handler for all
+types of messages. The callbacks are executed in separate Thread(s), using a pool of up to
+any number of concurrent threads as needed (if using more than one thread, the plugin
+code itself is responsible for thread safety of its internal data).
+
+### Runtime Tools
+
+Also included are some utilities for possible use within plugins, found in the
+`TouchPortalAPI.tools` module. These are mostly meant to be used during plugin execution
+(vs. at development time like the SDK tools).
+
+### SDK Tools
+
+This project also includes some tools to facilitate plugin development, found in the
+`TouchPortalAPI.sdk_tools` module, and available as a command-line utility.
+Currently the main focus is on generating and validating the plugin definition JSON files
+required for integration with TP. The primary goal being to remove the need to edit any
+definitions manually, outside of the plugin's code itself, and reduce or remove the need
+for repeating the same data in multiple places.
+
+
 ## Basic API Usage
 
 More complete example(s) may be found in the code repository's

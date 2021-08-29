@@ -2,7 +2,46 @@
 """
 # Touch Portal Python SDK Tools
 
-## Functions:
+## Features
+
+This SDK tool provides features for generating and validating Touch Portal Plugin Description files,
+which are in JSON format and typically named "entry.tp" (as described in the [TP API docs](https://www.touch-portal.com/api/)).
+
+**Generation** is done based on dictionary structures defined in plugin scripts. These structures closely follow
+the format of the description file JSON, but are further expanded to make them also useful within the plugin
+scripts themselves. This avoids almost all the need for duplication of things like unique IDs, default values,
+settings names, and so on, since those details need to be available in both the definition JSON and in the
+script which will be using those definitions to communicate with Touch Portal.
+
+**Validation** is performed on the generated descriptions, and can also be run against pre-existing definition files
+as a sort of "lint" utility. Currently the following things are checked:
+- All required attributes are present.
+- All attribute values are of the supported data type(s).
+- No unknown attributes are present.
+- Attributes are valid for the TP SDK version being used.
+- Attribute values fall within allowed list of values (if relevant, eg. `Action.type`).
+- All ID strings are unique within the plugin (eg. for States, Actions, etc).
+
+This tool can be used as a command-line utility, or imported as a module to use the available functions programmatically.
+The script command is `tppsdk` when the TouchPortalAPI is installed (via pip or setup), or `sdk_tool.py` when run directly
+from this source. To use within a script, simply import in the usual way as needed. For example:
+
+```py
+from TouchPortalAPI.sdk_tools import generateDefinitionFromScript
+```
+
+All generation/validation routines are based on TP API specification data tables defined in `TouchPortalAPI.sdk_spec`.
+
+A comprehensive example plugin which utilizes the SDK features is included with the TouchPortalAPI project.
+The JSON definition "entry.tp" file for that example could be generated with a simple command from within a local
+folder containing the example script:
+
+```
+tppsdk plugin_example.py
+```
+
+
+## Functions
 * Generates an `entry.tp` definition file for a Touch Portal plugin based
 on variables specified in the plugin source code (`generateDefinitionFromScript()`),
 from a loaded module (`generateDefinitionFromModule()`) or specified by value (`generateDefinitionFromDeclaration()`).
@@ -11,9 +50,11 @@ string (`validateDefinitionString()`), or object (`validateDefinitionObject()`).
 * Validate an `entry.tp` attribute value against the minimum
 SDK version, value type, value content, etc. (`validateAttribValue()`).
 
-## Command-line Usage:
+
+## Command-line Usage
+The script command is `tppsdk` when the TouchPortalAPI is installed (via pip or setup), or `sdk_tool.py` when run directly from this source.
 ```
-sdk_tools.py [-h] [-g] [-v] [-o <file>] [-s] [-i <n>] [target]
+<script_command> [-h] [-g] [-v] [-o <file>] [-s] [-i <n>] [target]
 
 positional arguments:
   target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory.
@@ -34,8 +75,9 @@ This script exits with status code -1 (error) if generation or validation produc
 All progress and warning messages are printed to stderr stream.
 ```
 
-## TODO/Ideas:
+## TODO/Ideas
 
+* Document the default attribute values from sdk_specs table.
 * Dynamic default values, eg. for action prefix or category id/name (see notes in sdk_spec tables).
 * Dynamic ID generation and write-back to plugin at runtime.
 * Allow plugin author to set their own defaults.
@@ -265,14 +307,14 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, skip_invalid:b
     The `info` and `category` values are required, the rest are optional.
 
     Setting `skip_invalid` to `True` will skip attributes with invalid values (they will not be included in generated output).
-    Default behavior is to only warn about them.
+    Default behavior is to warn about them but still include them in the output.
 
-    `kwargs` can be one or more of:
-        - settings:dict={},
-        - actions:dict={},
-        - states:dict={},
-        - events:dict={},
-        - connectors:dict={}
+    `**kwargs` can be one or more of:
+    - settings:dict = {},
+    - actions:dict = {},
+    - states:dict = {},
+    - events:dict = {},
+    - connectors:dict = {}
 
     Use `getMessages()` to check for any warnings/etc which may be generated (eg. from attribute validation).
     """

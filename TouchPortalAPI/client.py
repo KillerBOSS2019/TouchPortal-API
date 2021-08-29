@@ -78,8 +78,30 @@ class TYPES:
 
 class Client(ExecutorEventEmitter):
     """
-    A client for [Touch Portal API](https://www.touch-portal.com/api) plugin integration.
+    A TCP/IP client for [Touch Portal API](https://www.touch-portal.com/api) plugin integration.
     Implements a [pyee.ExecutorEventEmitter](https://pyee.readthedocs.io/en/latest/#pyee.ExecutorEventEmitter).
+
+    After an initial connection to a Touch Portal desktop application "server," the client
+    implements a send/receive event loop while maintaining the open sockets. Messages between
+    TP and the plugin are exchanged asynchronously, with all sending methods possibly returning
+    before the actual data is sent.
+
+    Messages from Touch Portal are delivered to the plugin script via event handler callbacks,
+    which can be either individual callbacks per message type, and/or a single handler for all
+    types of messages. The callbacks are executed in separate Thread(s), using a pool of up to
+    any number of concurrent threads as needed (if using more than one thread, the plugin
+    code itself is responsible for thread safety of its internal data). Please check the
+    `pyee.EventEmitter` documentation for general information on how events are handled
+    (which can be either via function decorators or via the inherited `Client.on()` method).
+
+    Generated event names correspond to Touch Portal API message types, one for each type
+    as defined in the TP API documentation (eg. "action" or "listChange") as well as one event
+    which is generated for all message types ("any"). Alternately, for a more formal approach,
+    the corresponding members of the `TYPES` class could be used instead of string names
+    (eg. `TYPES.onAction` or `TYPES.onListChange`).
+
+    Any errors raised within event listeners/handlers are trapped and then reported in the
+    inherited "error" event (from pyee.ExecutorEventEmitter), aka `TYPES.onError`.
     """
     TPHOST = '127.0.0.1'
     """ TP plugin server host IPv4 address. """
