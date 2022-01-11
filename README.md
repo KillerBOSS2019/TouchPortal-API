@@ -129,6 +129,12 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.6.1 (1/10/2022)
+-------------------
+- Fixed connectorUpdate method
+  - connectorValue needs to be a string
+  - connectorId provided prefix eg "pc_yourpluginid_"
+
 1.6 (8/26/2021)
 -------------------
 - Notification (https://www.touch-portal.com/api/index.php?section=notifications)
