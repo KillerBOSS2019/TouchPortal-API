@@ -434,6 +434,9 @@ class Client(ExecutorEventEmitter):
 
         Args:
             `connectorId`: Cannot be longer then 200 characters.
+                connectorId have syntax that you need to follow https://www.touch-portal.com/api/index.php?section=connectors
+                Also according to that site It requires you to have prefix "pc_yourPluginId_" + connectorid however This already provide
+                you the prefix and the pluginId so you just need you take care the rest eg connectorid|setting1=aValue
             `connectorValue`: Must be an integer between 0-100.
         """
         if not isinstance(connectorId, str):
@@ -443,8 +446,8 @@ class Client(ExecutorEventEmitter):
         if 0 <= connectorValue <= 100:
             self.send({
                 "type": "connectorUpdate",
-                "connectorId": connectorId,
-                "value": connectorValue
+                "connectorId": f"pc_{self.pluginId}_{connectorId}",
+                "value": str(connectorValue)
             })
         else:
             raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
