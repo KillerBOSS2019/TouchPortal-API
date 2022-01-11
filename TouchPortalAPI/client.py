@@ -446,7 +446,7 @@ class Client(ExecutorEventEmitter):
         if 0 <= connectorValue <= 100:
             self.send({
                 "type": "connectorUpdate",
-                "connectorId": f"pc_{self.pluginId}_{connectorId}",
+                "connectorId": f"pc_{self.pluginId}_{connectorId}_",
                 "value": str(connectorValue)
             })
         else:
