@@ -129,6 +129,10 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.6.2 (1/14/2022)
+-------------------
+- removed extra _ from connectorUpdate
+
 1.6.1 (1/10/2022)
 -------------------
 - Fixed connectorUpdate method
