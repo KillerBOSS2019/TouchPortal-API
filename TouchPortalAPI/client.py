@@ -68,6 +68,8 @@ class TYPES:
     """ When the plugin's Settings have been updated (by user or from the plugin itself) (Api 3.0+) """
     onNotificationOptionClicked = "notificationOptionClicked"
     """ When a user clicks on a notification action (Api 4.0+) """
+    shortConnectorIdNotification = 'shortConnectorIdNotification'
+    """ When creating new connector for the first time It will generate shortid and It will send as an event (Api 5.0+) """
     allMessage = 'any'
     """ Special event handler which will receive **all** messages from TouchPortal. """
     onError = 'error'
