@@ -19,6 +19,8 @@ __copyright__ = """
 import requests
 import os
 import base64
+from types import SimpleNamespace
+
 
 class Tools():
     """
@@ -78,3 +80,15 @@ class Tools():
             raise ValueError(f'No tags found in repository: {baselink}')
         else:
             raise ValueError(f'Invalid repository URL or response: {baselink}')
+            
+            
+    def nested_conversion(value):
+        """
+        Returns a dictionary back as a 'Class'
+     
+        - This allows for easy access to nested dictionary values
+        """
+        if not isinstance(value, dict):
+            return value
+        result = SimpleNamespace(**{key: nested_conversion(value) for (key, value) in value.items()})
+        return result
