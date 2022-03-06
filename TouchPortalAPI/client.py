@@ -22,6 +22,7 @@ import json
 from pyee import ExecutorEventEmitter
 from concurrent.futures import Executor, ThreadPoolExecutor
 from threading import Event, Lock
+from .tools import Tools
 
 __all__ = ['Client', 'TYPES']
 
@@ -122,7 +123,8 @@ class Client(ExecutorEventEmitter):
                  checkPluginId:bool = True,
                  updateStatesOnBroadcast:bool = True,
                  maxWorkers:int = None,
-                 executor:Executor = None):
+                 executor:Executor = None,
+                 callbackType:str = "Default"):
         """
         Creates an instance of the client.
 
@@ -140,6 +142,7 @@ class Client(ExecutorEventEmitter):
             `executor`: Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
                 [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
                 optionally using `maxWorkers` concurrent threads.
+            `callbackType`: type of data that sends to callbacks
         """
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
@@ -149,6 +152,7 @@ class Client(ExecutorEventEmitter):
         self.autoClose = autoClose
         self.checkPluginId = checkPluginId
         self.updateStatesOnBroadcast = updateStatesOnBroadcast
+        self.callbackType = callbackType
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -236,7 +240,10 @@ class Client(ExecutorEventEmitter):
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
-        self.emit(ev, data)
+        if self.callbackType.lower() == "default":
+            self.emit(ev, data)
+        elif self.callbackType.lower() == "namespace":
+            self.emit(ev, Tools.nested_conversion(data))
         self.emit(TYPES.allMessage, data)
 
     def __open(self):

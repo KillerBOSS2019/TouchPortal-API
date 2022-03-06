@@ -80,15 +80,25 @@ class Tools():
             raise ValueError(f'No tags found in repository: {baselink}')
         else:
             raise ValueError(f'Invalid repository URL or response: {baselink}')
-            
-            
+                    
+    @staticmethod        
     def nested_conversion(value):
         """
-        Returns a dictionary back as a 'Class'
-     
-        - This allows for easy access to nested dictionary values
+        Convert dictionary to object for easier access data.
+        Examples
+            `data = {"car": {"year": 2008, "name": "Tesla"}}` # try get name
+
+            instead of this `data['car']['name']` you can get name this way
+
+            data = Tools.nested_conversion(data)
+
+            `data.car.name`
+
+        Args:
+            `value`: any dictionary
+        Raises:
+            `ValueError`: If value is any other then type dict
         """
         if not isinstance(value, dict):
             return value
-        result = SimpleNamespace(**{key: nested_conversion(value) for (key, value) in value.items()})
-        return result
+        return SimpleNamespace(**{key: Tools.nested_conversion(value) for key, value in value.items()})
