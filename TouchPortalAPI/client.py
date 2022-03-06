@@ -160,6 +160,7 @@ class Client(ExecutorEventEmitter):
         self.selector = None
         self.currentStates = {}
         self.currentSettings = {}
+        self.choiceUpdateList = {}
         self.__heldActions = {}
         self.__stopEvent = Event()       # main loop inerrupt
         self.__stopEvent.set()           # not running yet
@@ -170,8 +171,7 @@ class Client(ExecutorEventEmitter):
 
         if logging:
             self.log = Log(self.pluginId)
-            self.log.name = "PythonSDK"
-
+            
     def __buffered_readLine(self):
         try:
             # Should be ready to read
@@ -373,9 +373,10 @@ class Client(ExecutorEventEmitter):
         This updates the list of choices in a previously-declared TP State with id `stateId`.
         See TP API reference for details on updating list values.
         """
-        if choiceId:
+        if choiceId not in self.choiceUpdateList or self.choiceUpdateList[choiceId] != values:
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+                self.choiceUpdateList[choiceId] = values
             else:
                 raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
