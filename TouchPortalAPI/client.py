@@ -23,6 +23,8 @@ from pyee import ExecutorEventEmitter
 from concurrent.futures import Executor, ThreadPoolExecutor
 from threading import Event, Lock
 from .tools import Tools
+from .tools import Log
+import sys
 
 __all__ = ['Client', 'TYPES']
 
@@ -124,7 +126,8 @@ class Client(ExecutorEventEmitter):
                  updateStatesOnBroadcast:bool = True,
                  maxWorkers:int = None,
                  executor:Executor = None,
-                 callbackType:str = "Default"):
+                 callbackType:str = "Default",
+                 logging:bool = True):
         """
         Creates an instance of the client.
 
@@ -164,6 +167,10 @@ class Client(ExecutorEventEmitter):
         self.__writeLock = Lock()        # mutex for __sendBuffer
         self.__sendBuffer = bytearray()
         self.__recvBuffer = bytearray()
+
+        if logging:
+            self.log = Log(self.pluginId)
+            self.log.name = "PythonSDK"
 
     def __buffered_readLine(self):
         try:
@@ -240,6 +247,8 @@ class Client(ExecutorEventEmitter):
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
+        if TYPES.onConnect == ev and data:
+            self.log.info(f"{self.pluginId} V{data['pluginVersion']} Connected to TouchPortal V{data['tpVersionString']} on {sys.platform}")
         if self.callbackType.lower() == "default":
             self.emit(ev, data)
         elif self.callbackType.lower() == "namespace":
@@ -259,6 +268,7 @@ class Client(ExecutorEventEmitter):
         self.__stopEvent.clear()
 
     def __close(self):
+        self.log.info(f"{self.pluginId} Disconnected from TouchPortal")
         self.__stopEvent.set()
         if self.__writeLock.locked():
             self.__writeLock.release()

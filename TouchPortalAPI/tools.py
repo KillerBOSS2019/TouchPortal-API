@@ -20,6 +20,35 @@ import requests
 import os
 import base64
 from types import SimpleNamespace
+import logging
+import sys
+
+class Log(logging.Logger):
+
+    fmt = logging.Formatter(
+			fmt="{asctime:s}.{msecs:03.0f} [{levelname:.1s}] [{filename:s}:{lineno:d}] {message:s}",
+			datefmt="[%m/%d] Time %H:%M:%S", style="{"
+		)
+
+    def __init__(self, pluginid, filename='log.txt') -> None:
+        super().__init__(pluginid)
+        self.filename = filename
+        
+
+        if os.path.exists(os.path.join(os.getcwd(), self.filename)):
+			# "rotate" old log to backup
+            bak = self.filename + ".bak"
+            if os.path.exists(bak):
+                os.remove(bak)
+                os.rename(self.filename, bak)
+
+        fh = logging.FileHandler(str(self.filename))
+        fh.setFormatter(self.fmt)
+        self.addHandler(fh)
+
+        sh = logging.StreamHandler(sys.stdout)
+        sh.setFormatter(self.fmt)
+        self.addHandler(sh)
 
 
 class Tools():
