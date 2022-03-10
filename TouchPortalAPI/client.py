@@ -262,11 +262,13 @@ class Client(ExecutorEventEmitter):
     def __emitEvent(self, ev, data):
         if TYPES.onConnect == ev and data:
             self.log.info(f"{self.pluginId} V{data['pluginVersion']} Connected to TouchPortal V{data['tpVersionString']} on {sys.platform}")
-        if self.useNamespaceCallbacks:
-            self.emit(ev, Tools.nested_conversion(data))
-        else:
+        if not self.useNamespaceCallbacks:
             self.emit(ev, data)
-        self.emit(TYPES.allMessage, data)
+            self.emit(TYPES.allMessage, data)
+        else:
+            convertedData = Tools.nested_conversion(data) # No need to call this twice
+            self.emit(ev, convertedData)
+            self.emit(TYPES.allMessage, convertedData)
 
     def __open(self):
         try:
