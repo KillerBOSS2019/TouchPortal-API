@@ -126,7 +126,7 @@ class Client(ExecutorEventEmitter):
                  updateStatesOnBroadcast:bool = True,
                  maxWorkers:int = None,
                  executor:Executor = None,
-                 callbackType:str = "Default",
+                 useNamespaceCallbacks:bool = False,
                  logging:bool = True,
                  logFileName:str = "log.txt"):
         """
@@ -146,9 +146,9 @@ class Client(ExecutorEventEmitter):
             `executor`: Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
                 [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
                 optionally using `maxWorkers` concurrent threads.
-            `callbackType`: type of data that sends to callbacks.
-                Default is `default` meaning It will send normal json
-                `namespace` meaning It will automatically convert json to namespace to make easier access value 
+            `useNamespaceCallbacks`: use NamespaceCallback as message handler
+                Default is `False` meaning It will send normal json
+                `True` meaning It will automatically convert json to namespace to make easier access value 
                 eg json: data['actionId']['value'] and namespace would be data.actionId.value
             `logging`: bool True/False that it will save log to a text file as well
                 Default is `True`
@@ -164,7 +164,7 @@ class Client(ExecutorEventEmitter):
         self.autoClose = autoClose
         self.checkPluginId = checkPluginId
         self.updateStatesOnBroadcast = updateStatesOnBroadcast
-        self.callbackType = callbackType
+        self.useNamespaceCallbacks = useNamespaceCallbacks
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -262,10 +262,10 @@ class Client(ExecutorEventEmitter):
     def __emitEvent(self, ev, data):
         if TYPES.onConnect == ev and data:
             self.log.info(f"{self.pluginId} V{data['pluginVersion']} Connected to TouchPortal V{data['tpVersionString']} on {sys.platform}")
-        if self.callbackType.lower() == "default":
-            self.emit(ev, data)
-        elif self.callbackType.lower() == "namespace":
+        if self.useNamespaceCallbacks:
             self.emit(ev, Tools.nested_conversion(data))
+        else:
+            self.emit(ev, data)
         self.emit(TYPES.allMessage, data)
 
     def __open(self):
