@@ -30,9 +30,10 @@ class Log(logging.Logger):
 			datefmt="%m%dT%H:%M:%S", style="{"
 		)
 
-    def __init__(self, pluginid, filename='log.txt') -> None:
+    def __init__(self, pluginid, filename='log.txt', logtofile=True) -> None:
         super().__init__(pluginid)
         self.filename = filename
+        self.logtofile = logtofile
         if os.path.exists(os.path.join(os.getcwd(), self.filename)):
 			# "rotate" old log to backup
             bak = os.path.join(os.getcwd(), self.filename) + ".bak"
@@ -40,9 +41,10 @@ class Log(logging.Logger):
                 os.remove(bak)
             os.rename(os.path.join(os.getcwd(), self.filename), bak)
 
-        fh = logging.FileHandler(str(self.filename))
-        fh.setFormatter(self.fmt)
-        self.addHandler(fh)
+        if self.logtofile:
+            fh = logging.FileHandler(str(self.filename))
+            fh.setFormatter(self.fmt)
+            self.addHandler(fh)
 
         sh = logging.StreamHandler(sys.stdout)
         sh.setFormatter(self.fmt)
@@ -123,8 +125,6 @@ class Tools():
 
         Args:
             `value`: any dictionary
-        Raises:
-            `ValueError`: If value is any other then type dict
         """
         if not isinstance(value, dict):
             return value

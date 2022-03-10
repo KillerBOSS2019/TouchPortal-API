@@ -127,7 +127,8 @@ class Client(ExecutorEventEmitter):
                  maxWorkers:int = None,
                  executor:Executor = None,
                  callbackType:str = "Default",
-                 logging:bool = True):
+                 logging:bool = True,
+                 logFileName:str = "log.txt"):
         """
         Creates an instance of the client.
 
@@ -145,7 +146,15 @@ class Client(ExecutorEventEmitter):
             `executor`: Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
                 [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
                 optionally using `maxWorkers` concurrent threads.
-            `callbackType`: type of data that sends to callbacks
+            `callbackType`: type of data that sends to callbacks.
+                Default is `default` meaning It will send normal json
+                `namespace` meaning It will automatically convert json to namespace to make easier access value 
+                eg json: data['actionId']['value'] and namespace would be data.actionId.value
+            `logging`: bool True/False that it will save log to a text file as well
+                Default is `True`
+            `logFileName`: if logging is True it will create a log file using this value.
+                Default is `log` *Note* logFileName will add ".txt" if it doesnt have it
+
         """
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
@@ -169,8 +178,11 @@ class Client(ExecutorEventEmitter):
         self.__sendBuffer = bytearray()
         self.__recvBuffer = bytearray()
 
+        self.logFileName = logFileName if logFileName.split(".")[-1].lower() == "txt" else logFileName+".txt"
         if logging:
-            self.log = Log(self.pluginId)
+            self.log = Log(self.pluginId, filename=self.logFileName)
+        else:
+            self.log = Log(self.pluginId, filename=self.logFileName, logtofile=False)
             
     def __buffered_readLine(self):
         try:
@@ -190,6 +202,7 @@ class Client(ExecutorEventEmitter):
                 return lines
             else:
                 # No connection
+                self.log.warning("Peer closed the connection.")
                 raise RuntimeError("Peer closed the connection.")
         return []
 
@@ -279,12 +292,12 @@ class Client(ExecutorEventEmitter):
             try:
                 self.selector.unregister(self.client)
             except Exception as e:
-                print(f"Error in selector.unregister(): {repr(e)}")
+                self.log.warning(f"Error in selector.unregister(): {repr(e)}")
         try:
             self.client.shutdown(socket.SHUT_RDWR)
             self.client.close()
         except OSError as e:
-            print(f"Error in socket.close(): {repr(e)}")
+            self.log.warning(f"Error in socket.close(): {repr(e)}")
         finally:
             # Delete reference to socket object for garbage collection, socket cannot be reused anyway.
             self.client = None
@@ -293,10 +306,12 @@ class Client(ExecutorEventEmitter):
         # print("TP Client stopped.")
 
     def __die(self, msg=None, exc=None):
-        if msg: print(msg)
+        if msg: self.log.info(msg)
         self.__emitEvent(TYPES.onShutdown, {"type": TYPES.onShutdown})
         self.__close()
-        if exc: raise exc
+        if exc:
+            self.log.warning(exc) 
+            raise exc
 
     def __getWriteLock(self):
         if self.__writeLock.acquire(timeout=15):
@@ -343,6 +358,7 @@ class Client(ExecutorEventEmitter):
                 else:
                     raise TypeError(f'createStateMany() requires a list of dicts, got {type(state)} instead.')
         except:
+            self.log.warning(f"createStateMany() requires an iteratable, got {type(states)} instead.")
             raise TypeError(f'createStateMany() requires an iteratable, got {type(states)} instead.')
 
     def removeState(self, stateId:str, validateExists = True):
@@ -355,6 +371,7 @@ class Client(ExecutorEventEmitter):
             self.send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
         elif validateExists:
+            self.log.warning(f"{stateId} Does not exist.")
             raise Exception(f"{stateId} Does not exist.")
 
     def removeStateMany(self, states:list):
@@ -366,6 +383,7 @@ class Client(ExecutorEventEmitter):
             for state in states:
                 self.removeState(state, False)
         except TypeError:
+            self.log.warning(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
             raise TypeError(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
 
     def choiceUpdate(self, choiceId:str, values:list):
@@ -373,12 +391,12 @@ class Client(ExecutorEventEmitter):
         This updates the list of choices in a previously-declared TP State with id `stateId`.
         See TP API reference for details on updating list values.
         """
-        if choiceId not in self.choiceUpdateList or self.choiceUpdateList[choiceId] != values:
-            if isinstance(values, list):
-                self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
-                self.choiceUpdateList[choiceId] = values
-            else:
-                raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
+        if isinstance(values, list):
+            self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+            self.choiceUpdateList[choiceId] = values
+        else:
+            self.log.warning(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
+            raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
     def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
         """
@@ -389,6 +407,7 @@ class Client(ExecutorEventEmitter):
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
             else:
+                self.log.warning(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
                 raise TypeError(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
 
     def settingUpdate(self, settingName:str, settingValue):
@@ -421,8 +440,10 @@ class Client(ExecutorEventEmitter):
                 if isinstance(state, dict):
                     self.stateUpdate(state.get('id', ""), state.get('value', ""))
                 else:
+                    self.log.warning(f'StateUpdateMany() requires a list of dicts, got {type(state)} instead.')
                     raise TypeError(f'StateUpdateMany() requires a list of dicts, got {type(state)} instead.')
         except TypeError:
+            self.log.warning(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
             raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
 
     def showNotification(self, notificationId:str, title:str, msg:str, options:list):
@@ -439,6 +460,7 @@ class Client(ExecutorEventEmitter):
         if notificationId and title and msg and options and isinstance(options, list):
             for option in options:
                 if 'id' not in option.keys() or 'title' not in option.keys():
+                    self.log.warning("all options require id and title keys")
                     raise TypeError("all options require id and title keys")
             self.send({
                 "type": "showNotification",
@@ -460,8 +482,10 @@ class Client(ExecutorEventEmitter):
             `connectorValue`: Must be an integer between 0-100.
         """
         if not isinstance(connectorId, str):
+            self.log.warning(f"connectorId needs to be a str not a {type(connectorId)}")
             raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
         if not isinstance(connectorValue, int):
+            self.log.warning(f"connectorValue requires a int not {type(connectorValue)}")
             raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
         if 0 <= connectorValue <= 100:
             self.send({
@@ -470,6 +494,7 @@ class Client(ExecutorEventEmitter):
                 "value": str(connectorValue)
             })
         else:
+            self.log.warning(f"connectorValue needs to be between 0-100 not {connectorValue}")
             raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
 
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
@@ -477,6 +502,34 @@ class Client(ExecutorEventEmitter):
         This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
         """
         self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
+
+    def getChoiceUpdatelist(self):
+        """
+        This will return a dict that `choiceUpdate` registered.
+            example return value `{"choiceUpdateid1": ["item1", "item2", "item3"], "exampleChoiceId": ["Option1", "Option2", "Option3"]}`
+
+        You should use this to verify before Updating the choice list    
+        **Note** This is the same as TPClient.choiceUpdateList variable *DO NOT MODIFY* TPClient.choiceUpdateList unless you know what your doing
+        """
+        return self.choiceUpdateList
+
+    def getStatelist(self):
+        """
+        This will return a dict that have key pair of states that you last updated.
+            Example retun value `{"stateId1": "value1", "stateId2": "value2", "stateId3": "value3"}`
+        This is used to keep track of all states. It will be automatically updated when you update states
+        **Note** This is the same as TPClient.currentState variable *DO NOT MODIFY* TPClient.currentState unless you know what your doing
+        """
+        return self.currentStates
+
+    def getSettinghistory(self):
+        """
+        This will return a dict that have key pair of setting value that you updated previously.
+
+        This is used to track settings value that you have updated previously 
+        **Note** This is the same as TPClient.currentSettings variable *DO NOT MODIFY* TPClient.currentSettings unless you know what your doing
+        """
+        return self.currentSettings
 
     def send(self, data):
         """
@@ -487,6 +540,7 @@ class Client(ExecutorEventEmitter):
         if self.__getWriteLock():
             if len(self.__sendBuffer) + len(data) > self.SND_BUFFER_SZ:
                 self.__writeLock.release()
+                self.log.warning("TP Client send buffer is full!")
                 raise ResourceWarning("TP Client send buffer is full!")
             self.__sendBuffer += (json.dumps(data)+'\n').encode()
             self.__writeLock.release()
