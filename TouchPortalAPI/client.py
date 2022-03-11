@@ -162,7 +162,6 @@ class Client(ExecutorEventEmitter):
         self.currentStates = {}
         self.currentSettings = {}
         self.choiceUpdateList = {}
-        self.shortidList = {}
         self.__heldActions = {}
         self.__stopEvent = Event()       # main loop inerrupt
         self.__stopEvent.set()           # not running yet
@@ -246,8 +245,6 @@ class Client(ExecutorEventEmitter):
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
-        if ev == TYPES.shortConnectorIdNotification and data['connectorId'] not in self.shortidList:
-            self.shortidList[data['connectorId']] = data['shortId']
         if not self.useNamespaceCallbacks:
             self.emit(ev, data)
             self.emit(TYPES.allMessage, data)
