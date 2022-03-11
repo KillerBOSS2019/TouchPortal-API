@@ -19,6 +19,8 @@ __copyright__ = """
 import requests
 import os
 import base64
+from types import SimpleNamespace
+
 
 class Tools():
     """
@@ -78,3 +80,24 @@ class Tools():
             raise ValueError(f'No tags found in repository: {baselink}')
         else:
             raise ValueError(f'Invalid repository URL or response: {baselink}')
+                    
+    @staticmethod        
+    def nested_conversion(value):
+        """
+        Convert dictionary to object for easier access data.
+        Examples
+            `data = {"car": {"year": 2008, "name": "Tesla"}}` # try get name
+
+            instead of this `data['car']['name']` you can get name this way
+
+            data = Tools.nested_conversion(data)
+
+            `data.car.name`
+
+        Args:
+            `value`: any dictionary
+        """
+        if not isinstance(value, dict):
+            return value
+            
+        return SimpleNamespace(**{key: Tools.nested_conversion(value) for key, value in value.items()})

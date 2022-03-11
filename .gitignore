@@ -3,3 +3,6 @@ build
 MANIFEST
 *.egg-info
 venv
+*.pyc
+*.bak
+*.txt

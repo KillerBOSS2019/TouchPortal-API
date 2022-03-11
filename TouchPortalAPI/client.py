@@ -22,6 +22,7 @@ import json
 from pyee import ExecutorEventEmitter
 from concurrent.futures import Executor, ThreadPoolExecutor
 from threading import Event, Lock
+from .tools import Tools
 
 __all__ = ['Client', 'TYPES']
 
@@ -120,9 +121,10 @@ class Client(ExecutorEventEmitter):
                  sleepPeriod:float = 0.01,
                  autoClose:bool = False,
                  checkPluginId:bool = True,
-                 updateStatesOnBroadcast:bool = True,
+                 updateStatesOnBroadcast:bool = False,
                  maxWorkers:int = None,
-                 executor:Executor = None):
+                 executor:Executor = None,
+                 useNamespaceCallbacks:bool = False):
         """
         Creates an instance of the client.
 
@@ -140,6 +142,11 @@ class Client(ExecutorEventEmitter):
             `executor`: Passed to `pyee.ExecutorEventEmitter`. By default this is a default-constructed
                 [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor),
                 optionally using `maxWorkers` concurrent threads.
+            `useNamespaceCallbacks`: use NamespaceCallback as message handler
+                Default is `False` meaning It will send normal json
+                `True` meaning It will automatically convert json to namespace to make easier access value 
+                eg json: data['actionId']['value'] and namespace would be data.actionId.value
+
         """
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
@@ -149,10 +156,12 @@ class Client(ExecutorEventEmitter):
         self.autoClose = autoClose
         self.checkPluginId = checkPluginId
         self.updateStatesOnBroadcast = updateStatesOnBroadcast
+        self.useNamespaceCallbacks = useNamespaceCallbacks
         self.client = None
         self.selector = None
         self.currentStates = {}
         self.currentSettings = {}
+        self.choiceUpdateList = {}
         self.__heldActions = {}
         self.__stopEvent = Event()       # main loop inerrupt
         self.__stopEvent.set()           # not running yet
@@ -160,7 +169,7 @@ class Client(ExecutorEventEmitter):
         self.__writeLock = Lock()        # mutex for __sendBuffer
         self.__sendBuffer = bytearray()
         self.__recvBuffer = bytearray()
-
+            
     def __buffered_readLine(self):
         try:
             # Should be ready to read
@@ -236,8 +245,13 @@ class Client(ExecutorEventEmitter):
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
-        self.emit(ev, data)
-        self.emit(TYPES.allMessage, data)
+        if not self.useNamespaceCallbacks:
+            self.emit(ev, data)
+            self.emit(TYPES.allMessage, data)
+        else:
+            convertedData = Tools.nested_conversion(data) # No need to call this twice
+            self.emit(ev, convertedData)
+            self.emit(TYPES.allMessage, convertedData)
 
     def __open(self):
         try:
@@ -279,7 +293,8 @@ class Client(ExecutorEventEmitter):
         if msg: print(msg)
         self.__emitEvent(TYPES.onShutdown, {"type": TYPES.onShutdown})
         self.__close()
-        if exc: raise exc
+        if exc:
+            raise exc
 
     def __getWriteLock(self):
         if self.__writeLock.acquire(timeout=15):
@@ -356,11 +371,11 @@ class Client(ExecutorEventEmitter):
         This updates the list of choices in a previously-declared TP State with id `stateId`.
         See TP API reference for details on updating list values.
         """
-        if choiceId:
-            if isinstance(values, list):
-                self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
-            else:
-                raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
+        if choiceId and isinstance(values, list):
+            self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+            self.choiceUpdateList[choiceId] = values
+        else:
+            raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
     def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
         """
@@ -459,6 +474,34 @@ class Client(ExecutorEventEmitter):
         This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
         """
         self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
+
+    def getChoiceUpdatelist(self):
+        """
+        This will return a dict that `choiceUpdate` registered.
+            example return value `{"choiceUpdateid1": ["item1", "item2", "item3"], "exampleChoiceId": ["Option1", "Option2", "Option3"]}`
+
+        You should use this to verify before Updating the choice list    
+        **Note** This is the same as TPClient.choiceUpdateList variable *DO NOT MODIFY* TPClient.choiceUpdateList unless you know what your doing
+        """
+        return self.choiceUpdateList
+
+    def getStatelist(self):
+        """
+        This will return a dict that have key pair of states that you last updated.
+            Example retun value `{"stateId1": "value1", "stateId2": "value2", "stateId3": "value3"}`
+        This is used to keep track of all states. It will be automatically updated when you update states
+        **Note** This is the same as TPClient.currentState variable *DO NOT MODIFY* TPClient.currentState unless you know what your doing
+        """
+        return self.currentStates
+
+    def getSettinghistory(self):
+        """
+        This will return a dict that have key pair of setting value that you updated previously.
+
+        This is used to track settings value that you have updated previously 
+        **Note** This is the same as TPClient.currentSettings variable *DO NOT MODIFY* TPClient.currentSettings unless you know what your doing
+        """
+        return self.currentSettings
 
     def send(self, data):
         """
