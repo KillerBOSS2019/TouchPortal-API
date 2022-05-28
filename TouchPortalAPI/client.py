@@ -162,6 +162,7 @@ class Client(ExecutorEventEmitter):
         self.currentStates = {}
         self.currentSettings = {}
         self.choiceUpdateList = {}
+        self.shortIdTracker = {}
         self.__heldActions = {}
         self.__stopEvent = Event()       # main loop inerrupt
         self.__stopEvent.set()           # not running yet
@@ -242,6 +243,8 @@ class Client(ExecutorEventEmitter):
             elif act_type == TYPES.onBroadcast and self.updateStatesOnBroadcast:
                 for key, value in self.currentStates.items():
                     self.__stateUpdate(key, value, True)
+            elif act_type == TYPES.shortConnectorIdNotification:
+                self.shortIdTracker[data["connectorId"]] = data['shortId']
             self.__emitEvent(act_type, data)
 
     def __emitEvent(self, ev, data):
@@ -318,13 +321,13 @@ class Client(ExecutorEventEmitter):
         """
         return actionId in self.__heldActions
 
-    def createState(self, stateId:str, description:str, value:str):
+    def createState(self, stateId:str, description:str, value:str, parentGroup:str = None):
         """
-        This will create a TP State at runtime. `stateId`, `description`, and `value` are all required (`value` becomes the State's default value).
+        This will create a TP State at runtime. `stateId`, `description`, and `value` (`value` becomes the State's default value) are all required except `parentGroup` which allow you to create states in a `folder`.
         """
         if stateId and description and value != None:
             if stateId not in self.currentStates:
-                self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value})
+                self.send({"type": "createState", "id": stateId, "desc": description, "defaultValue": value, "parentGroup": parentGroup})
                 self.currentStates[stateId] = value
             else:
                 self.stateUpdate(stateId, value)
@@ -332,12 +335,12 @@ class Client(ExecutorEventEmitter):
     def createStateMany(self, states:list):
         """
         Convenience function to create several States at once. `states` should be an iteratable of `dict` types
-        in the form of `{'id': "StateId", 'desc': "Description", 'value': "Default Value"}`.
+        in the form of `{'id': "StateId", 'desc': "Description", 'value': "Default Value"}` and optionally `'parentGroup': "Value"` which will make state `folder`.
         """
         try:
             for state in states:
                 if isinstance(state, dict):
-                    self.createState(state.get('id', ""), state.get('desc', ""), state.get('value', ""))
+                    self.createState(state.get('id', ""), state.get('desc', ""), state.get('value', ""), state.get("parentGroup", ""))
                 else:
                     raise TypeError(f'createStateMany() requires a list of dicts, got {type(state)} instead.')
         except:
@@ -445,6 +448,22 @@ class Client(ExecutorEventEmitter):
                 "options": options
             })
 
+    def shortIdUpdate(self, shortId:str, connectorValue:int):
+        """
+        This allows you to update slider position value using shortId which TouchPortal will broadcast.
+
+        Args:
+            `shortId`: a shortId is a id that is mapped to connectorId by TouchPortal
+            `connectorValue`: A integer between 0-100
+
+        """
+        if 0 <= connectorValue <= 100:
+            self.send({
+                "type": "connectorUpdate",
+                "shortId": shortId,
+                "value": str(connectorValue)
+            })
+
     def connectorUpdate(self, connectorId:str, connectorValue:int):
         """
         This allows you to update slider position value.
@@ -455,17 +474,22 @@ class Client(ExecutorEventEmitter):
                 Also according to that site It requires you to have prefix "pc_yourPluginId_" + connectorid however This already provide
                 you the prefix and the pluginId so you just need you take care the rest eg connectorid|setting1=aValue
             `connectorValue`: Must be an integer between 0-100.
+
+        Note: This method will automatically looking for shortId using gaven connectorId however if It cannot find shortId it will just send connectorId
         """
         if not isinstance(connectorId, str):
             raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
         if not isinstance(connectorValue, int):
             raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
         if 0 <= connectorValue <= 100:
-            self.send({
-                "type": "connectorUpdate",
-                "connectorId": f"pc_{self.pluginId}_{connectorId}",
-                "value": str(connectorValue)
-            })
+            if (cid := f"pc_{self.pluginId}_{connectorId}") in self.shortIdTracker:
+                self.shortIdUpdate(self.shortIdTracker[cid], connectorValue)
+            else:
+                self.send({
+                    "type": "connectorUpdate",
+                    "connectorId": f"pc_{self.pluginId}_{connectorId}",
+                    "value": str(connectorValue)
+                })
         else:
             raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
 

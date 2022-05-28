@@ -503,7 +503,7 @@ def _validateDefinition(entry, as_str=False):
     return res
 
 
-def _main():
+def main():
     from argparse import ArgumentParser
 
     parser = ArgumentParser(epilog="This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data. "
@@ -560,4 +560,4 @@ def _main():
 
 
 if __name__ == "__main__":
-    sys.exit(_main())
+    sys.exit(main())

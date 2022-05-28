@@ -129,6 +129,11 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.6.3 (5/27/2022)
+-------------------
+- Added shortId
+- sdk_spec updated to support parentGroup and new version of SDK
+
 1.6.2 (1/14/2022)
 -------------------
 - removed extra _ from connectorUpdate

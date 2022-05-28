@@ -59,6 +59,7 @@ TPSDK_ATTRIBS_STATE = {
   'type':             { 'v': 1, 'r': True,  't': str,   'd': "text",        'c': ["text","choice"]},
   'desc':             { 'v': 1, 'r': True,  't': str },
   'default':          { 'v': 1, 'r': True,  't': str,   'd': "" },
+  "parentGroup":      {"v": 6, "r": False, "t": str},
   'valueChoices':     { 'v': 1, 'r': False, 't': list },
 }
 """ [State structure](https://www.touch-portal.com/api/index.php?section=states) """
@@ -128,7 +129,7 @@ TPSDK_ATTRIBS_CATEGORY = {
 
 TPSDK_ATTRIBS_ROOT = {
 # key name              sdk V   required    [type(s)]    [default value]            [valid value list]   [lookup table]
-  'sdk':              { 'v': 1, 'r': True,  't': int,   'd': TPSDK_DEFAULT_VERSION, 'c': [1,2,3,4] },
+  'sdk':              { 'v': 1, 'r': True,  't': int,   'd': TPSDK_DEFAULT_VERSION, 'c': [1,2,3,4,5,6] },
   'version':          { 'v': 1, 'r': True,  't': int,   'd': 1 },
   'name':             { 'v': 1, 'r': True,  't': str },
   'id':               { 'v': 1, 'r': True,  't': str },
