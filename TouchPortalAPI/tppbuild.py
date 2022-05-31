@@ -1,14 +1,37 @@
+__copyright__ = """
+This file is part of the TouchPortal-API project.
+Copyright TouchPortal-API Developers
+Copyright (c) 2021 Maxim Paperno
+All rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import importlib
 import os
 import sys
+import os.path
 from zipfile import (ZipFile, ZIP_DEFLATED)
 import PyInstaller.__main__
 from argparse import ArgumentParser
 from glob import glob
 from shutil import rmtree
-import sdk_tools
 from typing import Union, TextIO
 import json
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from sdk_tools import generateDefinitionFromScript, _validateDefinition
 
 def getInfoFromBuildScript(script:Union[str, TextIO]):
     script_str = ""
@@ -69,7 +92,7 @@ def zip_dir(zf, path, base_path="./", recurse=True):
 
 def build_distro(opsys, version, pluginname, packingList, output):
 	os_name = "Windows" if opsys == OS_WIN else "MacOS"
-	zip_name = pluginname + "_v" + version + "_" + os_name + ".tpp"
+	zip_name = pluginname + "_v" + str(version) + "_" + os_name + ".tpp"
 	print("Creating archive: "+ zip_name)
 	if not os.path.exists(output):
 		os.makedirs(output)
@@ -156,13 +179,14 @@ def main():
 		if os.path.isfile(PLUGIN_ENTRY):
 			if PLUGIN_ENTRY.endswith(".py"):
 				print("Generating entry.tp from " , PLUGIN_ENTRY)
-				generatedJson = sdk_tools.generateDefinitionFromScript(os.path.join(os.getcwd(), PLUGIN_ENTRY))
+				sys.path.append(os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), PLUGIN_ENTRY))))
+				generatedJson = generateDefinitionFromScript(os.path.join(os.getcwd(), PLUGIN_ENTRY))
 				with open("entry.tp", "w", encoding="utf-8") as f:
 					json.dump(generatedJson, f, indent=4)
 				print("Successfully generated entry.tp")
 				isPyEntry = True
 			else:
-				result = sdk_tools._validateDefinition(PLUGIN_ENTRY)
+				result = _validateDefinition(PLUGIN_ENTRY)
 				if not result:
 					print(f"Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.")
 					return 0 # Exit build process because entry.tp is invalid

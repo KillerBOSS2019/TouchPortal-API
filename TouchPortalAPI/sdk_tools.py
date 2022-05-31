@@ -545,6 +545,7 @@ def main():
         else:
             out_dir = os.getcwd() if hasattr(opts.target, "read") else os.path.dirname(opts.target)
             output_path = os.path.join(out_dir, "entry.tp")
+        sys.path.append(os.path.dirname(os.path.realpath(opts.target)))
         entry_str, valid = _generateDefinition(opts.target, output_path, opts.indent, opts.skip_invalid)
         if opts.validate and output_path:
             opts.target = output_path
