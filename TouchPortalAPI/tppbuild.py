@@ -134,13 +134,15 @@ def main():
 	else:
 		return "Unsupported OS: " + sys.platform
 
-	parser = ArgumentParser(description="buildScript automatically compile into exe, entry and package them into importable tpp file")
+	parser = ArgumentParser(description=
+		"Script to automatically compile a Python plugin into a standalone exe, generate entry.tp, and package them into importable tpp file."
+	)
 
 	parser.add_argument(
 		"--target", metavar='<target>', required=True, nargs="*", type=str,
-		help='target is target to a build file that contains some infomations about the plugin.' +
-		'Using given infomation about the plugin, It will automatically build entry.tp (if given file is .py) and it will build the distro' +
-		'based on what system your using.'
+		help='A build script that contains some infomations about the plugin. ' +
+		'Using given infomation about the plugin, this script will automatically build entry.tp (if given file is .py) and it will build the distro ' +
+		'based on which operating system you\'re using.'
 	)
 
 	opts = parser.parse_args()
@@ -190,7 +192,7 @@ def main():
 				if not result:
 					print(f"Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.")
 					return 0 # Exit build process because entry.tp is invalid
-			
+
 			# If everything goes well It will add to TPP packing list
 			print("Adding entry.tp to packing list.")
 			TPP_PACK_LIST["entry.tp" if PLUGIN_ENTRY.endswith(".py") else PLUGIN_ENTRY] = PLUGIN_ROOT + "/"
@@ -217,7 +219,7 @@ def main():
 		for file in buildfile.FileRequired:
 			print(f"Adding {file} to plugin")
 			TPP_PACK_LIST[file.split("/")[-1]] = file.split("/")[0:-1]
-		
+
 		print("Packing everything into tpp file")
 		build_distro(opsys, __version__, PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
 
