@@ -1,60 +1,62 @@
-import os
+
+# first, some values which may be used in multiple places below
+
+# directory for plugin source code
+pluginSourcePath = "./"
+# the base file name for the plugin's main file, w/out .py extension
+pluginFileName = "plugin-example"
 
 """
-                Versioning system (https://semver.org/)
-
-MAJOR version when you make incompatible API changes,
-MINOR version when you add functionality in a backwards compatible manner, and
-PATCH version when you make backwards compatible bug fixes.
-
-"This just a guide that helps you with your plugin version System. feel free to follow it or not."
+PLUGIN_MAIN: This lets tppbuild know where your main python plugin file is located so it will know which file to compile.
 """
-versionMajor = 1
-versionMinor = 0
-versionPatch = 0
+PLUGIN_MAIN = pluginSourcePath + pluginFileName + ".py"
 
 """
-This will convert version from above into TP version eg
-if Major 1, Minor 0, and Patch 0 output would be 1000 and if you change Minor to 1 it would be 1100 etc..
+PLUGIN_EXE_NAME: This defines what you want your plugin executable to be named. tppbuild will also use this for the .tpp file in the format:
+                `pluginname + "_v" + version + "_" + os_name + ".tpp"`
+                If left blank, the file name from PLUGIN_MAIN is used (w/out .py extension).
 """
-__version__ = str(versionMajor * 1000 + versionMinor * 100 + versionPatch)
-
-"""
-PLUGIN_MAIN: This let tppbuild to know where is your main python located so then It will know which file to compile
-PLUGIN_EXE_NAME: This tells what you want your plugin to be named. as a note tppbuild will use this format `pluginname + "_v" + version + "_" + os_name + ".tpp"`
-                 IF this is empty It will use main py name
-PLUGIN_EXE_ICON: This should be a path to a .ico file that's used for the compiled exe icon (IF Leaved empty It will use default pyinstaller icon)
-"""
-PLUGIN_MAIN = r"plugin-example.py"
 PLUGIN_EXE_NAME = "pluginexample"
+
+"""
+PLUGIN_EXE_ICON: This should be a path to a .ico file that's used for the compiled exe (If left empty, the default pyinstaller icon will be used)
+"""
 PLUGIN_EXE_ICON = r""
 
 
 """
 PLUGIN_ENTRY: This can be either path to entry.tp or path to a python file that contains infomation about entry.
-Note if you pass in a entry.tp tppbuild will automatically validate the json. but if you pass in python file it will
+Note if you pass in a entry.tp, tppbuild will automatically validate the json. If you pass in a python file, it will
 build entry.tp & validate it for you.
 """
-PLUGIN_ENTRY = r"plugin-example.py"
-PLUGIN_ROOT = "TPExamplePlugin" # This is the root folder name that's inside of .tpp
-PLUGIN_ICON = r"icon-24.png" # This should be a path that goes to a icon that's for entry.tp
-OUTPUT_PATH = r"./" # This tells tppbuild where you want finished build tpp to be saved at. Default ./ meaning current dir build script
+PLUGIN_ENTRY = PLUGIN_MAIN  # Here we just use the same file as the plugin's main code since that contains all the definitions for entry.tp.
 
+""" This is the root folder name that will be inside of .tpp """
+PLUGIN_ROOT = "TPExamplePlugin"
+
+""" Path to icon file used in entry.tp for category `imagepath`, if any. If left blank, TP will use a default icon. """
+PLUGIN_ICON = r"icon-24.png"
+
+""" This tells tppbuild where you want finished build tpp to be saved at. Default "./" meaning current dir where tppbuild is running from. """
+OUTPUT_PATH = r"./"
+
+""" PLUGIN_VERSION: A version string for the generated .tpp file name. This example reads the `__version__` from the example plugin's code. """
+import importlib
+from sys import path
+path.insert(1, pluginSourcePath)
+plugin = importlib.import_module(pluginFileName)
+PLUGIN_VERSION = plugin.__version__
+
+# Or just set the PLUGIN_VERSION manually.
+# PLUGIN_VERSION = "1.0.0-beta1"
 
 """
-If you have any required file that your plugin needs put it in here. In a list
+If you have any required file(s) that your plugin needs, put them in this list.
 """
 FileRequired = []
 
+"""
+Any additional arguments to be passed to Pyinstaller. Optional.
+"""
+Pyinstaller_arg = []
 
-"""
-This is args thats used by Pyinstaller. NOT RECOMMENDED TO MODIFY THIS. unless you know what your doing.
-"""
-Pyinstaller_arg = [
-    f'{PLUGIN_MAIN}',
-    f'--name={PLUGIN_EXE_NAME if PLUGIN_EXE_NAME != "" else os.path.basename(PLUGIN_MAIN)[:os.path.basename(PLUGIN_MAIN).find(".py")]}',
-    '--onefile',
-    f'--distpath=./'
-]
-if PLUGIN_EXE_ICON and os.path.isfile(PLUGIN_EXE_ICON): # This just checks if it can find the exe icon. if not It won't use it. Please double check the path
-    Pyinstaller_arg.append(f"--icon={PLUGIN_EXE_ICON}")

@@ -21,55 +21,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import importlib
 import os
 import sys
-import os.path
 from zipfile import (ZipFile, ZIP_DEFLATED)
 import PyInstaller.__main__
 from argparse import ArgumentParser
 from glob import glob
 from shutil import rmtree
-from typing import Union, TextIO
 import json
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from sdk_tools import generateDefinitionFromScript, _validateDefinition
 
-def getInfoFromBuildScript(script:Union[str, TextIO]):
-    script_str = ""
-    if hasattr(script, "read"):
-        script_str = script.read()
-    elif not script.endswith(".py"):
-        script_str = script
-
-    try:
-        if script_str:
-            # load from a string
-            spec = importlib.util.spec_from_loader("buildScript", loader=None)
-            buildScript = importlib.util.module_from_spec(spec)
-            setattr(buildScript, "__file__", os.path.join(os.getcwd(), "build.py"))
-            exec(script_str, buildScript.__dict__)
-        else:
-            # load directly from a file path
-            spec = importlib.util.spec_from_file_location("buildScript", script)
-            buildScript = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(buildScript)
-        # print(plugin.TP_PLUGIN_INFO)
-    except Exception as e:
-        input_name = "input stream" if script_str else script
-        raise ImportError(f"ERROR while trying to import plugin code from '{input_name}': {repr(e)}")
-    return buildScript
-
-def build_clean():
-	print("Cleaning up...")
-	files = glob("*.spec")
-	files.extend(["build", "__pycache__", "entry.tp"])
-	for file in files:
-		if os.path.exists(file):
-			print("removing: " + file)
-			if os.path.isfile(file):
-				os.remove(file)
-			elif os.path.isdir(file):
-				rmtree(file)
-	print("")
+def getInfoFromBuildScript(script:str):
+	try:
+		spec = importlib.util.spec_from_file_location("buildScript", script)
+		buildScript = importlib.util.module_from_spec(spec)
+		spec.loader.exec_module(buildScript)
+	except Exception as e:
+		raise ImportError(f"ERROR while trying to import plugin code from '{script}': {repr(e)}")
+	return buildScript
 
 def build_tpp(zip_name, tpp_pack_list):
 	print("Creating archive: " + zip_name)
@@ -139,7 +108,7 @@ def main():
 	)
 
 	parser.add_argument(
-		"--target", metavar='<target>', required=True, nargs="*", type=str,
+		"--target", metavar='<target>', required=True, type=str,
 		help='A build script that contains some infomations about the plugin. ' +
 		'Using given infomation about the plugin, this script will automatically build entry.tp (if given file is .py) and it will build the distro ' +
 		'based on which operating system you\'re using.'
@@ -147,87 +116,88 @@ def main():
 
 	opts = parser.parse_args()
 	del parser
-	buildfile = os.path.join(os.getcwd(), opts.target[0])
-	print(buildfile)
-	buildfile = getInfoFromBuildScript(buildfile)
+	print("tppbuild started with target: " + opts.target)
+	buildfile = getInfoFromBuildScript(opts.target)
 
 
-	__version__ = ""
 	attri_list = ["PLUGIN_ENTRY", "PLUGIN_MAIN", "PLUGIN_ROOT", "Pyinstaller_arg",
 				  "PLUGIN_EXE_NAME", "PLUGIN_ICON", "PLUGIN_ICON", "FileRequired",
-				  "OUTPUT_PATH", "__version__"]
+				  "OUTPUT_PATH", "PLUGIN_VERSION"]
 
 	checklist = [attri in dir(buildfile) for attri in attri_list]
+	if all(checklist) == False:
+		print(f"{opts.target} is missing these variables: ", " ".join([attri for attri in attri_list if attri not in dir(buildfile)]))
+		return -1
+
 	isPyEntry = False
-	if all(checklist):
-		PLUGIN_ENTRY = buildfile.PLUGIN_ENTRY
-		PLUGIN_MAIN = buildfile.PLUGIN_MAIN
-		PLUGIN_ROOT = buildfile.PLUGIN_ROOT
-		PLUGIN_EXE_NAME = buildfile.PLUGIN_EXE_NAME
-		Pyinstaller_arg = buildfile.Pyinstaller_arg
-		if "__version__" in dir(buildfile):
-			__version__ = buildfile.__version__
+	TPP_PACK_LIST = {}
 
-		TPP_PACK_LIST = {}
+	print(f"Building {buildfile.PLUGIN_EXE_NAME} v{buildfile.PLUGIN_VERSION} target(s) on {sys.platform}\n")
 
-		print(f"Building {PLUGIN_EXE_NAME} v{__version__} target(s) on {sys.platform}\n")
-
-		"""
-		Step 1
-			Checking if python entry or entry.tp exists or not. and only move on if it exists
-		Step 2
-			If file is entry.tp It will automatically validdate.
-		"""
-		if os.path.isfile(PLUGIN_ENTRY):
-			if PLUGIN_ENTRY.endswith(".py"):
-				print("Generating entry.tp from " , PLUGIN_ENTRY)
-				sys.path.append(os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), PLUGIN_ENTRY))))
-				generatedJson = generateDefinitionFromScript(os.path.join(os.getcwd(), PLUGIN_ENTRY))
-				with open("entry.tp", "w", encoding="utf-8") as f:
-					json.dump(generatedJson, f, indent=4)
-				print("Successfully generated entry.tp")
-				isPyEntry = True
-			else:
-				result = _validateDefinition(PLUGIN_ENTRY)
-				if not result:
-					print(f"Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.")
-					return 0 # Exit build process because entry.tp is invalid
-
-			# If everything goes well It will add to TPP packing list
-			print("Adding entry.tp to packing list.")
-			TPP_PACK_LIST["entry.tp" if PLUGIN_ENTRY.endswith(".py") else PLUGIN_ENTRY] = PLUGIN_ROOT + "/"
+	"""
+	Step 1
+		Checking if python entry or entry.tp exists or not. and only move on if it exists
+	Step 2
+		If file is entry.tp It will automatically validdate.
+	"""
+	if os.path.isfile(buildfile.PLUGIN_ENTRY):
+		if buildfile.PLUGIN_ENTRY.endswith(".py"):
+			print("Generating entry.tp from " , buildfile.PLUGIN_ENTRY)
+			sys.path.append(os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), buildfile.PLUGIN_ENTRY))))
+			generatedJson = generateDefinitionFromScript(os.path.join(os.getcwd(), buildfile.PLUGIN_ENTRY))
+			with open("entry.tp", "w", encoding="utf-8") as f:
+				json.dump(generatedJson, f, indent=4)
+			print("Successfully generated entry.tp")
+			isPyEntry = True
 		else:
-			print(f"Warning could not find {PLUGIN_ENTRY}. Canceling build process.")
-			return 0
+			result = _validateDefinition(buildfile.PLUGIN_ENTRY)
+			if not result:
+				print(f"Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.")
+				return 0 # Exit build process because entry.tp is invalid
 
-		if not os.path.exists(buildfile.PLUGIN_ICON):
-			print(f"Warning {buildfile.PLUGIN_ICON} does not exists. TouchPortal will use default plugin icon")
-		else:
-			print(f"Found {buildfile.PLUGIN_ICON} adding it to packing list.")
-			TPP_PACK_LIST[buildfile.PLUGIN_ICON.split("/")[-1]] = PLUGIN_ROOT + "/" if len(buildfile.PLUGIN_ICON.split("/")) == 1 else "".join(buildfile.PLUGIN_ICON.split("/")[0:-1])
-
-		print(f"Compiling {PLUGIN_MAIN} for {sys.platform}")
-
-		PI_RUN = [PLUGIN_MAIN]
-		PI_RUN.extend(Pyinstaller_arg)
-		print("running pyinstaller with "," ".join(PI_RUN))
-		PyInstaller.__main__.run(PI_RUN)
-		print(f"Done compiled. adding it to packing list", PLUGIN_EXE_NAME + EXE_SFX)
-		TPP_PACK_LIST[PLUGIN_EXE_NAME + EXE_SFX] = PLUGIN_ROOT + "/"
-
-		print("Checking for any required file,")
-		for file in buildfile.FileRequired:
-			print(f"Adding {file} to plugin")
-			TPP_PACK_LIST[file.split("/")[-1]] = file.split("/")[0:-1]
-
-		print("Packing everything into tpp file")
-		build_distro(opsys, __version__, PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
-
-		print("Clean up any mess that's made from this.")
-		build_clean(["entry.tp"] if isPyEntry else None)
-		print("Done!")
+		# If everything goes well It will add to TPP packing list
+		print("Adding entry.tp to packing list.")
+		TPP_PACK_LIST["entry.tp" if buildfile.PLUGIN_ENTRY.endswith(".py") else buildfile.PLUGIN_ENTRY] = buildfile.PLUGIN_ROOT + "/"
 	else:
-		print(f"{opts.target[0]} is missing these infomation", " ".join([attri for attri in attri_list if attri not in dir(buildfile)]))
+		print(f"Warning could not find {buildfile.PLUGIN_ENTRY}. Canceling build process.")
+		return 0
+
+	if not os.path.exists(buildfile.PLUGIN_ICON):
+		print(f"Warning {buildfile.PLUGIN_ICON} does not exist. TouchPortal will use default plugin icon.")
+	else:
+		print(f"Found {buildfile.PLUGIN_ICON} adding it to packing list.")
+		TPP_PACK_LIST[buildfile.PLUGIN_ICON.split("/")[-1]] = buildfile.PLUGIN_ROOT + "/" if len(buildfile.PLUGIN_ICON.split("/")) == 1 else "".join(buildfile.PLUGIN_ICON.split("/")[0:-1])
+
+	print(f"Compiling {buildfile.PLUGIN_MAIN} for {sys.platform}")
+
+	PI_RUN = [buildfile.PLUGIN_MAIN]
+	PI_RUN.append(f'--distpath={buildfile.OUTPUT_PATH}')
+	PI_RUN.append(f'--onefile')
+	if (buildfile.PLUGIN_EXE_NAME == ""):
+		PI_RUN.append(f'--name={os.path.splitext(os.path.basename(buildfile.PLUGIN_MAIN))[0]}')
+	else:
+		PI_RUN.append(f'--name={buildfile.PLUGIN_EXE_NAME}')
+	if buildfile.PLUGIN_EXE_ICON and os.path.isfile(buildfile.PLUGIN_EXE_ICON):
+		PI_RUN.append(f"--icon={buildfile.PLUGIN_EXE_ICON}")
+	PI_RUN.extend(buildfile.Pyinstaller_arg)
+
+	print("Running pyinstaller with arguments:", " ".join(PI_RUN))
+	PyInstaller.__main__.run(PI_RUN)
+	print(f"Done compiling. adding to packing list:", buildfile.PLUGIN_EXE_NAME + EXE_SFX)
+	TPP_PACK_LIST[buildfile.PLUGIN_EXE_NAME + EXE_SFX] = buildfile.PLUGIN_ROOT + "/"
+
+	print("Checking for any additional required files")
+	for file in buildfile.FileRequired:
+		print(f"Adding {file} to plugin")
+		TPP_PACK_LIST[file.split("/")[-1]] = file.split("/")[0:-1]
+
+	print("Packing everything into tpp file")
+	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
+
+	print("Clean up any mess that's made from this.")
+	build_clean(["entry.tp"] if isPyEntry else None)
+	print("Done!")
+
 	return 0
 
 if __name__ == "__main__":
