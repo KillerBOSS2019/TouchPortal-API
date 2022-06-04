@@ -5,3 +5,4 @@ MANIFEST
 venv
 *.pyc
 *.bak
+*.log

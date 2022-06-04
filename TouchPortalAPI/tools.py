@@ -1,6 +1,8 @@
 __copyright__ = """
     This file is part of the TouchPortal-API project.
+    Copyright (c) TouchPortal-API Developers/Contributors
     Copyright (C) 2021 DamienS
+    All rights reserved.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,39 +18,11 @@ __copyright__ = """
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import requests
 import os
-import base64
-from types import SimpleNamespace
-import logging
 import sys
-
-class Log(logging.Logger):
-
-    fmt = logging.Formatter(
-			fmt="{asctime:s}.{msecs:03.0f} [{levelname}] [{filename:s}:{lineno:d}] {message:s}",
-			datefmt="%m%dT%H:%M:%S", style="{"
-		)
-
-    def __init__(self, pluginid, filename='log.txt', logtofile=True) -> None:
-        super().__init__(pluginid)
-        self.filename = filename
-        self.logtofile = logtofile
-        if os.path.exists(os.path.join(os.getcwd(), self.filename)):
-			# "rotate" old log to backup
-            bak = os.path.join(os.getcwd(), self.filename) + ".bak"
-            if os.path.exists(bak):
-                os.remove(bak)
-            os.rename(os.path.join(os.getcwd(), self.filename), bak)
-
-        if self.logtofile:
-            fh = logging.FileHandler(str(self.filename))
-            fh.setFormatter(self.fmt)
-            self.addHandler(fh)
-
-        sh = logging.StreamHandler(sys.stdout)
-        sh.setFormatter(self.fmt)
-        self.addHandler(sh)
+import base64
+import requests
+from types import SimpleNamespace
 
 class Tools():
     """
