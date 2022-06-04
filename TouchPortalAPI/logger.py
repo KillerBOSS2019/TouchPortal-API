@@ -26,17 +26,19 @@ from logging import Formatter, getLogger, getLevelName, StreamHandler, NullHandl
 from logging.handlers import TimedRotatingFileHandler
 
 class Logger:
-    """ A helper class for common logging requirements, which can be configured via the constructor.
+    """ A helper class for common logging requirements, which can be configured via the constructor and provides some convenience
+    methods.
 
-    It uses a an instance of Python's `logging.Logger()` class, either the one specified in the `logger` parameter,
+    It uses a an instance of Python's `logging.Logger()` class, either the one specified in the `logger` constructor parameter,
     or, if `logger` is `None`, one obtained with `logging.getLogger(name=name)`.
     Any logger interactions which are not directly supported by this helper class can be accessed directly via `Logger.logger` member.
 
     Due to the how Python's logger works, the first ("root") instance of the logger will define the defaults for any named loggers
-    added later. These defaults can optionally be overridden per child instance by passing the desired parameters to the constructor.
+    added later. These defaults can optionally be overridden per child instance by passing the desired parameters to the constructor
+    or via the `setLogLevel()`, `setStreamDestination()`, and `setFileDestination()` methods.
 
-    The class provides aliases for the common log writing methodss like `debug()`, `info()`, etc. In addition to the method names
-    from `logging.Logger`, some shorter aliases are provided (`dbg()`, `inf()`, `wrn()/warn()`, `err()`, `crt()/fatal()`).
+    The class provides aliases for the `logging.Logger` log writing methodss like `debug()`, `info()`, 'log()', etc.
+    In addition, some shorter aliases are provided (`dbg()`, `inf()`, `wrn()/warn()`, `err()`, `crt()/fatal()`).
 
     For further details on Python's built-in logging, see: https://docs.python.org/3/library/logging.html
     """
@@ -113,7 +115,7 @@ class Logger:
             self.logger.setLevel(level)
             # if switching from null logging, remove null handler and re-add stream/file handler(s)
             if self.nullHandler:
-                self.logger.removeHandler(self.streamHandler)
+                self.logger.removeHandler(self.nullHandler)
                 self.nullHandler = None
                 if self.fileHandler:
                     self.logger.addHandler(self.fileHandler)
@@ -125,9 +127,9 @@ class Logger:
                 self.logger.removeHandler(self.fileHandler)
             if self.streamHandler:
                 self.logger.removeHandler(self.streamHandler)
-            self.nullHandler = NullHandler
-            self.log.logger.addHandler(self.nullHandler)
-            self.log.logger.setLevel("CRITICAL")
+            self.nullHandler = NullHandler()
+            self.logger.addHandler(self.nullHandler)
+            self.logger.setLevel("CRITICAL")
 
     def setStreamDestination(self, stream):
         """ Set a destination for the StreamHandler logger. `stream` should be a file stream type (eg. os.stderr) or `None` to disable. """
