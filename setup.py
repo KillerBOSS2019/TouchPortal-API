@@ -45,7 +45,8 @@ setup(
   python_requires = '>=3.8',
   install_requires = [
     'pyee',
-    'requests'
+    'requests',
+    'pyinstaller'
   ],
   extras_require = {
     'dev': [
@@ -53,6 +54,6 @@ setup(
     ]
   },
   entry_points = {
-    'console_scripts': ['tppsdk=TouchPortalAPI.sdk_tools:main']
+    'console_scripts': ['tppsdk=TouchPortalAPI.sdk_tools:main', 'tppbuild=TouchPortalAPI.tppbuild:main']
   }
 )

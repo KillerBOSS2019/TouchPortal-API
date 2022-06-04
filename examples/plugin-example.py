@@ -40,6 +40,7 @@ TP_PLUGIN_INFO = {
     'version': int(float(__version__) * 100),  # TP only recognizes integer version numbers
     'name': "Touch Portal Plugin Example",
     'id': PLUGIN_ID,
+    "plugin_start_cmd": "%TP_PLUGIN_FOLDER%TPExamplePlugin\\pluginexample.exe",
     'configuration': {
         'colorDark': "#25274c",
         'colorLight': "#707ab5"
