@@ -153,7 +153,7 @@ class Client(ExecutorEventEmitter):
                 optionally using `maxWorkers` concurrent threads.
             `useNamespaceCallbacks`: use NamespaceCallback as message handler
                 Default is `False` meaning It will send normal json
-                `True` meaning It will automatically convert json to namespace to make easier access value 
+                `True` meaning It will automatically convert json to namespace to make easier access value
                 eg json: data['actionId']['value'] and namespace would be data.actionId.value
             `loggerName`: Optional name for the Logger to be used by the Client.
                 Default of `None` creates (or uses, if it already exists) the "root" (default) logger.
@@ -214,8 +214,7 @@ class Client(ExecutorEventEmitter):
                 return lines
             else:
                 # No connection
-                self.log.warning("Peer closed the connection.")
-                raise RuntimeError("Peer closed the connection.")
+                self.__raiseException("Peer closed the connection.", RuntimeError)
         return []
 
     def __write(self):
@@ -324,7 +323,7 @@ class Client(ExecutorEventEmitter):
         self.__emitEvent(TYPES.onShutdown, {"type": TYPES.onShutdown})
         self.__close()
         if exc:
-            self.log.warning(exc)
+            self.log.critical(repr(exc))
             raise exc
 
     def __getWriteLock(self):
@@ -552,7 +551,7 @@ class Client(ExecutorEventEmitter):
         This will return a dict that `choiceUpdate` registered.
             example return value `{"choiceUpdateid1": ["item1", "item2", "item3"], "exampleChoiceId": ["Option1", "Option2", "Option3"]}`
 
-        You should use this to verify before Updating the choice list    
+        You should use this to verify before Updating the choice list
         **Note** This is the same as TPClient.choiceUpdateList variable *DO NOT MODIFY* TPClient.choiceUpdateList unless you know what your doing
         """
         return self.choiceUpdateList
@@ -570,7 +569,7 @@ class Client(ExecutorEventEmitter):
         """
         This will return a dict that have key pair of setting value that you updated previously.
 
-        This is used to track settings value that you have updated previously 
+        This is used to track settings value that you have updated previously
         **Note** This is the same as TPClient.currentSettings variable *DO NOT MODIFY* TPClient.currentSettings unless you know what your doing
         """
         return self.currentSettings
