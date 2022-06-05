@@ -222,7 +222,11 @@ def main():
 
     # Set up and handle CLI arguments. These all relate to logging options.
     # The plugin can be run with "-h" option to show available argument options.
-    parser = ArgumentParser()
+    # Addtionally, a file constaining any of these arguments can be specified on the command line
+    # with the `@` prefix. For example: `plugin-example.py @config.txt`
+    # The file must contain one valid argument per line, including the `-` or `--` prefixes.
+    # See the plugin-example-conf.txt file for an example config file.
+    parser = ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument("-d", action='store_true',
                         help="Use debug logging.")
     parser.add_argument("-w", action='store_true',
@@ -237,6 +241,11 @@ def main():
     # his processes the actual command line and populates the `opts` dict.
     opts = parser.parse_args()
     del parser
+
+    # trim option string (they may contain spaces if read from config file)
+    opts.l = opts.l.strip()
+    opts.s = opts.s.strip().lower()
+    print(opts)
 
     # Set minimum logging level based on passed arguments
     logLevel = "INFO"
