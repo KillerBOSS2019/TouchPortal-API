@@ -1,6 +1,8 @@
 __copyright__ = """
     This file is part of the TouchPortal-API project.
+    Copyright (c) TouchPortal-API Developers/Contributors
     Copyright (C) 2021 DamienS
+    All rights reserved.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +24,10 @@ import json
 from pyee import ExecutorEventEmitter
 from concurrent.futures import Executor, ThreadPoolExecutor
 from threading import Event, Lock
+from .logger import Logger
 from .tools import Tools
+from typing import TextIO
+import sys
 
 __all__ = ['Client', 'TYPES']
 
@@ -124,7 +129,11 @@ class Client(ExecutorEventEmitter):
                  updateStatesOnBroadcast:bool = False,
                  maxWorkers:int = None,
                  executor:Executor = None,
-                 useNamespaceCallbacks:bool = False):
+                 useNamespaceCallbacks:bool = False,
+                 loggerName:str = None,
+                 logLevel:str = "INFO",
+                 logStream:TextIO = sys.stderr,
+                 logFileName:str = None):
         """
         Creates an instance of the client.
 
@@ -144,9 +153,21 @@ class Client(ExecutorEventEmitter):
                 optionally using `maxWorkers` concurrent threads.
             `useNamespaceCallbacks`: use NamespaceCallback as message handler
                 Default is `False` meaning It will send normal json
-                `True` meaning It will automatically convert json to namespace to make easier access value 
+                `True` meaning It will automatically convert json to namespace to make easier access value
                 eg json: data['actionId']['value'] and namespace would be data.actionId.value
-
+            `loggerName`: Optional name for the Logger to be used by the Client.
+                Default of `None` creates (or uses, if it already exists) the "root" (default) logger.
+            `logLevel`: Desired minimum logging level, one of:
+                "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG" (or equivalent Py `logging` module Level constants),
+                or `None` to disable all logging. The level can also be set at runtime via `setLogLevel()` method.
+                Default is "INFO".
+            `logStream`: Set a stream to write log messages to, or `None` to disable stream (console) logging.
+                The stream logger can also be modified at runtime via `setLogStream()` method.
+                Default is `sys.stderr`.
+            `logFileName`: A file name (with optional path) for log messages. Paths are relative to current working directory.
+                Pass `None` or empty string to disable file logging. The log file is rotated once per day and the last 7
+                logs are preserved (older ones are deleted). The file logger can also be modified at runtime via `setLogFile()` method.
+                Default is `None` (file logging is disabled).
         """
         if not executor and maxWorkers:
             executor = ThreadPoolExecutor(max_workers=maxWorkers)
@@ -157,6 +178,7 @@ class Client(ExecutorEventEmitter):
         self.checkPluginId = checkPluginId
         self.updateStatesOnBroadcast = updateStatesOnBroadcast
         self.useNamespaceCallbacks = useNamespaceCallbacks
+        self.log = Logger(name=loggerName, level=logLevel, filename=logFileName, stream=logStream)
         self.client = None
         self.selector = None
         self.currentStates = {}
@@ -170,7 +192,10 @@ class Client(ExecutorEventEmitter):
         self.__writeLock = Lock()        # mutex for __sendBuffer
         self.__sendBuffer = bytearray()
         self.__recvBuffer = bytearray()
-            
+        # explicitly disable logging if logLevel `None` was passed (Logger() c'tor ignores `None` log level)
+        if not logLevel:
+            self.log.setLogLevel(None)
+
     def __buffered_readLine(self):
         try:
             # Should be ready to read
@@ -189,7 +214,7 @@ class Client(ExecutorEventEmitter):
                 return lines
             else:
                 # No connection
-                raise RuntimeError("Peer closed the connection.")
+                self.__raiseException("Peer closed the connection.", RuntimeError)
         return []
 
     def __write(self):
@@ -269,6 +294,7 @@ class Client(ExecutorEventEmitter):
         self.__stopEvent.clear()
 
     def __close(self):
+        self.log.info(f"{self.pluginId} Disconnected from TouchPortal")
         self.__stopEvent.set()
         if self.__writeLock.locked():
             self.__writeLock.release()
@@ -279,12 +305,12 @@ class Client(ExecutorEventEmitter):
             try:
                 self.selector.unregister(self.client)
             except Exception as e:
-                print(f"Error in selector.unregister(): {repr(e)}")
+                self.log.warning(f"Error in selector.unregister(): {repr(e)}")
         try:
             self.client.shutdown(socket.SHUT_RDWR)
             self.client.close()
         except OSError as e:
-            print(f"Error in socket.close(): {repr(e)}")
+            self.log.warning(f"Error in socket.close(): {repr(e)}")
         finally:
             # Delete reference to socket object for garbage collection, socket cannot be reused anyway.
             self.client = None
@@ -293,10 +319,11 @@ class Client(ExecutorEventEmitter):
         # print("TP Client stopped.")
 
     def __die(self, msg=None, exc=None):
-        if msg: print(msg)
+        if msg: self.log.info(msg)
         self.__emitEvent(TYPES.onShutdown, {"type": TYPES.onShutdown})
         self.__close()
         if exc:
+            self.log.critical(repr(exc))
             raise exc
 
     def __getWriteLock(self):
@@ -308,11 +335,30 @@ class Client(ExecutorEventEmitter):
         self.__die(exc=RuntimeError("Send buffer mutex deadlock, cannot continue."))
         return False
 
+    def __raiseException(self, message, exc = TypeError):
+        self.log.error(message)
+        raise exc(message)
+
     def isConnected(self):
         """
         Returns `True` if the Client is connected to Touch Portal, `False` otherwise.
         """
         return not self.__stopEvent.is_set()
+
+    def setLogLevel(self, level):
+        """ Sets the minimum logging level. `level` can be one of one of:
+            "CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG" (or equivalent Py `logging` module Level constants),
+            or `None` to disable all logging.
+        """
+        self.log.setLogLevel(level)
+
+    def setLogStream(self, stream):
+        """ Set a destination for the StreamHandler logger. `stream` should be a file stream type (eg. os.stderr) or `None` to disable. """
+        self.log.setStreamDestination(stream)
+
+    def setLogFile(self, fileName):
+        """ Set a destination for the File logger. `filename` should be a file name (with or w/out a path) or `None` to disable the file logger. """
+        self.log.setFileDestination(fileName)
 
     def isActionBeingHeld(self, actionId:str):
         """
@@ -342,9 +388,9 @@ class Client(ExecutorEventEmitter):
                 if isinstance(state, dict):
                     self.createState(state.get('id', ""), state.get('desc', ""), state.get('value', ""), state.get("parentGroup", ""))
                 else:
-                    raise TypeError(f'createStateMany() requires a list of dicts, got {type(state)} instead.')
+                    self.__raiseException(f'createStateMany() requires a list of dicts, got {type(state)} instead.')
         except:
-            raise TypeError(f'createStateMany() requires an iteratable, got {type(states)} instead.')
+            self.__raiseException(f"createStateMany() requires an iteratable, got {type(states)} instead.")
 
     def removeState(self, stateId:str, validateExists = True):
         """
@@ -356,7 +402,7 @@ class Client(ExecutorEventEmitter):
             self.send({"type": "removeState", "id": stateId})
             self.currentStates.pop(stateId)
         elif validateExists:
-            raise Exception(f"{stateId} Does not exist.")
+            self.__raiseException(f"{stateId} Does not exist.", Exception)
 
     def removeStateMany(self, states:list):
         """
@@ -367,18 +413,19 @@ class Client(ExecutorEventEmitter):
             for state in states:
                 self.removeState(state, False)
         except TypeError:
-            raise TypeError(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
+            self.__raiseException(f'removeStateMany() requires an iteratable, got {type(states)} instead.')
 
     def choiceUpdate(self, choiceId:str, values:list):
         """
         This updates the list of choices in a previously-declared TP State with id `stateId`.
         See TP API reference for details on updating list values.
         """
-        if choiceId and isinstance(values, list):
-            self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
-            self.choiceUpdateList[choiceId] = values
-        else:
-            raise TypeError(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
+        if choiceId:
+            if isinstance(values, list):
+                self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+                self.choiceUpdateList[choiceId] = values
+            else:
+                self.__raiseException(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
     def choiceUpdateSpecific(self, stateId:str, values:list, instanceId:str):
         """
@@ -389,7 +436,7 @@ class Client(ExecutorEventEmitter):
             if isinstance(values, list):
                 self.send({"type": "choiceUpdate", "id": stateId, "instanceId": instanceId, "value": values})
             else:
-                raise TypeError(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
+                self.__raiseException(f'choiceUpdateSpecific() values argument needs to be a list not a {type(values)}')
 
     def settingUpdate(self, settingName:str, settingValue):
         """
@@ -421,9 +468,9 @@ class Client(ExecutorEventEmitter):
                 if isinstance(state, dict):
                     self.stateUpdate(state.get('id', ""), state.get('value', ""))
                 else:
-                    raise TypeError(f'StateUpdateMany() requires a list of dicts, got {type(state)} instead.')
+                    self.__raiseException(f'StateUpdateMany() requires a list of dicts, got {type(state)} instead.')
         except TypeError:
-            raise TypeError(f'StateUpdateMany() requires an iteratable, got {type(states)} instead.')
+            self.__raiseException(f"createStateMany() requires an iteratable, got {type(states)} instead.")
 
     def showNotification(self, notificationId:str, title:str, msg:str, options:list):
         """
@@ -439,7 +486,7 @@ class Client(ExecutorEventEmitter):
         if notificationId and title and msg and options and isinstance(options, list):
             for option in options:
                 if 'id' not in option.keys() or 'title' not in option.keys():
-                    raise TypeError("all options require id and title keys")
+                    self.__raiseException("all options require id and title keys")
             self.send({
                 "type": "showNotification",
                 "notificationId": str(notificationId),
@@ -490,9 +537,9 @@ class Client(ExecutorEventEmitter):
         Note: This method will automatically looking for shortId using gaven connectorId however if It cannot find shortId it will just send connectorId
         """
         if not isinstance(connectorId, str):
-            raise TypeError(f"connectorId needs to be a str not a {type(connectorId)}")
+            self.__raiseException(f"connectorId needs to be a str not a {type(connectorId)}")
         if not isinstance(connectorValue, int):
-            raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
+            self.__raiseException(f"connectorValue requires a int not {type(connectorValue)}")
         if 0 <= connectorValue <= 100:
             if f"pc_{self.pluginId}_{connectorId}" in self.shortIdTracker:
                 self.shortIdUpdate(self.shortIdTracker[connectorId], connectorValue)
@@ -503,7 +550,7 @@ class Client(ExecutorEventEmitter):
                     "value": str(connectorValue)
                 })
         else:
-            raise TypeError(f"connectorValue needs to be between 0-100 not {connectorValue}")
+            self.__raiseException(f"connectorValue needs to be between 0-100 not {connectorValue}")
 
     def updateActionData(self, instanceId:str, stateId:str, minValue, maxValue):
         """
@@ -516,7 +563,7 @@ class Client(ExecutorEventEmitter):
         This will return a dict that `choiceUpdate` registered.
             example return value `{"choiceUpdateid1": ["item1", "item2", "item3"], "exampleChoiceId": ["Option1", "Option2", "Option3"]}`
 
-        You should use this to verify before Updating the choice list    
+        You should use this to verify before Updating the choice list
         **Note** This is the same as TPClient.choiceUpdateList variable *DO NOT MODIFY* TPClient.choiceUpdateList unless you know what your doing
         """
         return self.choiceUpdateList
@@ -534,7 +581,7 @@ class Client(ExecutorEventEmitter):
         """
         This will return a dict that have key pair of setting value that you updated previously.
 
-        This is used to track settings value that you have updated previously 
+        This is used to track settings value that you have updated previously
         **Note** This is the same as TPClient.currentSettings variable *DO NOT MODIFY* TPClient.currentSettings unless you know what your doing
         """
         return self.currentSettings
@@ -545,10 +592,12 @@ class Client(ExecutorEventEmitter):
         after serializing it as JSON and adding a `\n`. Normally there is no need to use this method directly, but if the
         Python API doesn't cover something from the TP API, this could be used instead.
         """
+        if not self.isConnected():
+            self.__raiseException("TP Client not connected to Touch Portal, cannot send commands.", Exception)
         if self.__getWriteLock():
             if len(self.__sendBuffer) + len(data) > self.SND_BUFFER_SZ:
                 self.__writeLock.release()
-                raise ResourceWarning("TP Client send buffer is full!")
+                self.__raiseException("TP Client send buffer is full!", ResourceWarning)
             self.__sendBuffer += (json.dumps(data)+'\n').encode()
             self.__writeLock.release()
             self.__dataReadyEvent.set()

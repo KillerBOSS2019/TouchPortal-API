@@ -10,7 +10,7 @@ import TouchPortalAPI as TP
 
 # imports below are optional, to provide argument parsing and logging functionality
 from argparse import ArgumentParser
-from logging import (getLogger, Formatter, NullHandler, FileHandler, StreamHandler, DEBUG, INFO, WARNING)
+from TouchPortalAPI.logger import Logger
 
 
 # Version string of this plugin (in Python style).
@@ -140,9 +140,11 @@ try:
     )
 except Exception as e:
     sys.exit(f"Could not create TP Client, exiting. Error was:\n{repr(e)}")
+# TPClient: TP.Client = None  # instance of the TouchPortalAPI Client, created in main()
 
-# Crate the (optional) global logger
-g_log = getLogger()
+# Crate the (optional) global logger, an instance of `TouchPortalAPI::Logger` helper class.
+# Logging configuration is set up in main().
+g_log = Logger(name = PLUGIN_ID)
 
 # Settings will be sent by TP upon initial connection to the plugin,
 # as well as whenever they change at runtime. This example uses a
@@ -213,8 +215,18 @@ def main():
     global TPClient, g_log
     ret = 0  # sys.exit() value
 
-    # handle CLI arguments
-    parser = ArgumentParser()
+    # default log file destination
+    logFile = f"./{PLUGIN_ID}.log"
+    # default log stream destination
+    logStream = sys.stdout
+
+    # Set up and handle CLI arguments. These all relate to logging options.
+    # The plugin can be run with "-h" option to show available argument options.
+    # Addtionally, a file constaining any of these arguments can be specified on the command line
+    # with the `@` prefix. For example: `plugin-example.py @config.txt`
+    # The file must contain one valid argument per line, including the `-` or `--` prefixes.
+    # See the plugin-example-conf.txt file for an example config file.
+    parser = ArgumentParser(fromfile_prefix_chars='@')
     parser.add_argument("-d", action='store_true',
                         help="Use debug logging.")
     parser.add_argument("-w", action='store_true',
@@ -222,41 +234,40 @@ def main():
     parser.add_argument("-q", action='store_true',
                         help="Disable all logging (quiet).")
     parser.add_argument("-l", metavar="<logfile>",
-                        help="Log to this file (default is stdout).")
-    parser.add_argument("-s", action='store_true',
-                        help="If logging to file, also output to stdout.")
+                        help=f"Log file name (default is '{logFile}'). Use 'none' to disable file logging.")
+    parser.add_argument("-s", metavar="<stream>",
+                        help="Log to output stream: 'stdout' (default), 'stderr', or 'none'.")
 
+    # his processes the actual command line and populates the `opts` dict.
     opts = parser.parse_args()
     del parser
 
-    # set up logging
-    if opts.q:
-        # no logging at all
-        g_log.addHandler(NullHandler())
-    else:
-        # set up pretty log formatting (similar to TP format)
-        fmt = Formatter(
-            fmt="{asctime:s}.{msecs:03.0f} [{levelname:.1s}] [{filename:s}:{lineno:d}] {message:s}",
-            datefmt="%H:%M:%S", style="{"
-        )
-        # set the logging level
-        if   opts.d: g_log.setLevel(DEBUG)
-        elif opts.w: g_log.setLevel(WARNING)
-        else:        g_log.setLevel(INFO)
-        # set up log destination (file/stdout)
-        if opts.l:
-            try:
-                # note that this will keep appending to any existing log file
-                fh = FileHandler(str(opts.l))
-                fh.setFormatter(fmt)
-                g_log.addHandler(fh)
-            except Exception as e:
-                opts.s = True
-                print(f"Error while creating file logger, falling back to stdout. {repr(e)}")
-        if not opts.l or opts.s:
-            sh = StreamHandler(sys.stdout)
-            sh.setFormatter(fmt)
-            g_log.addHandler(sh)
+    # trim option string (they may contain spaces if read from config file)
+    opts.l = opts.l.strip()
+    opts.s = opts.s.strip().lower()
+    print(opts)
+
+    # Set minimum logging level based on passed arguments
+    logLevel = "INFO"
+    if opts.q: logLevel = None
+    elif opts.d: logLevel = "DEBUG"
+    elif opts.w: logLevel = "WARNING"
+
+    # set log file if -l argument was passed
+    if opts.l:
+        logFile = None if opts.l.lower() == "none" else opts.l
+    # set console logging if -s argument was passed
+    if opts.s:
+        if opts.s.lower() == "stderr": logStream = sys.stderr
+        elif opts.s.lower() == "stdout": logStream = sys.stdout
+        else: logStream = None
+
+    # Configure the Client logging based on command line arguments.
+    # Since the Client uses the "root" logger by default,
+    # this also sets all default logging options for any added child loggers, such as our g_log instance we created earlier.
+    TPClient.setLogFile(logFile)
+    TPClient.setLogStream(logStream)
+    TPClient.setLogLevel(logLevel)
 
     # ready to go
     g_log.info(f"Starting {TP_PLUGIN_INFO['name']} v{__version__} on {sys.platform}.")

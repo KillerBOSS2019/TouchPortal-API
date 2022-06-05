@@ -1,6 +1,8 @@
 __copyright__ = """
     This file is part of the TouchPortal-API project.
+    Copyright (c) TouchPortal-API Developers/Contributors
     Copyright (C) 2021 DamienS
+    All rights reserved.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,11 +18,11 @@ __copyright__ = """
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import requests
 import os
+import sys
 import base64
+import requests
 from types import SimpleNamespace
-
 
 class Tools():
     """
