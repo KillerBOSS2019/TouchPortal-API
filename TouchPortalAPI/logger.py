@@ -29,7 +29,7 @@ class Logger:
     """ A helper class for common logging requirements, which can be configured via the constructor and provides some convenience
     methods.
 
-    It uses a an instance of Python's `logging.Logger()` class, either the one specified in the `logger` constructor parameter,
+    It uses an instance of Python's `logging.Logger()` class, either the one specified in the `logger` constructor parameter,
     or, if `logger` is `None`, one obtained with `logging.getLogger(name=name)`.
     Any logger interactions which are not directly supported by this helper class can be accessed directly via `Logger.logger` member.
 
