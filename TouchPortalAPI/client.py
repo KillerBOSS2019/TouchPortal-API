@@ -448,6 +448,18 @@ class Client(ExecutorEventEmitter):
                 "options": options
             })
 
+    def __findShortId(self, connectorId:str):
+        """        
+        This method is used internally to find the short ID of a connector.
+
+        UNUSED code.
+        """
+        for cid in list(self.shortIdTracker.keys()):
+            if (splitCId := connectorId.split("|")) and splitCId[0] == cid.split("|")[0]:
+                if all(x in splitCId for x in splitCId[1:] if x in cid.split("|")[1:]):
+                    return self.shortIdTracker[connectorId]
+        return None
+
     def shortIdUpdate(self, shortId:str, connectorValue:int):
         """
         This allows you to update slider position value using shortId which TouchPortal will broadcast.
@@ -482,8 +494,8 @@ class Client(ExecutorEventEmitter):
         if not isinstance(connectorValue, int):
             raise TypeError(f"connectorValue requires a int not {type(connectorValue)}")
         if 0 <= connectorValue <= 100:
-            if (cid := f"pc_{self.pluginId}_{connectorId}") in self.shortIdTracker:
-                self.shortIdUpdate(self.shortIdTracker[cid], connectorValue)
+            if f"pc_{self.pluginId}_{connectorId}" in self.shortIdTracker:
+                self.shortIdUpdate(self.shortIdTracker[connectorId], connectorValue)
             else:
                 self.send({
                     "type": "connectorUpdate",

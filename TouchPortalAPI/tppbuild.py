@@ -194,7 +194,6 @@ def main():
 	print("Packing everything into tpp file")
 	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
 
-	print("Clean up any mess that's made from this.")
 	build_clean(["entry.tp"] if isPyEntry else None)
 	print("Done!")
 
