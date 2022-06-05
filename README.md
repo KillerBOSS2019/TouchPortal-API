@@ -15,7 +15,7 @@ Alternatively, download/clone the source code from this repository and either:
 - Python v3.8 or higher.
 - Additional Python modules `pyee` and `requests` (dependencies are automatically installed during setup, if necessary).
 - This Python API supports Touch Portal API version 3.0, as used in Touch Portal V2.3+.
-- Some TP API v4 features have been implemented, but have not yet been fully tested, pending release of TP v2.4.
+- Almost all the features from TP API (SDK 6.0 TP V 3.0.11) are fully implemented and tested with real plugins.
 
 
 ## Documentation
@@ -32,7 +32,7 @@ Check the [examples folder](https://github.com/KillerBOSS2019/TouchPortal-API/tr
 
 ### Basic Usage Example
 
-Make a folder in `%appdata%/TouchPortal/plugins/` called `ExamplePlugin`
+Make a folder in `%appdata%/TouchPortal/plugins/` or for Mac it would be in `Document/TouchPortal/plugins` called `ExamplePlugin`
 and make a file there called `entry.tp` and paste this JSON data into that file:
 
 ```json
@@ -129,6 +129,12 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7 (6/4/2022)
+-------------------
+- Updated pdoc
+- Added logging 
+- Added tppBuild
+
 1.6.3 (5/27/2022)
 -------------------
 - Added shortId

@@ -45,12 +45,14 @@ setup(
   python_requires = '>=3.8',
   install_requires = [
     'pyee',
-    'requests',
-    'pyinstaller'
+    'requests'
   ],
   extras_require = {
     'dev': [
       'pdoc',
+    ],
+    'optional': [
+      'Pyinstaller',
     ]
   },
   entry_points = {
