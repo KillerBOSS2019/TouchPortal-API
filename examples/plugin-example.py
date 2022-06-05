@@ -40,7 +40,8 @@ TP_PLUGIN_INFO = {
     'version': int(float(__version__) * 100),  # TP only recognizes integer version numbers
     'name': "Touch Portal Plugin Example",
     'id': PLUGIN_ID,
-    "plugin_start_cmd": "%TP_PLUGIN_FOLDER%TPExamplePlugin\\pluginexample.exe",
+    # Startup command, with default logging options read from configuration file (see main() for details)
+    "plugin_start_cmd": "%TP_PLUGIN_FOLDER%TPExamplePlugin\\pluginexample.exe @plugin-example-conf.txt",
     'configuration': {
         'colorDark': "#25274c",
         'colorLight': "#707ab5"
@@ -258,8 +259,8 @@ def main():
         logFile = None if opts.l.lower() == "none" else opts.l
     # set console logging if -s argument was passed
     if opts.s:
-        if opts.s.lower() == "stderr": logStream = sys.stderr
-        elif opts.s.lower() == "stdout": logStream = sys.stdout
+        if opts.S == "stderr": logStream = sys.stderr
+        elif opts.s == "stdout": logStream = sys.stdout
         else: logStream = None
 
     # Configure the Client logging based on command line arguments.
