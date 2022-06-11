@@ -89,11 +89,12 @@ PLUGIN_ICON = r"icon-24.png"
 OUTPUT_PATH = r"./"
 
 """ PLUGIN_VERSION: A version string for the generated .tpp file name. This example reads the `__version__` from the example plugin's code. """
-import importlib
-from sys import path
-path.insert(1, pluginSourcePath)
-plugin = importlib.import_module(pluginFileName)
-PLUGIN_VERSION = plugin.__version__
+# import importlib
+# from sys import path
+# from pathlib import Path
+# path.insert(1, Path(pluginSourcePath).resolve().absolute())
+# plugin = importlib.import_module(pluginFileName)
+PLUGIN_VERSION = "1.0.0" #plugin.__version__
 
 # Or just set the PLUGIN_VERSION manually.
 # PLUGIN_VERSION = "1.0.0-beta1"

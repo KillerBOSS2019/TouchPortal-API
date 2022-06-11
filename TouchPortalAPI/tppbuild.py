@@ -64,6 +64,7 @@ from zipfile import (ZipFile, ZIP_DEFLATED)
 from argparse import ArgumentParser
 from glob import glob
 from shutil import rmtree
+from pathlib import Path
 try:
 	import PyInstaller.__main__
 except ImportError:
@@ -116,14 +117,12 @@ def build_distro(opsys, version, pluginname, packingList, output):
 
 	print("")
 
-def build_clean(morefile=None, dirPath=None):
+def build_clean(distPath, dirPath=None):
 	print("Cleaning up...")
 	files = glob("build")
 	files.extend(glob("*.spec"))
-	for f in ["dist/*.exe", "__pycache__"]:
-		files.extend(glob(os.path.join(dirPath,f)))
-	if morefile != None:
-		files.extend(morefile)
+	files.extend(glob(os.path.join(dirPath,"__pycache__")))
+
 	for file in files:
 		if os.path.exists(file):
 			print("removing: " + file)
@@ -131,7 +130,14 @@ def build_clean(morefile=None, dirPath=None):
 				os.remove(file)
 			elif os.path.isdir(file):
 				rmtree(file)
+	rmtree(distPath)
 	print("")
+
+def filePath(*file):
+	fullpath = os.path.join(*file)
+	return str(Path(fullpath).resolve())
+
+		
 
 EXE_SFX = ".exe" if sys.platform == "win32" else ""
 
@@ -179,19 +185,23 @@ def main():
 
 	print(f"Building {buildfile.PLUGIN_EXE_NAME} v{buildfile.PLUGIN_VERSION} target(s) on {sys.platform}\n")
 
-	buildfile_path = os.path.join(os.getcwd(), os.path.dirname(opts.target))
-	if os.path.exists(dirPath := os.path.join(buildfile_path, buildfile.OUTPUT_PATH, "dist")):
+	out_dir = os.path.dirname(opts.target)
+	buildfiledir = filePath(out_dir)
+
+	if os.path.exists(dirPath := os.path.join(buildfiledir, buildfile.OUTPUT_PATH, "dist")):
 		rmtree(dirPath)
 	os.makedirs(dirPath)
 
-	if os.path.isfile(os.path.join(buildfile_path, buildfile.PLUGIN_ENTRY)):
-		sys.path.append(os.path.dirname(os.path.realpath(os.path.join(buildfile_path, buildfile.PLUGIN_ENTRY))))
-		entry_output_path = os.path.join(buildfile_path, buildfile.OUTPUT_PATH, "dist", "entry.tp")
-		sdk_arg = [os.path.join(buildfile_path, buildfile.PLUGIN_ENTRY), f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
+	distdir = filePath(buildfiledir, buildfile.OUTPUT_PATH, 'dist')
+
+	if (entry_abs_path := filePath(buildfiledir, buildfile.PLUGIN_ENTRY)) and os.path.isfile(entry_abs_path):
+		sys.path.append(os.path.dirname(os.path.realpath(entry_abs_path)))
+		entry_output_path = filePath(distdir, "entry.tp")
+		sdk_arg = [entry_abs_path, f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
 		result = sdk_tools.main(sdk_arg)
 		if result == 0:
 			print("Adding entry.tp to packing list.")
-			TPP_PACK_LIST[os.path.join(buildfile_path, buildfile.OUTPUT_PATH, "dist", "entry.tp") if buildfile.PLUGIN_ENTRY.endswith(".py") else entry_output_path] = buildfile.PLUGIN_ROOT + "/"
+			TPP_PACK_LIST[entry_output_path] = buildfile.PLUGIN_ROOT + "/"
 		else:
 			print("Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.")
 			return 0
@@ -199,44 +209,44 @@ def main():
 		print(f"Warning could not find {buildfile.PLUGIN_ENTRY}. Canceling build process.")
 		return 0
 	
-	if not os.path.exists(os.path.join(buildfile_path, buildfile.PLUGIN_ICON)):
+	if not os.path.exists(filePath(buildfiledir, buildfile.PLUGIN_ICON)):
 		print(f"Warning {buildfile.PLUGIN_ICON} does not exist. TouchPortal will use default plugin icon.")
 	else:
 		print(f"Found {buildfile.PLUGIN_ICON} adding it to packing list.")
-		iconpath = os.path.join(buildfile_path, buildfile.PLUGIN_ICON)
-		TPP_PACK_LIST[os.path.join(buildfile_path, buildfile.PLUGIN_ICON.split("/")[-1])] = buildfile.PLUGIN_ROOT + "/" \
+		TPP_PACK_LIST[filePath(buildfiledir, buildfile.PLUGIN_ICON.split("/")[-1])] = buildfile.PLUGIN_ROOT + "/" \
 			 if len(buildfile.PLUGIN_ICON.split("/")) == 1 else "".join(buildfile.PLUGIN_ICON.split("/")[0:-1])
 
 	print(f"Compiling {buildfile.PLUGIN_MAIN} for {sys.platform}")
 
-	PI_RUN = [os.path.join(buildfile_path, buildfile.PLUGIN_MAIN)]
-	PI_RUN.append(f'--distpath={os.path.join(buildfile_path, buildfile.OUTPUT_PATH, "dist")}')
+	PI_RUN = [filePath(buildfiledir, buildfile.PLUGIN_MAIN)]
+	PI_RUN.append(f'--distpath={distdir}')
 	PI_RUN.append(f'--onefile')
 	PI_RUN.append("--clean")
 	if (buildfile.PLUGIN_EXE_NAME == ""):
 		PI_RUN.append(f'--name={os.path.splitext(os.path.basename(buildfile.PLUGIN_MAIN))[0]}')
 	else:
 		PI_RUN.append(f'--name={buildfile.PLUGIN_EXE_NAME}')
-	if buildfile.PLUGIN_EXE_ICON and os.path.isfile(os.path.join(buildfile_path, buildfile.PLUGIN_EXE_ICON)):
-		PI_RUN.append(f"--icon={os.path.join(buildfile_path, buildfile.PLUGIN_EXE_ICON)}")
+	if buildfile.PLUGIN_EXE_ICON and os.path.isfile(os.path.join(buildfiledir, buildfile.PLUGIN_EXE_ICON)):
+		PI_RUN.append(f"--icon={os.path.join(buildfiledir, buildfile.PLUGIN_EXE_ICON)}")
+
+	PI_RUN.append(f"--specpath={distdir}")
+	PI_RUN.append(f"--workpath={distdir}")
+
 	PI_RUN.extend(buildfile.ADDITIONAL_PYINSTALLER_ARGS)
 
 	print("Running pyinstaller with arguments:", " ".join(PI_RUN))
 	PyInstaller.__main__.run(PI_RUN)
 	print(f"Done compiling. adding to packing list:", buildfile.PLUGIN_EXE_NAME + EXE_SFX)
-	TPP_PACK_LIST[os.path.join(buildfile_path, buildfile.OUTPUT_PATH, "dist", buildfile.PLUGIN_EXE_NAME + EXE_SFX)] = buildfile.PLUGIN_ROOT + "/"
+	TPP_PACK_LIST[filePath(distdir, buildfile.PLUGIN_EXE_NAME + EXE_SFX)] = buildfile.PLUGIN_ROOT + "/"
 	print("Checking for any additional required files")
 	for file in buildfile.ADDITIONAL_FILES:
 		print(f"Adding {file} to plugin")
-		TPP_PACK_LIST[file.split("/")[-1]] = file.split("/")[0:-1]
+		TPP_PACK_LIST[filePath(file.split("/")[-1])] = file.split("/")[0:-1]
 
 	print("Packing everything into tpp file")
-	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, os.path.join(buildfile_path, buildfile.OUTPUT_PATH))
+	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, os.path.join(buildfiledir, buildfile.OUTPUT_PATH))
 
-	build_clean([entry_output_path] if buildfile.PLUGIN_ENTRY.endswith(".py") else None, buildfile_path)
-
-	# remove empty dist folder
-	rmtree(os.path.join(buildfile_path, buildfile.OUTPUT_PATH, "dist"))
+	build_clean(distdir, buildfiledir)
 	print("Done!")
 
 	return 0
