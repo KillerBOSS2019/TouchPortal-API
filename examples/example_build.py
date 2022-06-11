@@ -1,3 +1,46 @@
+"""
+In order for buildScript to work, you need to have the following variables in your build file:
+
+    - PLUGIN_ROOT: (Required)
+        This lets the build script to know your plugin's root directory.
+
+    - OUTPUT_PATH: (Required)
+        This tells tppbuild where you want finished build tpp to be saved at. Default "./" meaning current dir where tppbuild is running from.
+
+
+    - PLUGIN_MAIN: (Required)
+        This lets tppbuild know where your main python plugin file is located so it will know which file to compile.
+
+    - PLUGIN_EXE_NAME: (Required)
+        This is the name of the executable file that is compiled by Pyinstaller.
+
+    - PLUGIN_EXE_ICON: (Optional)
+        This should be a path to a .ico file. However if png passed in, it will automatically converted to ico.
+        Otherwise, it will use pyinstaller's default icon.
+
+
+    - PLUGIN_ENTRY: (Required)
+        This can be either path to entry.tp or path to a python file that contains infomation about entry.
+        Note if you pass in a entry.tp, tppbuild will automatically validate the json. If you pass in a python file, it will
+        build entry.tp & validate it for you. If validation fails, tppbuild will exit.
+
+    - PLUGIN_ENTRY_INDENT: (Required)
+        Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.
+
+    - PLUGIN_VERSION: (Required)
+        A version string will be used as part of .tpp file.
+
+
+    - ADDITIONAL_FILES: (Optional)
+        If your plugin requires any additional files for your plugin to work, you can add them here.
+
+    - ADDITIONAL_PYINSTALLER_ARGS: (Optional)
+        If you have additional arguments for Pyinstaller, you can add them here. otherwise default it will use these arguments:
+        '--onefile', '--noconsole', '--distpath', 'dist', 'name', 'icon'
+
+Even if you don't use all of the above variables, you still need to have the following variables in your build file
+
+"""
 
 # first, some values which may be used in multiple places below
 
@@ -19,7 +62,7 @@ PLUGIN_EXE_NAME: This defines what you want your plugin executable to be named. 
 PLUGIN_EXE_NAME = "pluginexample"
 
 """
-PLUGIN_EXE_ICON: This should be a path to a .ico file that's used for the compiled exe (If left empty, the default pyinstaller icon will be used)
+PLUGIN_EXE_ICON: This should be a path to a .ico file. However if png passed in, it will automatically converted to ico.
 """
 PLUGIN_EXE_ICON = r""
 
@@ -27,9 +70,14 @@ PLUGIN_EXE_ICON = r""
 """
 PLUGIN_ENTRY: This can be either path to entry.tp or path to a python file that contains infomation about entry.
 Note if you pass in a entry.tp, tppbuild will automatically validate the json. If you pass in a python file, it will
-build entry.tp & validate it for you.
+build entry.tp & validate it for you. If validation fails, tppbuild will exit.
 """
 PLUGIN_ENTRY = PLUGIN_MAIN  # Here we just use the same file as the plugin's main code since that contains all the definitions for entry.tp.
+
+"""
+
+"""
+PLUGIN_ENTRY_INDENT = 2
 
 """ This is the root folder name that will be inside of .tpp """
 PLUGIN_ROOT = "TPExamplePlugin"
@@ -53,10 +101,10 @@ PLUGIN_VERSION = plugin.__version__
 """
 If you have any required file(s) that your plugin needs, put them in this list.
 """
-FileRequired = []
+ADDITIONAL_FILES = []
 
 """
 Any additional arguments to be passed to Pyinstaller. Optional.
 """
-Pyinstaller_arg = []
+ADDITIONAL_PYINSTALLER_ARGS = []
 

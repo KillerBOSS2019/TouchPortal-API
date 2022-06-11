@@ -58,7 +58,7 @@ The script command is `tppsdk` when the TouchPortalAPI is installed (via pip or 
 
 positional arguments:
   target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory.
-                        Defaults to './main.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead.
+                        Defaults to './tppEntry.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -503,7 +503,7 @@ def _validateDefinition(entry, as_str=False):
     return res
 
 
-def main():
+def main(sdk_args=None):
     from argparse import ArgumentParser
 
     parser = ArgumentParser(epilog="This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data. "
@@ -523,7 +523,7 @@ def main():
                          help="Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.")
     gen_grp.add_argument("-i", "--indent", metavar="<n>", type=int, default=2,
                          help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is %(default)s spaces.")
-    opts = parser.parse_args()
+    opts = parser.parse_args(sdk_args)
     del parser
 
     # default action
@@ -537,7 +537,7 @@ def main():
     valid = True
     entry_str = ""
     if opts.generate:
-        opts.target = _normPath(opts.target or "main.py")
+        opts.target = _normPath(opts.target or "tppEntry.py")
         output_path = None
         if opts.o:
             if opts.o not in ("-","stdout"):
