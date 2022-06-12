@@ -1,3 +1,29 @@
+__copyright__ = """
+This file is part of the TouchPortal-API project.
+Copyright TouchPortal-API Developers
+Copyright (c) 2021 DamienS
+All rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
+"""
+This is another way to create your build config. It's meant to when you import a constants variable
+It will hint you on how to create the file.
+"""
+
+
 PLUGIN_MAIN = ""
 """
 *REQUIRED*
@@ -79,6 +105,11 @@ import inspect
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import tppbuild
 
+"""
+validateBuild() this takes no arguments. when It's called it will check for all
+required constants variable are vaild It will check if path is vaild, is a file etc... If 
+any error is found, It will list all the error during the process.
+"""
 def validateBuild():
     frame = inspect.stack()[1]
     module = inspect.getmodule(frame[0])
@@ -142,6 +173,10 @@ def validateBuild():
     if not anyError:
         print("Validation completed successfully, No error found.")
 
+"""
+runBuild() this takes no arguments. This is the same as `tppbuild file.py` you do not need to pass your build config,
+It will automatically find it.
+"""
 def runBuild():
     frame = inspect.stack()[1]
     module = inspect.getmodule(frame[0])

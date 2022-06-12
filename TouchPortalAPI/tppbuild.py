@@ -40,7 +40,7 @@ optional arguments:
 __copyright__ = """
 This file is part of the TouchPortal-API project.
 Copyright TouchPortal-API Developers
-Copyright (c) 2021 Maxim Paperno
+Copyright (c) 2021 DamienS
 All rights reserved.
 
 This program is free software: you can redistribute it and/or modify
@@ -230,7 +230,7 @@ def main(buildArgs=None):
 	else:
 		PI_RUN.append(f'--name={buildfile.PLUGIN_EXE_NAME}')
 	if buildfile.PLUGIN_EXE_ICON and os.path.isfile(buildfile.PLUGIN_EXE_ICON):
-		PI_RUN.append(f"--icon={buildfile.PLUGIN_EXE_ICON}")
+		PI_RUN.append(f"--icon={Path(buildfile.PLUGIN_EXE_ICON).resolve()}")
 
 	PI_RUN.append(f"--specpath={distdir}")
 	PI_RUN.append(f"--workpath={distdir}")
