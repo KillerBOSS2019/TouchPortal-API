@@ -41,18 +41,16 @@ In order for buildScript to work, you need to have the following variables in yo
 Even if you don't use all of the above variables, you still need to have the following variables in your build file
 
 """
+from TouchPortalAPI.build import *
 
 # first, some values which may be used in multiple places below
-
-# directory for plugin source code
-pluginSourcePath = "./"
 # the base file name for the plugin's main file, w/out .py extension
-pluginFileName = "plugin-example"
+pluginFileName = "plugin_example"
 
 """
 PLUGIN_MAIN: This lets tppbuild know where your main python plugin file is located so it will know which file to compile.
 """
-PLUGIN_MAIN = pluginSourcePath + pluginFileName + ".py"
+PLUGIN_MAIN = pluginFileName + ".py"
 
 """
 PLUGIN_EXE_NAME: This defines what you want your plugin executable to be named. tppbuild will also use this for the .tpp file in the format:
@@ -83,18 +81,14 @@ PLUGIN_ENTRY_INDENT = 2
 PLUGIN_ROOT = "TPExamplePlugin"
 
 """ Path to icon file used in entry.tp for category `imagepath`, if any. If left blank, TP will use a default icon. """
-PLUGIN_ICON = r"icon-24.png"
+PLUGIN_ICON = r""
 
 """ This tells tppbuild where you want finished build tpp to be saved at. Default "./" meaning current dir where tppbuild is running from. """
 OUTPUT_PATH = r"./"
 
 """ PLUGIN_VERSION: A version string for the generated .tpp file name. This example reads the `__version__` from the example plugin's code. """
-# import importlib
-# from sys import path
-# from pathlib import Path
-# path.insert(1, Path(pluginSourcePath).resolve().absolute())
-# plugin = importlib.import_module(pluginFileName)
-PLUGIN_VERSION = "1.0.0" #plugin.__version__
+import plugin_example
+PLUGIN_VERSION = plugin_example.__version__
 
 # Or just set the PLUGIN_VERSION manually.
 # PLUGIN_VERSION = "1.0.0-beta1"
@@ -107,5 +101,11 @@ ADDITIONAL_FILES = []
 """
 Any additional arguments to be passed to Pyinstaller. Optional.
 """
-ADDITIONAL_PYINSTALLER_ARGS = []
+ADDITIONAL_PYINSTALLER_ARGS = [
+    "--log-level=WARN"
+]
 
+# validateBuild()
+
+if __name__ == "__main__":
+    runBuild()

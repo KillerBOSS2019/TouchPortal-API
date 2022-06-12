@@ -76,6 +76,7 @@ import sdk_tools
 
 def getInfoFromBuildScript(script:str):
 	try:
+		sys.path.insert(1, os.getcwd()) # This allows build config to import stuff
 		spec = importlib.util.spec_from_file_location("buildScript", script)
 		buildScript = importlib.util.module_from_spec(spec)
 		spec.loader.exec_module(buildScript)
@@ -119,9 +120,8 @@ def build_distro(opsys, version, pluginname, packingList, output):
 
 def build_clean(distPath, dirPath=None):
 	print("Cleaning up...")
-	files = glob("build")
-	files.extend(glob("*.spec"))
-	files.extend(glob(os.path.join(dirPath,"__pycache__")))
+	files = glob(distPath)
+	files.extend(glob("__pycache__"))
 
 	for file in files:
 		if os.path.exists(file):
@@ -130,7 +130,6 @@ def build_clean(distPath, dirPath=None):
 				os.remove(file)
 			elif os.path.isdir(file):
 				rmtree(file)
-	rmtree(distPath)
 	print("")
 
 def filePath(*file):
@@ -144,7 +143,7 @@ EXE_SFX = ".exe" if sys.platform == "win32" else ""
 OS_WIN = 1
 OS_MAC = 2
 
-def main():
+def main(buildArgs=None):
 	if sys.platform == "win32":
 		opsys = OS_WIN
 	elif sys.platform == "darwin":
@@ -166,14 +165,19 @@ def main():
 		'based on which operating system you\'re using.'
 	)
 
-	opts = parser.parse_args()
+	opts = parser.parse_args(buildArgs)
 	del parser
-	
+
+	out_dir = os.path.dirname(opts.target)
+
+	if out_dir:
+		os.chdir(out_dir)
+
 	print("tppbuild started with target: " + opts.target)
-	buildfile = getInfoFromBuildScript(opts.target)
+	buildfile = getInfoFromBuildScript(os.path.basename(opts.target))
 
 	attri_list = ["PLUGIN_ENTRY", "PLUGIN_MAIN", "PLUGIN_ROOT", "ADDITIONAL_PYINSTALLER_ARGS",
-				  "PLUGIN_EXE_NAME", "PLUGIN_ICON", "PLUGIN_ICON", "ADDITIONAL_FILES",
+				  "PLUGIN_EXE_NAME", "PLUGIN_ICON", "PLUGIN_EXE_ICON", "ADDITIONAL_FILES",
 				  "OUTPUT_PATH", "PLUGIN_VERSION", "PLUGIN_ENTRY_INDENT"]
 
 	checklist = [attri in dir(buildfile) for attri in attri_list]
@@ -185,18 +189,17 @@ def main():
 
 	print(f"Building {buildfile.PLUGIN_EXE_NAME} v{buildfile.PLUGIN_VERSION} target(s) on {sys.platform}\n")
 
-	out_dir = os.path.dirname(opts.target)
-	buildfiledir = filePath(out_dir)
+	#buildfiledir = filePath(out_dir)
 
-	if os.path.exists(dirPath := os.path.join(buildfiledir, buildfile.OUTPUT_PATH, "dist")):
+	if os.path.exists(dirPath := os.path.join(buildfile.OUTPUT_PATH, "dist")):
 		rmtree(dirPath)
 	os.makedirs(dirPath)
 
-	distdir = filePath(buildfiledir, buildfile.OUTPUT_PATH, 'dist')
+	distdir = os.path.join(buildfile.OUTPUT_PATH, 'dist')
 
-	if (entry_abs_path := filePath(buildfiledir, buildfile.PLUGIN_ENTRY)) and os.path.isfile(entry_abs_path):
+	if (entry_abs_path := buildfile.PLUGIN_ENTRY) and os.path.isfile(entry_abs_path):
 		sys.path.append(os.path.dirname(os.path.realpath(entry_abs_path)))
-		entry_output_path = filePath(distdir, "entry.tp")
+		entry_output_path = os.path.join(distdir, "entry.tp")
 		sdk_arg = [entry_abs_path, f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
 		result = sdk_tools.main(sdk_arg)
 		if result == 0:
@@ -209,16 +212,16 @@ def main():
 		print(f"Warning could not find {buildfile.PLUGIN_ENTRY}. Canceling build process.")
 		return 0
 	
-	if not os.path.exists(filePath(buildfiledir, buildfile.PLUGIN_ICON)):
+	if not os.path.exists(buildfile.PLUGIN_ICON):
 		print(f"Warning {buildfile.PLUGIN_ICON} does not exist. TouchPortal will use default plugin icon.")
 	else:
 		print(f"Found {buildfile.PLUGIN_ICON} adding it to packing list.")
-		TPP_PACK_LIST[filePath(buildfiledir, buildfile.PLUGIN_ICON.split("/")[-1])] = buildfile.PLUGIN_ROOT + "/" \
+		TPP_PACK_LIST[buildfile.PLUGIN_ICON.split("/")[-1]] = buildfile.PLUGIN_ROOT + "/" \
 			 if len(buildfile.PLUGIN_ICON.split("/")) == 1 else "".join(buildfile.PLUGIN_ICON.split("/")[0:-1])
 
 	print(f"Compiling {buildfile.PLUGIN_MAIN} for {sys.platform}")
 
-	PI_RUN = [filePath(buildfiledir, buildfile.PLUGIN_MAIN)]
+	PI_RUN = [buildfile.PLUGIN_MAIN]
 	PI_RUN.append(f'--distpath={distdir}')
 	PI_RUN.append(f'--onefile')
 	PI_RUN.append("--clean")
@@ -226,8 +229,8 @@ def main():
 		PI_RUN.append(f'--name={os.path.splitext(os.path.basename(buildfile.PLUGIN_MAIN))[0]}')
 	else:
 		PI_RUN.append(f'--name={buildfile.PLUGIN_EXE_NAME}')
-	if buildfile.PLUGIN_EXE_ICON and os.path.isfile(os.path.join(buildfiledir, buildfile.PLUGIN_EXE_ICON)):
-		PI_RUN.append(f"--icon={os.path.join(buildfiledir, buildfile.PLUGIN_EXE_ICON)}")
+	if buildfile.PLUGIN_EXE_ICON and os.path.isfile(buildfile.PLUGIN_EXE_ICON):
+		PI_RUN.append(f"--icon={buildfile.PLUGIN_EXE_ICON}")
 
 	PI_RUN.append(f"--specpath={distdir}")
 	PI_RUN.append(f"--workpath={distdir}")
@@ -241,12 +244,12 @@ def main():
 	print("Checking for any additional required files")
 	for file in buildfile.ADDITIONAL_FILES:
 		print(f"Adding {file} to plugin")
-		TPP_PACK_LIST[filePath(file.split("/")[-1])] = file.split("/")[0:-1]
+		TPP_PACK_LIST[os.path.basename(file)] = os.path.split(file)[0]
 
 	print("Packing everything into tpp file")
-	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, os.path.join(buildfiledir, buildfile.OUTPUT_PATH))
+	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
 
-	build_clean(distdir, buildfiledir)
+	build_clean(distdir)
 	print("Done!")
 
 	return 0
