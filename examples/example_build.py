@@ -41,7 +41,7 @@ In order for buildScript to work, you need to have the following variables in yo
 Even if you don't use all of the above variables, you still need to have the following variables in your build file
 
 """
-from TouchPortalAPI.build import *
+from TouchPortalAPI import tppbuild
 
 # first, some values which may be used in multiple places below
 # the base file name for the plugin's main file, w/out .py extension
@@ -108,4 +108,4 @@ ADDITIONAL_PYINSTALLER_ARGS = [
 # validateBuild()
 
 if __name__ == "__main__":
-    runBuild()
+    tppbuild.runBuild()
