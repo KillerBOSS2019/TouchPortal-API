@@ -84,10 +84,6 @@ def generateAction(entry):
             table += "</li>\n"
 
         table += "</ul></td>\n"
-        try:
-            print('Yes' if 'hasHoldFunctionality' in entry[action].keys() and entry[action]['hasHoldFunctionality'] else 'No')
-        except:
-            pass
         table += f"<td align=center>{'Yes' if 'hasHoldFunctionality' in entry[action].keys() and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
 
     table += "</table>\n"
@@ -141,6 +137,25 @@ def generateState(entry, baseid):
     stateDoc += "\n\n"
     return stateDoc
 
+def generateEvent(entry, baseid):
+    eventDoc = "\n### Events\n\n"
+    eventDoc += f"<b>Base Id:</b> {baseid}.\n\n"
+    eventDoc += "<table>\n"
+    eventDoc += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
+        "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
+    for event in entry.keys():
+        eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[1]}</td>" + \
+            f"<td>{event}</td>" + \
+            f"<td>{entry[event]['valueStateId']}</td>" + \
+            f"<td>{entry[event]['format']}</td>" + \
+            f"<td>{entry[event]['valueType']}</td>" + \
+            f"<td>{', '.join(entry[event]['valueChoices'])}</td>"
+        eventDoc += "</tr>\n"
+    eventDoc += "</table>\n\n"
+
+    return eventDoc
+
+
 def main(docArg=None):
     parser = ArgumentParser(description=
         "Script to automatically generates a documentation for a TouchPortal plugin.")
@@ -181,6 +196,9 @@ def main(docArg=None):
 
     state = generateState(entry.TP_PLUGIN_STATES, entry.TP_PLUGIN_INFO['id'])
     documentation += state
+
+    event = generateEvent(entry.TP_PLUGIN_EVENTS, entry.TP_PLUGIN_INFO['id'])
+    documentation += event
 
     if entry.TP_PLUGIN_INFO['doc'].get('Install'):
         documentation += "\n# Installation\n"
