@@ -22,7 +22,7 @@ def generateTableContent(entry, entryFile):
 ![License](https://img.shields.io/github/license/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]})
 - [{entry['name']}](#{entry['name'].replace(" ", "-")})
   - [Description](#description)
-    """
+"""
 
     if hasattr(entryFile, "TP_PLUGIN_SETTINGS") and entryFile.TP_PLUGIN_SETTINGS:
         table_content += """  - [Settings Overview](#Settings-Overview)"""
@@ -84,7 +84,11 @@ def generateAction(entry):
             table += "</li>\n"
 
         table += "</ul></td>\n"
-        table += f"<td align=center>{'Yes' if 'hasHoldFunctionality' in entry[action]['data'][data].keys() and entry[action]['data'][data]['hasHoldFunctionality'] else 'No'}</td>\n"
+        try:
+            print('Yes' if 'hasHoldFunctionality' in entry[action].keys() and entry[action]['hasHoldFunctionality'] else 'No')
+        except:
+            pass
+        table += f"<td align=center>{'Yes' if 'hasHoldFunctionality' in entry[action].keys() and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
 
     table += "</table>\n"
 
