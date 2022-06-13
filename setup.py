@@ -56,6 +56,6 @@ setup(
     ]
   },
   entry_points = {
-    'console_scripts': ['tppsdk=TouchPortalAPI.sdk_tools:main', 'tppbuild=TouchPortalAPI.tppbuild:main']
+    'console_scripts': ['tppsdk=TouchPortalAPI.sdk_tools:main', 'tppbuild=TouchPortalAPI.tppbuild:main', 'tppdoc=TouchPortalAPI.tppdoc:main']
   }
 )
