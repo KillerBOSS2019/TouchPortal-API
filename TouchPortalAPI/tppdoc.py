@@ -74,7 +74,7 @@ def generateAction(entry):
 
     for action in entry.keys():
         table += f"<tr valign='top'><td>{entry[action]['name']}</td>" + \
-            f"<td>{entry[action]['doc'] if entry[action].get('doc') else 'No document available'}</td>" + \
+            f"<td>{entry[action]['doc'] if entry[action].get('doc') else ' '}</td>" + \
             f"<td>{entry[action]['format'].replace('$', '')}</td>"
 
         table += "<td><ol start=1>\n"
@@ -110,7 +110,7 @@ def generateConnectors(entry):
 
     for connor in entry.keys():
         table += f"<tr valign='top'><td>{entry[connor]['name']}</td>" + \
-            f"<td>{entry[connor]['doc'] if entry[connor].get('doc') else 'No document available'}</td>" + \
+            f"<td>{entry[connor]['doc'] if entry[connor].get('doc') else ' '}</td>" + \
             f"<td>{entry[connor]['format'].replace('$', '')}</td>"
 
         table += "<td><ol start=1>\n"
@@ -167,7 +167,8 @@ def generateSetting(entry):
         if "maxValue" in entry[setting].keys() and entry[setting]['maxValue']:
             settingDoc += f" | {entry[setting]['maxValue']}"
         settingDoc += " |\n\n"
-        settingDoc += f"{entry[setting]['doc']}\n\n"
+        if entry[setting].get('doc'):
+            settingDoc += f"{entry[setting]['doc']}\n\n"
     return settingDoc
 
 def generateState(entry, baseid):
@@ -190,7 +191,7 @@ def generateEvent(entry, baseid):
     for event in entry.keys():
         eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[1]}</td>" + \
             f"<td>{event}</td>" + \
-            f"<td>{entry[event]['valueStateId']}</td>" + \
+            f"<td>{entry[event]['valueStateId'].split(baseid)[1]}</td>" + \
             f"<td>{entry[event]['format']}</td>" + \
             f"<td>{entry[event]['valueType']}</td>" + \
             f"<td>{', '.join(entry[event]['valueChoices'])}</td>"
@@ -229,7 +230,7 @@ def main(docArg=None):
     documentation += f"""
 
 # Description
-{entry.TP_PLUGIN_INFO['doc']['description'] if entry.TP_PLUGIN_INFO.get("doc") and entry.TP_PLUGIN_INFO['doc'].get("description") and entry.TP_PLUGIN_INFO['doc']['description'] != "" else "No description."}\n\n
+{entry.TP_PLUGIN_INFO['doc']['description'] if entry.TP_PLUGIN_INFO.get("doc") and entry.TP_PLUGIN_INFO['doc'].get("description") and entry.TP_PLUGIN_INFO['doc']['description'] != "" else " "}\n\n
 This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API).
     """
     setting = generateSetting(entry.TP_PLUGIN_SETTINGS)
