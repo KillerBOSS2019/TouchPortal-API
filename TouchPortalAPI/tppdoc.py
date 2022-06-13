@@ -25,7 +25,7 @@ def generateTableContent(entry, entryFile):
     """
 
     if hasattr(entryFile, "TP_PLUGIN_SETTINGS") and entryFile.TP_PLUGIN_SETTINGS:
-        table_content += """- [Settings Overview](#Settings-Overview)"""
+        table_content += """  - [Settings Overview](#Settings-Overview)"""
 
     table_content += """
   - [Features](#Features)"""
