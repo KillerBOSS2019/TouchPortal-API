@@ -45,6 +45,11 @@ TP_PLUGIN_INFO = {
     'configuration': {
         'colorDark': "#25274c",
         'colorLight': "#707ab5"
+    },
+    'doc': {
+        "description": "This is an example plugin for Touch Portal. It demonstrates the basics of how to create a plugin, and how to communicate with Touch Portal.",
+        "repository": "KillerBOSS2019:TP-YTDM-Plugin",
+        "Install": "1. Download .tpp file\n2. in TouchPortal gui click gear icon and select 'Import Plugin'\n3. Select the .tpp file\n4. Click 'Import'",
     }
 }
 
@@ -52,6 +57,7 @@ TP_PLUGIN_INFO = {
 # set, or to persist data between plugin runs (as read-only settings).
 TP_PLUGIN_SETTINGS = {
     'example': {
+        'doc': "Example setting doc", # testing purposes
         'name': "Example Setting",
         # "text" is the default type and could be omitted here
         'type': "text",
@@ -84,6 +90,7 @@ TP_PLUGIN_ACTIONS = {
         # Numeric token values correspond to the order in which the data items are listed here, while text tokens correspond
         # to the last part of a dotted data ID (the part after the last period; letters, numbers, and underscore allowed).
         'format': "Set Example State Text to $[text] and Color to $[2]",
+        "doc": "This action sets the example setting to a given value, and also sets the color of the example setting to a given value.",
         'data': {
             'text': {
                 'id': PLUGIN_ID + ".act.example.data.text",
@@ -97,6 +104,86 @@ TP_PLUGIN_ACTIONS = {
                 'type': "color",
                 'label': "Color",
                 'default': "#818181FF"
+            },
+        }
+    },
+    'Inc/DecrVol': {
+        # 'category' is optional, if omitted then this action will be added to all, or the only, category(ies)
+        'category': "main",
+        'id': PLUGIN_ID + ".act.Inc/DecrVol",
+        'name': 'Volume Mixer: Increase/Decrease process volume',
+        'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
+        'type': "communicate",
+        'tryInline': True,
+        'format': "$[2]$[1]Volume to$[3]",
+        "doc": "This action increases or decreases the process volume of the selected process.",
+        "hasHoldFunctionality": True,
+        'data': {
+            'AppChoice': {
+                'id': PLUGIN_ID + ".act.Inc/DecrVol.data.process",
+                # "text" is the default type and could be omitted here
+                'type': "choice",
+                'label': "process list",
+                'default': "",
+                "valueChoices": []
+                
+            },
+            'OptionList': {
+                'id': PLUGIN_ID + ".act.Inc/DecrVol.data.choice",
+                'type': "choice",
+                'label': "Option choice",
+                'default': "Increase",
+                "valueChoices": [
+                    "Increase",
+                    "Decrease",
+                    "Set"
+                ]
+            },
+            'Volume': {
+                'id': PLUGIN_ID + ".act.Inc/DecrVol.data.Volume",
+                'type': "number",
+                'label': "Volume",
+                "allowDecimals": False,
+                "minValue": 0,
+                "maxValue": 100,
+                "default": 10
+            },
+        }
+    },
+     'AppMute': {
+        # 'category' is optional, if omitted then this action will be added to all, or the only, category(ies)
+        'category': "main",
+        'id': PLUGIN_ID + ".act.Mute/Unmute",
+        'name': 'Volume Mixer: Mute/Unmute process volume',
+        'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
+        'type': "communicate",
+        'tryInline': True,
+        # 'format' tokens like $[1] will be replaced in the generated JSON with the corresponding data id wrapped with "{$...$}".
+        # Numeric token values correspond to the order in which the data items are listed here, while text tokens correspond
+        # to the last part of a dotted data ID (the part after the last period; letters, numbers, and underscore allowed).
+        'format': "$[2] Program:$[1]",
+        "hasHoldFunctionality": True,
+        "doc": "This action mutes or unmutes the selected process.",
+        'data': {
+            'appChoice': {
+                'id': PLUGIN_ID + ".act.Mute/Unmute.data.process",
+                # "text" is the default type and could be omitted here
+                'type': "choice",
+                'label': "process list",
+                'default': "",
+                "valueChoices": []
+                
+            },
+            'OptionList': {
+                'id': PLUGIN_ID + ".act.Mute/Unmute.data.choice",
+                'type': "choice",
+                'label': "Option choice",
+                'default': "Toggle",
+                "valueChoices": [
+                    "Mute",
+                    "Unmute",
+                    "Toggle"
+                ]
             },
         }
     },
