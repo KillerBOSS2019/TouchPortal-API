@@ -1,6 +1,69 @@
+"""
+# TouchPortal Python TPP documentation generator
+
+## Features
+
+ This SDK tools will generate a markdown file that can be used to document your TouchPortal plugin.
+
+ This is what it includes:
+    - automatically generate a table of contents
+    - automatically generate a badges that shows total downloads, forks, stars and license
+    - automatically generate action section and show details of each data
+    - automatically generate connector section and show details of each data
+    - automatically generate state section
+    - automatically generate event section
+    - automatically generate settings section
+    - automatically generate installation section (if you include `"doc": {"install": ""})` in `TP_PLUGIN_INFO`)
+    - automatically generate bugs and support section
+
+ Using it in [example](https://github.com/KillerBOSS2019/TouchPortal-API/tree/main/examples)
+
+ ```
+ tppdoc plugin_example.py
+ ```
+ In this example we are using `plugin_example.py` file because that file contains entry infomations and using those information we can generate a markdown file.
+
+ ## Command-line Usage
+ The script command is `tppdoc` when the TouchPortalAPI is installed (via pip or setup), or `tppdoc.py` when run directly from this source.
+
+ ```
+ <script-command> [-h] <target>
+
+ Script to automatically generates a documentation for a TouchPortal plugin.
+
+ positional arguments:
+   <target>    tppdoc is a documanentation generator for TouchPortal plugins. It uses py entry to generates a markdown
+               file.It can generate a table for the plugin settings, connectors, actions, state, and event. and It will
+               also show data field example, It can show max length, min value, max value for the data field.
+ ```
+"""
+
+__copyright__ = """
+This file is part of the TouchPortal-API project.
+Copyright TouchPortal-API Developers
+Copyright (c) 2021 DamienS
+All rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import sys, os
 import importlib
 from argparse import ArgumentParser
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from sdk_tools import _generateDefinition
 
 def getInfoFromBuildScript(script:str):
 	try:
@@ -62,6 +125,22 @@ def generateTableContent(entry, entryFile):
   """
     return table_content
 
+def typeNumber(entry):
+    typeDoc = ""
+    if entry.get('minValue'):
+        typeDoc += f" &nbsp; <b>Min Value:</b> {entry['minValue']}"
+    else:
+        typeDoc += " &nbsp; <b>Min Value:</b> -2147483648"
+
+    if entry.get('maxValue'):
+        typeDoc += f" &nbsp; <b>Max Value:</b> {entry['maxValue']}"
+    else:
+        typeDoc += f" &nbsp; <b>Max Value:</b> 2147483647"
+
+    if entry.get('allowDecimals'):
+        typeDoc += f" &nbsp; <b>Allow Decimals:</b> {entry['allowDecimals']}"
+
+    return typeDoc
 
 def generateAction(entry):
     actionDoc = "\n## Actions\n"
@@ -72,29 +151,29 @@ def generateAction(entry):
         "<th>On<br/>Hold</sub></div></th>" + \
         "</tr>\n"
 
-    for action in entry.keys():
+    for action in entry:
         table += f"<tr valign='top'><td>{entry[action]['name']}</td>" + \
             f"<td>{entry[action]['doc'] if entry[action].get('doc') else ' '}</td>" + \
-            f"<td>{entry[action]['format'].replace('$', '')}</td>"
+            f"<td>{entry[action]['format'].replace('$', '') if entry[action].get('format') else ' '}</td>"
 
-        table += "<td><ol start=1>\n"
+        if entry[action].get('data'):
+            table += "<td><ol start=1>\n"
+            for data in entry[action]['data']:
+                table += f"<li>[{data}] Type: {entry[action]['data'][data]['type']} &nbsp; \n"
 
-        for data in entry[action]['data'].keys():
-            table += f"<li>[{data}] Type: {entry[action]['data'][data]['type']} &nbsp; \n"
+                if entry[action]['data'][data]['type'] == "choice" and entry[action]['data'][data].get('valueChoices'):
+                    table += f"Default: <b>{entry[action]['data'][data]['default']}</b> Possible choices: {entry[action]['data'][data]['valueChoices']}"
+                elif "default" in entry[action]['data'][data].keys() and entry[action]['data'][data]['default'] != "":
+                    table += f"Default: <b>{entry[action]['data'][data]['default']}</b>"
+                else:
+                    table += "&lt;empty&gt;"
 
-            if entry[action]['data'][data]['type'] == "choice" and entry[action]['data'][data]['valueChoices']:
-                table += f"<b>{entry[action]['data'][data]['default']}</b> {entry[action]['data'][data]['valueChoices']}"
-            elif "default" in entry[action]['data'][data].keys() and entry[action]['data'][data]['default'] != "":
-                table += f"<b>{entry[action]['data'][data]['default']}</b>"
-            else:
-                table += "&lt;empty&gt;"
+                if entry[action]['data'][data]['type'] == "number":
+                    table += typeNumber(entry[action]['data'][data])
 
-            if entry[action]['data'][data]['type'] == "number":
-                table += f" ({entry[action]['data'][data]['minValue']}-{entry[action]['data'][data]['maxValue']})"
-            table += "</li>\n"
-
-        table += "</ol></td>\n"
-        table += f"<td align=center>{'Yes' if 'hasHoldFunctionality' in entry[action].keys() and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
+                table += "</li>\n"
+            table += "</ol></td>\n"
+        table += f"<td align=center>{'Yes' if entry[action].get('hasHoldFunctionality') and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
 
     table += "</table>\n"
 
@@ -111,22 +190,22 @@ def generateConnectors(entry):
     for connor in entry.keys():
         table += f"<tr valign='top'><td>{entry[connor]['name']}</td>" + \
             f"<td>{entry[connor]['doc'] if entry[connor].get('doc') else ' '}</td>" + \
-            f"<td>{entry[connor]['format'].replace('$', '')}</td>"
+            f"<td>{entry[connor]['format'].replace('$', '') if entry[connor].get('format') else ' '}</td>"
 
         table += "<td><ol start=1>\n"
 
         for data in entry[connor]['data'].keys():
             table += f"<li>[{data}] Type: {entry[connor]['data'][data]['type']} &nbsp; \n"
 
-            if entry[connor]['data'][data]['type'] == "choice" and entry[connor]['data'][data]['valueChoices']:
-                table += f"<b>{entry[connor]['data'][data]['default']}</b> {entry[connor]['data'][data]['valueChoices']}"
+            if entry[connor]['data'][data]['type'] == "choice" and entry[connor]['data'][data].get('valueChoices'):
+                table += f"Default: <b>{entry[connor]['data'][data]['default']}</b> Possible choices: {entry[connor]['data'][data]['valueChoices']}"
             elif "default" in entry[connor]['data'][data].keys() and entry[connor]['data'][data]['default'] != "":
-                table += f"<b>{entry[connor]['data'][data]['default']}</b>"
+                table += f"Default: <b>{entry[connor]['data'][data]['default']}</b>"
             else:
                 table += "&lt;empty&gt;"
 
             if entry[connor]['data'][data]['type'] == "number":
-                table += f" ({entry[connor]['data'][data]['minValue']}-{entry[connor]['data'][data]['maxValue']})"
+                table += typeNumber(entry[connor]['data'][data])
             table += "</li>\n"
         
         table += "</ol></td>\n"
@@ -139,33 +218,26 @@ def generateConnectors(entry):
 def generateSetting(entry):
     settingDoc = "\n## Settings Overview\n"
 
+    def f(data):
+        return [data.get('maxLength', 0) > 0, data.get('minValue', None), data.get('maxValue', None)]
+
     for setting in entry.keys():
         settingDoc += f"### {setting}\n"
         settingDoc += "| Read-only | Type | Default Value"
-        if "maxLength" in entry[setting].keys() and entry[setting]['maxLength']:
-            settings += f" | Max. Length"
-        if "minValue" in entry[setting].keys() and entry[setting]['minValue']:
-            settings += f" | Min. Value"
-        if "maxValue" in entry[setting].keys() and entry[setting]['maxValue']:
-            settings += f" | Max. Value"
+        if f(entry[setting])[0]: settings += f" | Max. Length"
+        if f(entry[setting])[1]: settings += f" | Min. Value"
+        if f(entry[setting])[2]: settings += f" | Max. Value"
         settingDoc += " |\n"
         settingDoc += "| --- | --- | ---"
-        if "maxLength" in entry[setting].keys() and entry[setting]['maxLength']:
-            settingDoc += f" | ---"
-        if "minValue" in entry[setting].keys() and entry[setting]['minValue']:
-            settingDoc += f" | ---"
-        if "maxValue" in entry[setting].keys() and entry[setting]['maxValue']:
-            settingDoc += f" | ---"
+        if f(entry[setting])[0]: settingDoc += f" | ---"
+        if f(entry[setting])[1]: settingDoc += f" | ---"
+        if f(entry[setting])[2]: settingDoc += f" | ---"
 
         settingDoc += " |\n"
         settingDoc += f"| {entry[setting]['readOnly']} | {entry[setting]['type']} | {entry[setting]['default']}"
-
-        if "maxLength" in entry[setting].keys() and entry[setting]['maxLength']:
-            settingDoc += f" | {entry[setting]['maxLength']}"
-        if "minValue" in entry[setting].keys() and entry[setting]['minValue']:
-            settingDoc += f" | {entry[setting]['minValue']}"
-        if "maxValue" in entry[setting].keys() and entry[setting]['maxValue']:
-            settingDoc += f" | {entry[setting]['maxValue']}"
+        if f(entry[setting])[0]: settingDoc += f" | {entry[setting]['maxLength']}"
+        if f(entry[setting])[1]: settingDoc += f" | {entry[setting]['minValue']}"
+        if f(entry[setting])[2]: settingDoc += f" | {entry[setting]['maxValue']}"
         settingDoc += " |\n\n"
         if entry[setting].get('doc'):
             settingDoc += f"{entry[setting]['doc']}\n\n"
@@ -175,10 +247,10 @@ def generateState(entry, baseid):
     stateDoc = "\n## States\n"
 
     stateDoc += f" <b>Base Id:</b> {baseid}.\n\n"
-    stateDoc += "| Id | Name | Description | DefaultValue |\n"
-    stateDoc += "| --- | --- | --- | --- |\n"
+    stateDoc += "| Id | Name | Description | DefaultValue | parentGroup |\n"
+    stateDoc += "| --- | --- | --- | --- | --- |\n"
     for state in entry.keys():
-        stateDoc += f"| {entry[state]['id'].split(baseid)[1]} | {state} | {entry[state]['desc']} | {entry[state]['default']} |\n"
+        stateDoc += f"| {entry[state]['id'].split(baseid)[1]} | {state} | {entry[state]['desc']} | {entry[state]['default']} | {entry[state].get('parentGroup', ' ')} |\n"
     stateDoc += "\n\n"
     return stateDoc
 
@@ -188,7 +260,7 @@ def generateEvent(entry, baseid):
     eventDoc += "<table>\n"
     eventDoc += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
         "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
-    for event in entry.keys():
+    for event in entry:
         eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[1]}</td>" + \
             f"<td>{event}</td>" + \
             f"<td>{entry[event]['valueStateId'].split(baseid)[1]}</td>" + \
@@ -219,11 +291,18 @@ def main(docArg=None):
 
     if out_dir:
         os.chdir(out_dir)
+    print("vaildating python entry...\n")
+    if _generateDefinition(os.path.basename(opts.target), None, -1, False, showMessage=False)[1]:
+        print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
+    else:
+        print("File is invalid. Please above error for more information.")
+        return 0
 
     entry = getInfoFromBuildScript(os.path.basename(opts.target))
 
     documentation = """"""
 
+    print("Building table of content\n")
     tableContent = generateTableContent(entry.TP_PLUGIN_INFO, entry)
     documentation += tableContent
 
@@ -233,26 +312,39 @@ def main(docArg=None):
 {entry.TP_PLUGIN_INFO['doc']['description'] if entry.TP_PLUGIN_INFO.get("doc") and entry.TP_PLUGIN_INFO['doc'].get("description") and entry.TP_PLUGIN_INFO['doc']['description'] != "" else " "}\n\n
 This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API).
     """
+
+    print("Generating settings section\n")
     setting = generateSetting(entry.TP_PLUGIN_SETTINGS)
     documentation += setting
 
     documentation += "\n# Features\n"
-    action = generateAction(entry.TP_PLUGIN_ACTIONS)
-    documentation += action
 
-    connector = generateConnectors(entry.TP_PLUGIN_CONNECTORS)
-    documentation += connector
+    if "TP_PLUGIN_ACTIONS" in dir(entry) and entry.TP_PLUGIN_ACTIONS:
+        print("Generating action section\n")
+        action = generateAction(entry.TP_PLUGIN_ACTIONS)
+        documentation += action
 
-    state = generateState(entry.TP_PLUGIN_STATES, entry.TP_PLUGIN_INFO['id'])
-    documentation += state
+    if "TP_PLUGIN_CONNECTORS" in dir(entry) and entry.TP_PLUGIN_CONNECTORS:
+        print("Generating connector section\n")
+        connector = generateConnectors(entry.TP_PLUGIN_CONNECTORS)
+        documentation += connector
 
-    event = generateEvent(entry.TP_PLUGIN_EVENTS, entry.TP_PLUGIN_INFO['id'])
-    documentation += event
+    if "TP_PLUGIN_STATES" in dir(entry) and entry.TP_PLUGIN_STATES:
+        print("Generating state section\n")
+        state = generateState(entry.TP_PLUGIN_STATES, entry.TP_PLUGIN_INFO['id'])
+        documentation += state
+
+    if "TP_PLUGIN_EVENTS" in dir(entry) and entry.TP_PLUGIN_EVENTS:
+        print("Generating event section\n")
+        event = generateEvent(entry.TP_PLUGIN_EVENTS, entry.TP_PLUGIN_INFO['id'])
+        documentation += event
 
     if entry.TP_PLUGIN_INFO.get("doc") and entry.TP_PLUGIN_INFO['doc'].get('Install'):
+        print("Found install method. Generating install section\n")
         documentation += "\n# Installation\n"
         documentation += entry.TP_PLUGIN_INFO['doc']['Install']
 
+    print("Generating Bugs and Suggestion section\n")
     documentation += "\n# Bugs and Suggestion\n"
     try:
         documentation += f"Open an [issue](https://github.com/{'/'.join(entry.TP_PLUGIN_INFO['doc']['repository'].split(':'))}/issues) or join offical [TouchPortal Discord](https://discord.gg/MgxQb8r) for support.\n\n"
@@ -264,6 +356,9 @@ This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGI
 
     with open("test.md", "w") as f:
         f.write(documentation)
+        
+    print("Finished generating documentation.")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -174,6 +174,7 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bo
         return ret
     for k, data in table.items():
         # try get explicit value from item
+        #if not data.get("doc"): continue
         if (v := item.get(k)) is None:
             # try get default value
             v = data.get('d')
@@ -459,7 +460,7 @@ def validateDefinitionFile(file:Union[str, TextIO]):
 
 ## CLI handlers
 
-def _generateDefinition(script, output_path, indent, skip_invalid:bool=False):
+def _generateDefinition(script, output_path, indent, skip_invalid:bool=False, showMessage=True):
     input_name = "input stream"
     if isinstance(script, str):
         if len(script.split(".")) < 2:
@@ -473,8 +474,9 @@ def _generateDefinition(script, output_path, indent, skip_invalid:bool=False):
     valid = True
     if (messages := getMessages()):
         valid = False
-        _printMessages(messages)
-        _printToErr("")
+        if showMessage:
+            _printMessages(messages)
+            _printToErr("")
     # output
     if output_path:
         # write it to a file
@@ -483,7 +485,8 @@ def _generateDefinition(script, output_path, indent, skip_invalid:bool=False):
         _printToErr(f"Saved generated JSON to '{output_path}'\n")
     else:
         # send to stdout
-        print(entry_str)
+        if showMessage:
+            print(entry_str)
     _printToErr(f"Finished generating plugin definition JSON from '{input_name}'.\n")
     return entry_str, valid
 

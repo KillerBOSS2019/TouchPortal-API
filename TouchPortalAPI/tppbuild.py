@@ -16,7 +16,7 @@
  Using it in [example](https://github.com/KillerBOSS2019/TouchPortal-API/tree/main/examples)
 
  ```
- tppbuild --target example_build.py
+ tppbuild example_build.py
  ```
  In this example we targed the example_build.py file because that file contains infomations on how to build the plugin.
 
