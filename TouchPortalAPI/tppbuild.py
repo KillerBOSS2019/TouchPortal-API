@@ -57,6 +57,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+__all__ = ['PLUGIN_MAIN', 'PLUGIN_EXE_NAME', 'PLUGIN_EXE_ICON', 'PLUGIN_ENTRY', 'PLUGIN_ENTRY_INDENT', 'PLUGIN_ROOT',
+ 'PLUGIN_ICON', 'OUTPUT_PATH', 'PLUGIN_VERSION', 'ADDITIONAL_FILES', 'ADDITIONAL_PYINSTALLER_ARGS', 'validateBuild', 'runBuild']
+
 import importlib
 import os
 import sys
@@ -407,6 +410,3 @@ def runBuild():
     file = module.__file__
 
     main([file])
-
-__all__ = [PLUGIN_MAIN, PLUGIN_EXE_NAME, PLUGIN_EXE_ICON, PLUGIN_ENTRY, PLUGIN_ENTRY_INDENT, PLUGIN_ROOT,
- PLUGIN_ICON, OUTPUT_PATH, PLUGIN_VERSION, ADDITIONAL_FILES, ADDITIONAL_PYINSTALLER_ARGS, validateBuild, runBuild]
