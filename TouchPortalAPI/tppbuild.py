@@ -264,7 +264,7 @@ def main(buildArgs=None):
 	print("Checking for any additional required files")
 	for file in buildfile.ADDITIONAL_FILES:
 		print(f"Adding {file} to plugin")
-		TPP_PACK_LIST[os.path.basename(file)] = os.path.split(file)[0]
+		TPP_PACK_LIST[os.path.basename(file)] = os.path.join(buildfile.PLUGIN_ROOT, os.path.split(file)[0])
 
 	print("Packing everything into tpp file")
 	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
