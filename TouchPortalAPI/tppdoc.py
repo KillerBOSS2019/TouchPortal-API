@@ -63,7 +63,8 @@ import importlib
 from argparse import ArgumentParser
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-from sdk_tools import _generateDefinition
+from sdk_tools import _validateDefinition
+import TpToPy
 
 def getInfoFromBuildScript(script:str):
 	try:
@@ -261,9 +262,9 @@ def generateEvent(entry, baseid):
     eventDoc += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
         "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
     for event in entry:
-        eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[1]}</td>" + \
+        eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[-1]}</td>" + \
             f"<td>{event}</td>" + \
-            f"<td>{entry[event]['valueStateId'].split(baseid)[1]}</td>" + \
+            f"<td>{entry[event]['valueStateId'].split(baseid)[-1]}</td>" + \
             f"<td>{entry[event]['format']}</td>" + \
             f"<td>{entry[event]['valueType']}</td>" + \
             f"<td>{', '.join(entry[event]['valueChoices'])}</td>"
@@ -271,7 +272,6 @@ def generateEvent(entry, baseid):
     eventDoc += "</table>\n\n"
 
     return eventDoc
-
 
 def main(docArg=None):
     parser = ArgumentParser(description=
@@ -284,6 +284,11 @@ def main(docArg=None):
                 ' data field example, It can show max length, min value, max value for the data field.'
     )
 
+    parser.add_argument(
+        "--ignoreError", action='store_true', default=False,
+        help='Ignore error when parsing the plugin. Default is False.'
+    )
+
     opts = parser.parse_args(docArg)
     del parser
 
@@ -291,14 +296,18 @@ def main(docArg=None):
 
     if out_dir:
         os.chdir(out_dir)
-    print("vaildating python entry...\n")
-    if _generateDefinition(os.path.basename(opts.target), None, -1, False, showMessage=False)[1]:
-        print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
-    else:
-        print("File is invalid. Please above error for more information.")
-        return 0
+    print("vaildating entry...\n")
+    if not opts.ignoreError:
+        if  _validateDefinition(os.path.basename(opts.target), as_str=False):
+            print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
+        else:
+            print("File is invalid. Please above error for more information.")
+            return 0
 
-    entry = getInfoFromBuildScript(os.path.basename(opts.target))
+    entryType = "py" if os.path.basename(opts.target).endswith(".py") else "tp"
+    if entryType == "py": entry = getInfoFromBuildScript(os.path.basename(opts.target))
+    else: entry = TpToPy.toString(os.path.basename(opts.target))
+
 
     documentation = """"""
 
@@ -307,15 +316,17 @@ def main(docArg=None):
     documentation += tableContent
 
     documentation += f"""
-
 # Description
-{entry.TP_PLUGIN_INFO['doc']['description'] if entry.TP_PLUGIN_INFO.get("doc") and entry.TP_PLUGIN_INFO['doc'].get("description") and entry.TP_PLUGIN_INFO['doc']['description'] != "" else " "}\n\n
-This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API).
-    """
 
-    print("Generating settings section\n")
-    setting = generateSetting(entry.TP_PLUGIN_SETTINGS)
-    documentation += setting
+"""
+    if entry.TP_PLUGIN_INFO.get('doc', False) and entry.TP_PLUGIN_INFO['doc'].get('description', False):
+        documentation += f"{entry.TP_PLUGIN_INFO['doc']['description']}\n\n"
+    
+    documentation += f"This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API)."
+    if entry.TP_PLUGIN_INFO.get('settings', False):
+        print("Generating settings section\n")
+        setting = generateSetting(entry.TP_PLUGIN_SETTINGS)
+        documentation += setting
 
     documentation += "\n# Features\n"
 
