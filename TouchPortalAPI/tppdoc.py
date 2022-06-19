@@ -289,6 +289,11 @@ def main(docArg=None):
         help='Ignore error when parsing the plugin. Default is False.'
     )
 
+    parser.add_argument(
+        "--o", "--output", default="Documentation",
+        help='Name of generated documentation. Default is "Documentation". You do not need to add the extension.'
+    )
+
     opts = parser.parse_args(docArg)
     del parser
 
@@ -365,7 +370,7 @@ def main(docArg=None):
     documentation += "\n# License\n"
     documentation += "This plugin is licensed under the [GPL 3.0 License] - see the [LICENSE](LICENSE) file for more information.\n\n"
 
-    with open("test.md", "w") as f:
+    with open(opts.output+".md", "w") as f:
         f.write(documentation)
         
     print("Finished generating documentation.")

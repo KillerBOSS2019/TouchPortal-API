@@ -113,6 +113,7 @@ from re import compile as re_compile
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
+import TpToPy
 
 ## globals
 g_messages = []  # validation reporting
@@ -505,6 +506,9 @@ def _validateDefinition(entry, as_str=False):
     _printToErr(f"\nFinished validating '{name}'.\n")
     return res
 
+def generatePythonStruct(entry, name):
+    TpToPy = TpToPy(entry)
+    TpToPy.writetoFile(name + ".py")
 
 def main(sdk_args=None):
     from argparse import ArgumentParser
@@ -528,6 +532,13 @@ def main(sdk_args=None):
                          help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is %(default)s spaces.")
     opts = parser.parse_args(sdk_args)
     del parser
+
+    t = _normPath(opts.target or "TPPEntry.py")
+    if opts.target.endswith(".tp"):
+        valid = _validateDefinition(opts.target)
+        if valid == 0:
+            generatePythonStruct("TPPEntry" if opts.o not in ("-","stdout") else opts.o)
+        return valid
 
     # default action
     opts.generate = opts.generate or not opts.validate

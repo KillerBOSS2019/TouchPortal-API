@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import json
 from pathlib import Path
 
@@ -105,8 +104,9 @@ class TpToPy():
         with open(fileName, 'w') as f:
             f.write("#!/usr/bin/env python3\n")
             for entryVar in ["TP_PLUGIN_INFO", "TP_PLUGIN_SETTINGS", "TP_PLUGIN_STATES", "TP_PLUGIN_ACTIONS", "TP_PLUGIN_CONNECTORS", "TP_PLUGIN_EVENTS"]:
-                struct = json.dumps(locals()[entryVar], indent=4, sort_keys=False, skipkeys=True)
-                #print(struct)
+                struct = json.dumps(locals()[entryVar], indent=4, sort_keys=False, skipkeys=True)\
+                    .replace("true,\n", "True,").replace("false,\n", "False,")\
+                    .replace("true\n", "True\n").replace("false\n", "False\n")
                 f.write(f"{entryVar} = {struct}\n\n")
 
 class toString():
