@@ -113,7 +113,7 @@ from re import compile as re_compile
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
-import TpToPy
+from TpToPy import TpToPy
 
 ## globals
 g_messages = []  # validation reporting
@@ -434,14 +434,16 @@ def validateDefinitionObject(data:dict):
     _validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
     return len(g_messages) == 0
 
-def validateDefinitionString(data:str):
+def validateDefinitionString(data):
     """
     Validates a TP plugin definition structure from JSON string.
     `data` is an entry.tp JSON string
     Returns `True` if no problems were found, `False` otherwise.
     Use `getMessages()` to check for any validation warnings which may be generated.
     """
-    return validateDefinitionObject(json.loads(data))
+    if isinstance(data, str):
+        return validateDefinitionObject(json.loads(data))
+    return validateDefinitionObject(data)
 
 def validateDefinitionFile(file:Union[str, TextIO]):
     """
@@ -507,8 +509,14 @@ def _validateDefinition(entry, as_str=False):
     return res
 
 def generatePythonStruct(entry, name):
-    TpToPy = TpToPy(entry)
-    TpToPy.writetoFile(name + ".py")
+    _printToErr("Generating Python struct from entry json...\n")
+    tp_to_py = TpToPy(entry)
+    try:
+        tp_to_py.writetoFile(name)
+        _printToErr(f"Saved generated Python struct to '{name}.py'\n")
+    except Exception as e:
+        _printToErr(f"Error: {e}")
+        return -1
 
 def main(sdk_args=None):
     from argparse import ArgumentParser
@@ -534,16 +542,16 @@ def main(sdk_args=None):
     del parser
 
     t = _normPath(opts.target or "TPPEntry.py")
-    if opts.target.endswith(".tp"):
-        valid = _validateDefinition(opts.target)
+    if opts.target.endswith(".tp") and not opts.validate:
+        valid = _validateDefinition(t)
         if valid == 0:
-            generatePythonStruct("TPPEntry" if opts.o not in ("-","stdout") else opts.o)
+            generatePythonStruct(t, opts.o or "TPPEntry")
         return valid
 
     # default action
     opts.generate = opts.generate or not opts.validate
 
-    _printToErr("")
+    _printToErr("") 
 
     if opts.target in ("-","stdin"):
         opts.target = sys.stdin
@@ -565,7 +573,9 @@ def main(sdk_args=None):
             opts.target = output_path
 
     if opts.validate:
-        if entry_str:
+        if opts.target.endswith(".py"): # checks if is python file if It is then It will vaildate the python file by converting it to json first
+            valid = _validateDefinition(generateDefinitionFromScript(opts.target), as_str=True) # little hacky lol
+        elif entry_str:
             valid = _validateDefinition(entry_str, True)
         else:
             opts.target = _normPath(opts.target or "entry.tp")

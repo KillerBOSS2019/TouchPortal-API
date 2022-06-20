@@ -4,6 +4,9 @@ from pathlib import Path
 class TpToPy():
     def __init__(self, entry):
         self.entry = json.loads(Path(entry).resolve().read_text())
+    
+    def getPluginId(self):
+        return self.entry.get("id", "")
 
     def __convertData(self, data):
         newData = {}
@@ -49,7 +52,7 @@ class TpToPy():
             if categories[category].get("states") and isinstance(categories[category]['states'], list):
                 for state in range(len(categories[category]["states"])):
                     generatedState[state+1] = categories[category]["states"][state]
-                    generatedState[state+1]["category"] = categories[category]["id"]
+                    generatedState[state+1]["category"] = categories[category].get("id", "").split(".")[-1]
         return generatedState
         
 
@@ -61,11 +64,11 @@ class TpToPy():
             if categories[category].get("actions") and isinstance(categories[category]['actions'], list):
                 for action in range(len(categories[category]["actions"])):
                     generatedAction[action+1] = categories[category]["actions"][action]
-                    if categories[category]["actions"][action]['data']:
+                    if categories[category]["actions"][action].get('data', False): # Not all action have data
                         generatedAction[action+1]['format'] = self.__convertFormat(categories[category]["actions"][action]['format'], generatedAction[action+1]['data'])
                         generatedAction[action+1]['data'] = self.__convertData(categories[category]["actions"][action]['data'])
 
-                    generatedAction[action+1]["category"] = categories[category]["id"]
+                    generatedAction[action+1]["category"] = categories[category].get("id", "").split(".")[-1]
         return generatedAction
 
     def generateEvents(self):
@@ -73,10 +76,10 @@ class TpToPy():
         categories = self.entry["categories"]
 
         for category in range(len(categories)):
-            if categories[category].get("events") and isinstance(categories[category]['events'], list):
+            if categories[category].get("events", False) and isinstance(categories[category]['events'], list):
                 for event in range(len(categories[category]["events"])):
                     generatedEvents[event+1] = categories[category]["events"][event]
-                    generatedEvents[event+1]["category"] = categories[category]["id"]
+                    generatedEvents[event+1]["category"] = categories[category].get("id", "").split(".")[-1]
 
         return generatedEvents
 
@@ -87,12 +90,25 @@ class TpToPy():
             if categories[category].get("connectors") and isinstance(categories[category]['connectors'], list):
                 for connector in range(len(categories[category]["connectors"])):
                     generatedConnectors[connector+1] = categories[category]["connectors"][connector]
-                    generatedConnectors[connector+1]["category"] = categories[category]["id"]
+                    generatedConnectors[connector+1]["category"] = categories[category].get("id", "").split(".")[-1]
                     if generatedConnectors[connector+1].get('data', False):
                         generatedConnectors[connector+1]['format'] = self.__convertFormat(generatedConnectors[connector+1]['format'], generatedConnectors[connector+1]['data'])
                         generatedConnectors[connector+1]['data'] = self.__convertData(generatedConnectors[connector+1]['data'])
         
         return generatedConnectors
+    
+    def generateCalegories(self):
+        generatedCategories = {}
+        categories = self.entry.get("categories", [])
+
+        for category in categories:
+            categId = category.get("id", "").split(".")
+            generatedCategories[categId[-1]] = {
+                "id": ".".join(categId[:-1]) or categId[-1],
+                "name": category.get("name", ""),
+                "imagepath": category.get("imagepath", ""),
+            }
+        return generatedCategories
 
     def writetoFile(self, fileName):
         TP_PLUGIN_INFO = self.generateInfo()
@@ -101,11 +117,12 @@ class TpToPy():
         TP_PLUGIN_ACTIONS = self.generateActions()
         TP_PLUGIN_CONNECTORS = self.generateConnectors()
         TP_PLUGIN_EVENTS = self.generateEvents()
+        TP_PLUGIN_CATEGORIES = self.generateCalegories()
         with open(fileName, 'w') as f:
             f.write("#!/usr/bin/env python3\n")
-            for entryVar in ["TP_PLUGIN_INFO", "TP_PLUGIN_SETTINGS", "TP_PLUGIN_STATES", "TP_PLUGIN_ACTIONS", "TP_PLUGIN_CONNECTORS", "TP_PLUGIN_EVENTS"]:
+            for entryVar in ["TP_PLUGIN_INFO", "TP_PLUGIN_SETTINGS", "TP_PLUGIN_CATEGORIES", "TP_PLUGIN_CONNECTORS", "TP_PLUGIN_ACTIONS", "TP_PLUGIN_STATES", "TP_PLUGIN_EVENTS"]:
                 struct = json.dumps(locals()[entryVar], indent=4, sort_keys=False, skipkeys=True)\
-                    .replace("true,\n", "True,").replace("false,\n", "False,")\
+                    .replace("true,\n", "True,\n").replace("false,\n", "False,\n")\
                     .replace("true\n", "True\n").replace("false\n", "False\n")
                 f.write(f"{entryVar} = {struct}\n\n")
 

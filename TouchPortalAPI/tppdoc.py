@@ -63,7 +63,7 @@ import importlib
 from argparse import ArgumentParser
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-from sdk_tools import _validateDefinition
+from sdk_tools import _validateDefinition, generateDefinitionFromScript
 import TpToPy
 
 def getInfoFromBuildScript(script:str):
@@ -174,6 +174,8 @@ def generateAction(entry):
 
                 table += "</li>\n"
             table += "</ol></td>\n"
+        else:
+            table += "<td> </td>\n"
         table += f"<td align=center>{'Yes' if entry[action].get('hasHoldFunctionality') and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
 
     table += "</table>\n"
@@ -251,7 +253,7 @@ def generateState(entry, baseid):
     stateDoc += "| Id | Name | Description | DefaultValue | parentGroup |\n"
     stateDoc += "| --- | --- | --- | --- | --- |\n"
     for state in entry.keys():
-        stateDoc += f"| {entry[state]['id'].split(baseid)[1]} | {state} | {entry[state]['desc']} | {entry[state]['default']} | {entry[state].get('parentGroup', ' ')} |\n"
+        stateDoc += f"| {entry[state]['id'].split(baseid)[-1]} | {state} | {entry[state]['desc']} | {entry[state]['default']} | {entry[state].get('parentGroup', ' ')} |\n"
     stateDoc += "\n\n"
     return stateDoc
 
@@ -285,12 +287,12 @@ def main(docArg=None):
     )
 
     parser.add_argument(
-        "--ignoreError", action='store_true', default=False,
+        "-ignoreError", action='store_true', default=False,
         help='Ignore error when parsing the plugin. Default is False.'
     )
 
     parser.add_argument(
-        "--o", "--output", default="Documentation",
+        "-o", "--output", default="Documentation",
         help='Name of generated documentation. Default is "Documentation". You do not need to add the extension.'
     )
 
@@ -301,15 +303,20 @@ def main(docArg=None):
 
     if out_dir:
         os.chdir(out_dir)
-    print("vaildating entry...\n")
+
+    entryType = "py" if os.path.basename(opts.target).endswith(".py") else "tp"
     if not opts.ignoreError:
-        if  _validateDefinition(os.path.basename(opts.target), as_str=False):
+        print("vaildating entry...\n")
+        if  entryType == "tp" and _validateDefinition(os.path.basename(opts.target)):
+            print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
+        elif entryType == "py" and _validateDefinition(generateDefinitionFromScript(os.path.basename(opts.target)), as_str=True):
             print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
         else:
             print("File is invalid. Please above error for more information.")
             return 0
+    else:
+        print("Ignoring errors, contiune building document.\n")
 
-    entryType = "py" if os.path.basename(opts.target).endswith(".py") else "tp"
     if entryType == "py": entry = getInfoFromBuildScript(os.path.basename(opts.target))
     else: entry = TpToPy.toString(os.path.basename(opts.target))
 
@@ -370,7 +377,7 @@ def main(docArg=None):
     documentation += "\n# License\n"
     documentation += "This plugin is licensed under the [GPL 3.0 License] - see the [LICENSE](LICENSE) file for more information.\n\n"
 
-    with open(opts.output+".md", "w") as f:
+    with open(opts.output or "Documentation.md", "w") as f:
         f.write(documentation)
         
     print("Finished generating documentation.")
