@@ -106,7 +106,7 @@ def generateTableContent(entry, entryFile):
 
     if "TP_PLUGIN_CONNECTORS" in dir(entryFile) and entryFile.TP_PLUGIN_CONNECTORS:
         table_content += """
-    - [Slider](#Sliders)"""
+    - [Slider](#sliders)"""
 
     if "TP_PLUGIN_STATES" in dir(entryFile) and entryFile.TP_PLUGIN_STATES:
         table_content += """
@@ -143,80 +143,87 @@ def typeNumber(entry):
 
     return typeDoc
 
-def __generateActionTable(entry):
-    pass
+def __generateData(entry):
+    dataDocList = ""
+    needDropdown = False
+    if entry.get('data'):
+        dataDocList += "<td>"
+        if len(entry['data']) > 3:
+            dataDocList += "<details><summary><ins>Click to expand</ins></summary><ol start=1>\n"
+            needDropdown = True
+        for data in entry['data']:
+            dataDocList += f"<li>[{data}] Type: {entry['data'][data]['type']} &nbsp; \n"
+
+            if entry['data'][data]['type'] == "choice" and entry['data'][data].get('valueChoices'):
+                dataDocList += f"Default: <b>{entry['data'][data]['default']}</b> Possible choices: {entry['data'][data]['valueChoices']}"
+            elif "default" in entry['data'][data].keys() and entry['data'][data]['default'] != "":
+                dataDocList += f"Default: <b>{entry['data'][data]['default']}</b>"
+            else:
+                dataDocList += "&lt;empty&gt;"
+
+            if entry['data'][data]['type'] == "number":
+                dataDocList += typeNumber(entry['data'][data])
+
+            dataDocList += "</li>\n"
+        dataDocList += "</ol></td>\n"
+        if needDropdown:
+            dataDocList += "</details>"
+    else:
+        dataDocList += "<td> </td>\n"
+    
+    return dataDocList
 
 def generateAction(entry):
     actionDoc = "\n## Actions\n"
-    table = "<table>\n"
-
-    table += "<tr valign='buttom'>" + "<th>Action Name</th>" + "<th>Description</th>" + "<th>Format</th>" + \
-        "<th nowrap>Data<br/><div align=left><sub>choices/default (in bold)</th>" + \
-        "<th>On<br/>Hold</sub></div></th>" + \
-        "</tr>\n"
+    filterActionbyCategory = {}
 
     for action in entry:
-        table += f"<tr valign='top'><td>{entry[action]['name']}</td>" + \
-            f"<td>{entry[action]['doc'] if entry[action].get('doc') else ' '}</td>" + \
-            f"<td>{entry[action]['format'].replace('$', '') if entry[action].get('format') else ' '}</td>"
+        categoryName = entry[action].get("category", "main")
+        if entry[action]['category'] not in filterActionbyCategory:
+            filterActionbyCategory[categoryName] = "<table>\n"
+            filterActionbyCategory[categoryName] += "<tr valign='buttom'>" + "<th>Action Name</th>" + "<th>Description</th>" + "<th>Format</th>" + \
+                "<th nowrap>Data<br/><div align=left><sub>choices/default (in bold)</th>" + \
+                "<th>On<br/>Hold</sub></div></th>" + \
+                "</tr>\n"
 
-        if entry[action].get('data'):
-            table += "<td><ol start=1>\n"
-            for data in entry[action]['data']:
-                table += f"<li>[{data}] Type: {entry[action]['data'][data]['type']} &nbsp; \n"
+        filterActionbyCategory[categoryName] += f"<tr valign='top'><td>{entry[action]['name']}</td>" + \
+        f"<td>{entry[action]['doc'] if entry[action].get('doc') else ' '}</td>" + \
+        f"<td>{entry[action]['format'].replace('$', '') if entry[action].get('format') else ' '}</td>"
+        filterActionbyCategory[categoryName] += __generateData(entry[action])
 
-                if entry[action]['data'][data]['type'] == "choice" and entry[action]['data'][data].get('valueChoices'):
-                    table += f"Default: <b>{entry[action]['data'][data]['default']}</b> Possible choices: {entry[action]['data'][data]['valueChoices']}"
-                elif "default" in entry[action]['data'][data].keys() and entry[action]['data'][data]['default'] != "":
-                    table += f"Default: <b>{entry[action]['data'][data]['default']}</b>"
-                else:
-                    table += "&lt;empty&gt;"
-
-                if entry[action]['data'][data]['type'] == "number":
-                    table += typeNumber(entry[action]['data'][data])
-
-                table += "</li>\n"
-            table += "</ol></td>\n"
-        else:
-            table += "<td> </td>\n"
-        table += f"<td align=center>{'Yes' if entry[action].get('hasHoldFunctionality') and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
-
-    table += "</table>\n"
-
-    actionDoc += table
-
+        filterActionbyCategory[categoryName] += f"<td align=center>{'Yes' if entry[action].get('hasHoldFunctionality') and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
+    
+    for category in filterActionbyCategory:
+        actionDoc += f"<details {'open' if list(filterActionbyCategory.keys()).index(category) == 0 else ''}><summary><b>Category:</b> {category} <ins>(Click to expand)</ins></summary>"
+        actionDoc += filterActionbyCategory[category]
+        actionDoc += "</tr></table></details>\n"
+    
+    actionDoc += "<br>\n"
     return actionDoc
 
 def generateConnectors(entry):
     connectorDoc = "\n## Sliders\n"
-    table = "<table>\n"
-    table += "<tr valign='buttom'>" + "<th>Slider Name</th>" + "<th>Description</th>" + "<th>Format</th>" + \
-        "<th nowrap>Data<br/><div align=left><sub>choices/default (in bold)</th>" + "</tr>\n"
+    filterConnectorsbyCategory = {}
 
-    for connor in entry.keys():
-        table += f"<tr valign='top'><td>{entry[connor]['name']}</td>" + \
-            f"<td>{entry[connor]['doc'] if entry[connor].get('doc') else ' '}</td>" + \
-            f"<td>{entry[connor]['format'].replace('$', '') if entry[connor].get('format') else ' '}</td>"
+    for connector in entry:
+        categoryName = entry[connector].get("category", "main")
+        if entry[connector]['category'] not in filterConnectorsbyCategory:
+            filterConnectorsbyCategory[categoryName] = "<table>\n"
+            filterConnectorsbyCategory[categoryName] += "<tr valign='buttom'>" + "<th>Slider Name</th>" + "<th>Description</th>" + "<th>Format</th>" + \
+                                                        "<th nowrap>Data<br/><div align=left><sub>choices/default (in bold)</th>" + "</tr>\n"
+            
+        filterConnectorsbyCategory[categoryName] += f"<tr valign='top'><td>{entry[connector]['name']}</td>" + \
+        f"<td>{entry[connector]['doc'] if entry[connector].get('doc') else ' '}</td>" + \
+        f"<td>{entry[connector]['format'].replace('$', '') if entry[connector].get('format') else ' '}</td>"
 
-        table += "<td><ol start=1>\n"
+        filterConnectorsbyCategory[categoryName] += __generateData(entry[connector])
 
-        for data in entry[connor]['data'].keys():
-            table += f"<li>[{data}] Type: {entry[connor]['data'][data]['type']} &nbsp; \n"
+    for category in filterConnectorsbyCategory:
+        connectorDoc += f"<details {'open' if list(filterConnectorsbyCategory.keys()).index(category) == 0 else ''}><summary><b>Category:</b> {category} <ins>(Click to expand)</ins></summary>"
+        connectorDoc += filterConnectorsbyCategory[category]
+        connectorDoc += "</table></details>\n"
+    connectorDoc += "<br>\n"
 
-            if entry[connor]['data'][data]['type'] == "choice" and entry[connor]['data'][data].get('valueChoices'):
-                table += f"Default: <b>{entry[connor]['data'][data]['default']}</b> Possible choices: {entry[connor]['data'][data]['valueChoices']}"
-            elif "default" in entry[connor]['data'][data].keys() and entry[connor]['data'][data]['default'] != "":
-                table += f"Default: <b>{entry[connor]['data'][data]['default']}</b>"
-            else:
-                table += "&lt;empty&gt;"
-
-            if entry[connor]['data'][data]['type'] == "number":
-                table += typeNumber(entry[connor]['data'][data])
-            table += "</li>\n"
-        
-        table += "</ol></td>\n"
-    table += "</table>\n"
-    connectorDoc += table
     return connectorDoc
     
 
@@ -249,44 +256,65 @@ def generateSetting(entry):
             settingDoc += f"{entry[setting]['doc']}\n\n"
     return settingDoc
 
-def __generateStateBody(entry, baseid):
-    return f"| {entry['id'].split(baseid)[-1]} | {entry['desc']} | {entry['default']} | {entry.get('parentGroup', ' ')} |\n"
-
 def generateState(entry, baseid):
     stateDoc = "\n## States\n"
     filterCategory = {}
     for state in entry:
-        if entry[state].get('category', False):
-            if not entry[state]["category"] in filterCategory:
-                filterCategory[entry[state].get("category")] = ""
-                filterCategory[entry[state].get("category")] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category:</b> {entry[state].get('category')} <u>(Click to expand)</u></summary>\n"
-                filterCategory[entry[state].get("category")] += "\n\n| Id | Description | DefaultValue | parentGroup |\n"
-                filterCategory[entry[state].get("category")] += "| --- | --- | --- | --- |\n"
+        categoryName = entry[state].get("category", "main")
+        if not categoryName in filterCategory:
+            filterCategory[categoryName] = ""
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category:</b> {entry[state].get('category')} <sub><ins>(Click to expand)</ins></sub></summary>\n"
+            filterCategory[categoryName] += "\n\n| Id | Description | DefaultValue | parentGroup |\n"
+            filterCategory[categoryName] += "| --- | --- | --- | --- |\n"
 
-            filterCategory[entry[state].get("category")] += __generateStateBody(entry[state], baseid)
+        filterCategory[categoryName] += f"| {entry[state]['id'].split(baseid)[-1]} | {entry[state]['desc']} | {entry[state]['default']} | {entry[state].get('parentGroup', ' ')} |\n"
 
     for category in filterCategory:
         stateDoc += filterCategory[category]
-        stateDoc += "</details>\n"
-        stateDoc += "\n\n"
-    state += "<br>"
+        stateDoc += "</details>\n\n"
+    stateDoc += "<br>\n"
+
     return stateDoc
 
 def generateEvent(entry, baseid):
     eventDoc = "\n## Events\n\n"
-    eventDoc += f"<b>Base Id:</b> {baseid}.\n\n"
-    eventDoc += "<table>\n"
-    eventDoc += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
-        "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
+    filterCategory = {}
+
     for event in entry:
-        eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[-1]}</td>" + \
+        needDropdown = False
+
+        categoryName = entry[event].get("category", "main")
+        if not categoryName in filterCategory:
+            filterCategory[categoryName] = ""
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category: </b>{categoryName}</summary>\n\n"
+            filterCategory[categoryName] += "<table>\n"
+            filterCategory[categoryName] += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
+                                                 "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
+
+        filterCategory[categoryName] += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[-1]}</td>" + \
             f"<td>{entry[event].get('name', '')}</td>" + \
             f"<td>{entry[event].get('valueStateId', '').split(baseid)[-1]}</td>" + \
             f"<td>{entry[event].get('format', '')}</td>" + \
             f"<td>{entry[event].get('valueType', '')}</td>" + \
-            f"<td>{', '.join(entry[event].get('valueChoices', ''))}</td>"
-        eventDoc += "</tr>\n"
-    eventDoc += "</table>\n\n"
+            "<td>"
+        
+        if len(entry[event].get('valueChoices', [])) > 5:
+            filterCategory[categoryName] += f"<details><summary><ins>detail</ins></summary>\n"
+            needDropdown = True
+
+        filterCategory[categoryName] += f"<ul>"
+        for item in entry[event].get('valueChoices', []):
+            filterCategory[categoryName] += f"<li>{item}</li>"
+        filterCategory[categoryName] += "</ul></td>"
+
+        if needDropdown:
+            filterCategory[categoryName] += "</details>"
+        eventDoc += "<td></tr>\n"
+    
+    for category in filterCategory:
+        eventDoc += filterCategory[category]
+        eventDoc += f"</table></details>\n"
+    eventDoc += "<br>\n"
 
     return eventDoc
 
