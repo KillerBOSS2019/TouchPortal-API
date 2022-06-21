@@ -121,7 +121,7 @@ def generateTableContent(entry, entryFile):
   - [Installation Guide](#installation)"""
         
     table_content += """
-  - [Bugs and Support](#Bugs-and-Suggestion)
+  - [Bugs and Support](#bugs-and-suggestion)
   - [License](#license)
   """
     return table_content
@@ -142,6 +142,9 @@ def typeNumber(entry):
         typeDoc += f" &nbsp; <b>Allow Decimals:</b> {entry['allowDecimals']}"
 
     return typeDoc
+
+def __generateActionTable(entry):
+    pass
 
 def generateAction(entry):
     actionDoc = "\n## Actions\n"
@@ -246,15 +249,27 @@ def generateSetting(entry):
             settingDoc += f"{entry[setting]['doc']}\n\n"
     return settingDoc
 
+def __generateStateBody(entry, baseid):
+    return f"| {entry['id'].split(baseid)[-1]} | {entry['desc']} | {entry['default']} | {entry.get('parentGroup', ' ')} |\n"
+
 def generateState(entry, baseid):
     stateDoc = "\n## States\n"
+    filterCategory = {}
+    for state in entry:
+        if entry[state].get('category', False):
+            if not entry[state]["category"] in filterCategory:
+                filterCategory[entry[state].get("category")] = ""
+                filterCategory[entry[state].get("category")] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category:</b> {entry[state].get('category')} <u>(Click to expand)</u></summary>\n"
+                filterCategory[entry[state].get("category")] += "\n\n| Id | Description | DefaultValue | parentGroup |\n"
+                filterCategory[entry[state].get("category")] += "| --- | --- | --- | --- |\n"
 
-    stateDoc += f" <b>Base Id:</b> {baseid}.\n\n"
-    stateDoc += "| Id | Name | Description | DefaultValue | parentGroup |\n"
-    stateDoc += "| --- | --- | --- | --- | --- |\n"
-    for state in entry.keys():
-        stateDoc += f"| {entry[state]['id'].split(baseid)[-1]} | {state} | {entry[state]['desc']} | {entry[state]['default']} | {entry[state].get('parentGroup', ' ')} |\n"
-    stateDoc += "\n\n"
+            filterCategory[entry[state].get("category")] += __generateStateBody(entry[state], baseid)
+
+    for category in filterCategory:
+        stateDoc += filterCategory[category]
+        stateDoc += "</details>\n"
+        stateDoc += "\n\n"
+    state += "<br>"
     return stateDoc
 
 def generateEvent(entry, baseid):
@@ -265,11 +280,11 @@ def generateEvent(entry, baseid):
         "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
     for event in entry:
         eventDoc += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[-1]}</td>" + \
-            f"<td>{event}</td>" + \
-            f"<td>{entry[event]['valueStateId'].split(baseid)[-1]}</td>" + \
-            f"<td>{entry[event]['format']}</td>" + \
-            f"<td>{entry[event]['valueType']}</td>" + \
-            f"<td>{', '.join(entry[event]['valueChoices'])}</td>"
+            f"<td>{entry[event].get('name', '')}</td>" + \
+            f"<td>{entry[event].get('valueStateId', '').split(baseid)[-1]}</td>" + \
+            f"<td>{entry[event].get('format', '')}</td>" + \
+            f"<td>{entry[event].get('valueType', '')}</td>" + \
+            f"<td>{', '.join(entry[event].get('valueChoices', ''))}</td>"
         eventDoc += "</tr>\n"
     eventDoc += "</table>\n\n"
 

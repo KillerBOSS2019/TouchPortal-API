@@ -37,7 +37,7 @@ class TpToPy():
         generatedSetting = {}
         if not self.entry.get("settings", True): return generatedSetting
 
-        settings = self.entry["settings"]
+        settings = self.entry.get("settings", [])
 
         if isinstance(settings, list):
             for setting in range(len(settings)):
@@ -47,12 +47,13 @@ class TpToPy():
     def generateStates(self):
         generatedState = {}
         categories = self.entry["categories"]
-
+        stateNum = 1
         for category in range(len(categories)):
             if categories[category].get("states") and isinstance(categories[category]['states'], list):
-                for state in range(len(categories[category]["states"])):
-                    generatedState[state+1] = categories[category]["states"][state]
-                    generatedState[state+1]["category"] = categories[category].get("id", "").split(".")[-1]
+                for state in range(len(categories[category].get("states", []))):
+                    generatedState[stateNum] = categories[category]["states"][state]
+                    generatedState[stateNum]["category"] = categories[category].get("id", "").split(".")[-1]
+                    stateNum += 1
         return generatedState
         
 
@@ -67,13 +68,12 @@ class TpToPy():
                     if categories[category]["actions"][action].get('data', False): # Not all action have data
                         generatedAction[action+1]['format'] = self.__convertFormat(categories[category]["actions"][action]['format'], generatedAction[action+1]['data'])
                         generatedAction[action+1]['data'] = self.__convertData(categories[category]["actions"][action]['data'])
-
                     generatedAction[action+1]["category"] = categories[category].get("id", "").split(".")[-1]
         return generatedAction
 
     def generateEvents(self):
         generatedEvents = {}
-        categories = self.entry["categories"]
+        categories = self.entry.get("categories", [])
 
         for category in range(len(categories)):
             if categories[category].get("events", False) and isinstance(categories[category]['events'], list):
@@ -85,7 +85,7 @@ class TpToPy():
 
     def generateConnectors(self):
         generatedConnectors = {}
-        categories = self.entry["categories"]
+        categories = self.entry.get("categories", [])
         for category in range(len(categories)):
             if categories[category].get("connectors") and isinstance(categories[category]['connectors'], list):
                 for connector in range(len(categories[category]["connectors"])):

@@ -544,8 +544,8 @@ def main(sdk_args=None):
     t = _normPath(opts.target or "TPPEntry.py")
     if opts.target.endswith(".tp") and not opts.validate:
         valid = _validateDefinition(t)
-        if valid == 0:
-            generatePythonStruct(t, opts.o or "TPPEntry")
+        if not valid: input("Found errors. Press Enter to build or Ctrl+C to exit...")
+        generatePythonStruct(t, opts.o or "TPPEntry")
         return valid
 
     # default action
