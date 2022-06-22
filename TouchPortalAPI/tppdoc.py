@@ -78,9 +78,7 @@ def getInfoFromBuildScript(script:str):
 
 def generateTableContent(entry, entryFile):
     table_content = f"""
-# {entry['name'].replace(" ", "-")}
-
-"""
+# {entry['name'].replace(" ", "-")}"""
     if entry.get('doc'):
         table_content += f"""
 ![Downloads](https://img.shields.io/github/downloads/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}/total) 
@@ -91,11 +89,9 @@ def generateTableContent(entry, entryFile):
 
     table_content += f"""
 - [{entry['name']}](#{entry['name'].replace(" ", "-")})
-  - [Description](#description)
-"""
-
+  - [Description](#description)"""
     if hasattr(entryFile, "TP_PLUGIN_SETTINGS") and entryFile.TP_PLUGIN_SETTINGS:
-        table_content += """  - [Settings Overview](#Settings-Overview)"""
+        table_content += """ \n  - [Settings Overview](#Settings-Overview)"""
 
     table_content += """
   - [Features](#Features)"""
@@ -378,7 +374,7 @@ def main(docArg=None):
         documentation += f"{entry.TP_PLUGIN_INFO['doc']['description']}\n\n"
     
     documentation += f"This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API)."
-    if entry.TP_PLUGIN_INFO:
+    if entry.TP_PLUGIN_SETTINGS:
         print("Generating settings section\n")
         setting = generateSetting(entry.TP_PLUGIN_SETTINGS)
         documentation += setting
