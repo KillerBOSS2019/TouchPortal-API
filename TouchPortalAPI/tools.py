@@ -47,7 +47,7 @@ class Tools():
         if type == "Auto" or type == "Web":
             try:
                 r = requests.head(image)
-                if r.headers['content-type'] in image_formats:
+                if r.headers.get('content-type', 'image/png' if type == "Web" else '') in image_formats:
                     data = requests.get(image).content
                 else:
                     raise TypeError(f"Returned image content type ({r.headers['content-type']}) is not one of: {image_formats}")

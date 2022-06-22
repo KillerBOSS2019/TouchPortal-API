@@ -83,9 +83,9 @@ def generateTableContent(entry, entryFile):
 """
     if entry.get('doc'):
         table_content += f"""
-![Downloads](https://img.shields.io/github/downloads/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}/total)
-![Forks](https://img.shields.io/github/forks/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]})
-![Stars](https://img.shields.io/github/stars/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]})
+![Downloads](https://img.shields.io/github/downloads/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}/total) 
+![Forks](https://img.shields.io/github/forks/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}) 
+![Stars](https://img.shields.io/github/stars/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}) 
 ![License](https://img.shields.io/github/license/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]})
 """
 
@@ -147,12 +147,12 @@ def __generateData(entry):
     dataDocList = ""
     needDropdown = False
     if entry.get('data'):
-        dataDocList += "<td>"
+        dataDocList += "<td><ol start=1>"
         if len(entry['data']) > 3:
-            dataDocList += "<details><summary><ins>Click to expand</ins></summary><ol start=1>\n"
+            dataDocList = "<td><details><summary><ins>Click to expand</ins></summary><ol start=1>\n"
             needDropdown = True
         for data in entry['data']:
-            dataDocList += f"<li>[{data}] Type: {entry['data'][data]['type']} &nbsp; \n"
+            dataDocList += f"<li>Type: {entry['data'][data]['type']} &nbsp; \n"
 
             if entry['data'][data]['type'] == "choice" and entry['data'][data].get('valueChoices'):
                 dataDocList += f"Default: <b>{entry['data'][data]['default']}</b> Possible choices: {entry['data'][data]['valueChoices']}"
@@ -229,7 +229,7 @@ def generateConnectors(entry):
 
 
 def generateSetting(entry):
-    settingDoc = "\n## Settings Overview\n"
+    settingDoc = "\n\n## Settings Overview\n"
 
     def f(data):
         return [data.get('maxLength', 0) > 0, data.get('minValue', None), data.get('maxValue', None)]
@@ -237,9 +237,9 @@ def generateSetting(entry):
     for setting in entry.keys():
         settingDoc += f"### {setting}\n"
         settingDoc += "| Read-only | Type | Default Value"
-        if f(entry[setting])[0]: settings += f" | Max. Length"
-        if f(entry[setting])[1]: settings += f" | Min. Value"
-        if f(entry[setting])[2]: settings += f" | Max. Value"
+        if f(entry[setting])[0]: settingDoc += f" | Max. Length"
+        if f(entry[setting])[1]: settingDoc += f" | Min. Value"
+        if f(entry[setting])[2]: settingDoc += f" | Max. Value"
         settingDoc += " |\n"
         settingDoc += "| --- | --- | ---"
         if f(entry[setting])[0]: settingDoc += f" | ---"
@@ -263,7 +263,7 @@ def generateState(entry, baseid):
         categoryName = entry[state].get("category", "main")
         if not categoryName in filterCategory:
             filterCategory[categoryName] = ""
-            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category:</b> {entry[state].get('category')} <sub><ins>(Click to expand)</ins></sub></summary>\n"
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category:</b> {entry[state].get('category')} <ins>(Click to expand)</ins></summary>\n"
             filterCategory[categoryName] += "\n\n| Id | Description | DefaultValue | parentGroup |\n"
             filterCategory[categoryName] += "| --- | --- | --- | --- |\n"
 
@@ -378,7 +378,7 @@ def main(docArg=None):
         documentation += f"{entry.TP_PLUGIN_INFO['doc']['description']}\n\n"
     
     documentation += f"This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API)."
-    if entry.TP_PLUGIN_INFO.get('settings', False):
+    if entry.TP_PLUGIN_INFO:
         print("Generating settings section\n")
         setting = generateSetting(entry.TP_PLUGIN_SETTINGS)
         documentation += setting
