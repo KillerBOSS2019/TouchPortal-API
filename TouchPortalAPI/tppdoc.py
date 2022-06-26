@@ -279,7 +279,7 @@ def generateEvent(entry, baseid):
     for event in entry:
         needDropdown = False
 
-        categoryName = entry[event].get("category", "main")
+        categoryName = event.get("category", "main")
         if not categoryName in filterCategory:
             filterCategory[categoryName] = ""
             filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category: </b>{categoryName}</summary>\n\n"
@@ -287,19 +287,19 @@ def generateEvent(entry, baseid):
             filterCategory[categoryName] += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
                                                  "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
 
-        filterCategory[categoryName] += f"<tr valign='top'><td>{entry[event]['id'].split(baseid)[-1]}</td>" + \
-            f"<td>{entry[event].get('name', '')}</td>" + \
-            f"<td>{entry[event].get('valueStateId', '').split(baseid)[-1]}</td>" + \
-            f"<td>{entry[event].get('format', '')}</td>" + \
-            f"<td>{entry[event].get('valueType', '')}</td>" + \
+        filterCategory[categoryName] += f"<tr valign='top'><td>{event['id'].split(baseid)[-1]}</td>" + \
+            f"<td>{event.get('name', '')}</td>" + \
+            f"<td>{event.get('valueStateId', '').split(baseid)[-1]}</td>" + \
+            f"<td>{event.get('format', '')}</td>" + \
+            f"<td>{event.get('valueType', '')}</td>" + \
             "<td>"
         
-        if len(entry[event].get('valueChoices', [])) > 5:
+        if len(event.get('valueChoices', [])) > 5:
             filterCategory[categoryName] += f"<details><summary><ins>detail</ins></summary>\n"
             needDropdown = True
 
         filterCategory[categoryName] += f"<ul>"
-        for item in entry[event].get('valueChoices', []):
+        for item in event.get('valueChoices', []):
             filterCategory[categoryName] += f"<li>{item}</li>"
         filterCategory[categoryName] += "</ul></td>"
 
