@@ -96,7 +96,7 @@ class TpToPy():
         for category in categories:
             categId = category.get("id", "").split(".")
             generatedCalegory[categId[-1]] = {
-                "id": ".".join(categId[:-1]) or categId[-1],
+                "id": category.get("id"),
                 "name": category.get("name", ""),
                 "imagepath": category.get("imagepath", ""),
             }
@@ -106,7 +106,7 @@ class TpToPy():
 
             for todo in todoList: # hack
                 if (data := category.get(todo)) and isinstance(data, list):
-                    todoList[todo](data, categId)
+                    todoList[todo](data, categId[-1])
         
         return generatedCalegory
 
@@ -130,12 +130,10 @@ class toString():
     def __init__(self, entry):
         self.entry = TpToPy(entry)
 
-        TP_PLUGIN_INFO = self.generateInfo()
-        TP_PLUGIN_SETTINGS = self.generateSettings()
-        TP_PLUGIN_STATES = self.structState
-        TP_PLUGIN_ACTIONS = self.structAction
-        TP_PLUGIN_CONNECTORS = self.structConnector
-        TP_PLUGIN_EVENTS = self.structEvent
-        TP_PLUGIN_CATEGORIES = self.generateCalegories()
-
-    
+        self.TP_PLUGIN_INFO = self.entry.generateInfo()
+        self.TP_PLUGIN_SETTINGS = self.entry.generateSettings()
+        self.TP_PLUGIN_CATEGORIES = self.entry.generateCalegories()
+        self.TP_PLUGIN_STATES = self.entry.structState
+        self.TP_PLUGIN_ACTIONS = self.entry.structAction
+        self.TP_PLUGIN_CONNECTORS = self.entry.structConnector
+        self.TP_PLUGIN_EVENTS = self.entry.structEvent

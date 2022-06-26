@@ -231,7 +231,6 @@ def generateSetting(entry):
         return [data.get('maxLength', 0) > 0, data.get('minValue', None), data.get('maxValue', None)]
 
     for setting in entry.keys():
-        settingDoc += f"### {setting}\n"
         settingDoc += "| Read-only | Type | Default Value"
         if f(entry[setting])[0]: settingDoc += f" | Max. Length"
         if f(entry[setting])[1]: settingDoc += f" | Min. Value"
@@ -277,6 +276,7 @@ def generateEvent(entry, baseid):
     filterCategory = {}
 
     for event in entry:
+        event = entry[event] # dict looks like {'0': {}, '1': {}}. so when looping It will give `0` etc..
         needDropdown = False
 
         categoryName = event.get("category", "main")
@@ -331,7 +331,7 @@ def main(docArg=None):
     )
 
     parser.add_argument(
-        "-o", "--output", default="Documentation",
+        "-o", "--output", default="Documentation.md",
         help='Name of generated documentation. Default is "Documentation". You do not need to add the extension.'
     )
 
@@ -416,7 +416,7 @@ def main(docArg=None):
     documentation += "\n# License\n"
     documentation += "This plugin is licensed under the [GPL 3.0 License] - see the [LICENSE](LICENSE) file for more information.\n\n"
 
-    with open(opts.output or "Documentation.md", "w") as f:
+    with open(opts.output, "w") as f:
         f.write(documentation)
         
     print("Finished generating documentation.")
