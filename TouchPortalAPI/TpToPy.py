@@ -67,7 +67,8 @@ class TpToPy():
         for action in data:
             startIndex += 1
             self.structAction[startIndex] = action
-            self.structAction[startIndex]['format'] = self.__convertFormat(action["format"], action['data'])
+            if self.structAction[startIndex].get("format", False):
+                self.structAction[startIndex]['format'] = self.__convertFormat(action["format"], action['data'])
             if action.get('data', False):
                 self.structAction[startIndex]['data'] = self.__convertData(action['data'])
             self.structAction[startIndex]["category"] = category
@@ -85,7 +86,8 @@ class TpToPy():
         for connector in data:
             self.structConnector[startIndex] = connector
             self.structConnector[startIndex]['category'] = category
-            self.structConnector[startIndex]['format'] = self.__convertFormat(connector['format'], connector['data'])
+            if self.structConnector[startIndex].get('format', False):
+                self.structConnector[startIndex]['format'] = self.__convertFormat(connector['format'], connector['data'])
             if connector.get("data", False):
                 self.structConnector[startIndex]['data'] = self.__convertData(connector['data'])
     

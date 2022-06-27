@@ -201,7 +201,7 @@ def generateAction(entry, categoryStruct):
     filterActionbyCategory = {}
 
     numberOfCategory = [entry[x].get("category") for x in entry]
-    allowDetailOpen = not len(numberOfCategory) > 1
+    allowDetailOpen = not len(set(numberOfCategory)) > 1
 
     for action in entry:
         categoryName = entry[action].get("category", "main")
@@ -234,7 +234,7 @@ def generateConnectors(entry, categoryStruct):
     filterConnectorsbyCategory = {}
 
     numberOfCategory = [entry[x].get("category") for x in entry]
-    allowDetailOpen = not len(numberOfCategory) > 1
+    allowDetailOpen = not len(set(numberOfCategory)) > 1
 
     for connector in entry:
         categoryName = entry[connector].get("category", "main")
@@ -279,7 +279,7 @@ def generateSetting(entry):
         if f(entry[setting])[2]: settingDoc += f" | ---"
 
         settingDoc += " |\n"
-        settingDoc += f"| {entry[setting]['readOnly']} | {entry[setting]['type']} | {entry[setting]['default']}"
+        settingDoc += f"| {entry[setting].get('readOnly', False)} | {entry[setting]['type']} | {entry[setting]['default']}"
         if f(entry[setting])[0]: settingDoc += f" | {entry[setting]['maxLength']}"
         if f(entry[setting])[1]: settingDoc += f" | {entry[setting]['minValue']}"
         if f(entry[setting])[2]: settingDoc += f" | {entry[setting]['maxValue']}"
@@ -292,7 +292,7 @@ def generateState(entry, baseid, categoryStruct):
     stateDoc = "\n## States\n"
     filterCategory = {}
     numberOfCategory = [entry[x].get("category") for x in entry]
-    allowDetailOpen = not len(numberOfCategory) > 1
+    allowDetailOpen = not len(set(numberOfCategory)) > 1
     for state in entry:
         categoryName = entry[state].get("category", "main")
         state = entry[state]
@@ -317,7 +317,7 @@ def generateEvent(entry, baseid, categoryStruct):
     eventDoc = "\n## Events\n\n"
     filterCategory = {}
     numberOfCategory = [entry[x].get("category") for x in entry]
-    allowDetailOpen = not len(numberOfCategory) > 1
+    allowDetailOpen = not len(set(numberOfCategory)) > 1
     for event in entry:
         event = entry[event] # dict looks like {'0': {}, '1': {}}. so when looping It will give `0` etc..
         needDropdown = False
