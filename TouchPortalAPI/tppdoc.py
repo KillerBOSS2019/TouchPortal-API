@@ -76,6 +76,20 @@ def getInfoFromBuildScript(script:str):
 		raise ImportError(f"ERROR while trying to import entry code from '{script}': {repr(e)}")
 	return entry
 
+def generateCategoryLink(linkType, entry, categoryStruct):
+    linkList = []
+    # Ik this is not the most efficient way to do it
+    for category in categoryStruct:
+        for item in entry:
+            if (theItem := entry[item].get('category')) == category:
+                linkName = categoryStruct[theItem].get('name')
+                linkAdress = categoryStruct[theItem].get('id') + linkType
+                if (dataToAppend := f"\n        - [Category: {linkName}](#{linkAdress})") not in linkList:
+                    linkList.append(dataToAppend)
+
+    # print(linkList)
+    return "".join(linkList)
+
 def generateTableContent(entry, entryFile):
     table_content = f"""
 # {entry['name'].replace(" ", "-")}"""
@@ -97,20 +111,24 @@ def generateTableContent(entry, entryFile):
   - [Features](#Features)"""
 
     if "TP_PLUGIN_ACTIONS" in dir(entryFile) and entryFile.TP_PLUGIN_ACTIONS:
-        table_content += """
-    - [Actions](#actions)"""
+        table_content += """\n    - [Actions](#actions)"""
+
+        table_content += generateCategoryLink("actions", entryFile.TP_PLUGIN_ACTIONS, entryFile.TP_PLUGIN_CATEGORIES)
 
     if "TP_PLUGIN_CONNECTORS" in dir(entryFile) and entryFile.TP_PLUGIN_CONNECTORS:
         table_content += """
-    - [Slider](#sliders)"""
+    - [Connectors](#connectors)"""
+        table_content += generateCategoryLink("connectors", entryFile.TP_PLUGIN_CONNECTORS, entryFile.TP_PLUGIN_CATEGORIES)
 
     if "TP_PLUGIN_STATES" in dir(entryFile) and entryFile.TP_PLUGIN_STATES:
         table_content += """
     - [States](#states)"""
+        table_content += generateCategoryLink("states", entryFile.TP_PLUGIN_STATES, entryFile.TP_PLUGIN_CATEGORIES)
 
     if "TP_PLUGIN_EVENTS" in dir(entryFile) and entryFile.TP_PLUGIN_EVENTS:
         table_content += """
     - [Events](#events)"""
+        table_content += generateCategoryLink("events", entryFile.TP_PLUGIN_EVENTS, entryFile.TP_PLUGIN_CATEGORIES)
 
     if entry.get("doc") and "Install" in entry['doc'].keys() and entry['doc']['Install']:
         table_content += """
@@ -169,9 +187,21 @@ def __generateData(entry):
     
     return dataDocList
 
-def generateAction(entry):
+def getCategoryName(categoryId, categoryStruct):
+    try:
+        return categoryStruct[categoryId].get('name', categoryId)
+    except IndexError:
+        return categoryStruct[list(categoryStruct.keys())[0]] # If it does not have a `category` field It will use default
+
+def getCategoryId(categoryId, categoryStruct):
+    return categoryStruct.get(categoryId)
+
+def generateAction(entry, categoryStruct):
     actionDoc = "\n## Actions\n"
     filterActionbyCategory = {}
+
+    numberOfCategory = [entry[x].get("category") for x in entry]
+    allowDetailOpen = not len(numberOfCategory) > 1
 
     for action in entry:
         categoryName = entry[action].get("category", "main")
@@ -190,16 +220,21 @@ def generateAction(entry):
         filterActionbyCategory[categoryName] += f"<td align=center>{'Yes' if entry[action].get('hasHoldFunctionality') and entry[action]['hasHoldFunctionality'] else 'No'}</td>\n"
     
     for category in filterActionbyCategory:
-        actionDoc += f"<details {'open' if list(filterActionbyCategory.keys()).index(category) == 0 else ''}><summary><b>Category:</b> {category} <ins>(Click to expand)</ins></summary>"
+        categoryRealName = getCategoryName(categoryId=category, categoryStruct=categoryStruct)
+        categoryLinkAddress = getCategoryId(category, categoryStruct).get("id") + "actions" # to make it unique
+        actionDoc += f"<details {'open' if list(filterActionbyCategory.keys()).index(category) == 0 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <ins>(Click to expand)</ins></summary>"
         actionDoc += filterActionbyCategory[category]
         actionDoc += "</tr></table></details>\n"
     
     actionDoc += "<br>\n"
     return actionDoc
 
-def generateConnectors(entry):
-    connectorDoc = "\n## Sliders\n"
+def generateConnectors(entry, categoryStruct):
+    connectorDoc = "\n## Connectors\n"
     filterConnectorsbyCategory = {}
+
+    numberOfCategory = [entry[x].get("category") for x in entry]
+    allowDetailOpen = not len(numberOfCategory) > 1
 
     for connector in entry:
         categoryName = entry[connector].get("category", "main")
@@ -215,7 +250,9 @@ def generateConnectors(entry):
         filterConnectorsbyCategory[categoryName] += __generateData(entry[connector])
 
     for category in filterConnectorsbyCategory:
-        connectorDoc += f"<details {'open' if list(filterConnectorsbyCategory.keys()).index(category) == 0 else ''}><summary><b>Category:</b> {category} <ins>(Click to expand)</ins></summary>"
+        categoryRealName = getCategoryName(categoryId=category, categoryStruct=categoryStruct)
+        categoryLinkAddress = getCategoryId(category, categoryStruct).get("id") + "connectors"
+        connectorDoc += f"<details {'open' if list(filterConnectorsbyCategory.keys()).index(category) == 0 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <ins>(Click to expand)</ins></summary>"
         connectorDoc += filterConnectorsbyCategory[category]
         connectorDoc += "</table></details>\n"
     connectorDoc += "<br>\n"
@@ -251,18 +288,23 @@ def generateSetting(entry):
             settingDoc += f"{entry[setting]['doc']}\n\n"
     return settingDoc
 
-def generateState(entry, baseid):
+def generateState(entry, baseid, categoryStruct):
     stateDoc = "\n## States\n"
     filterCategory = {}
+    numberOfCategory = [entry[x].get("category") for x in entry]
+    allowDetailOpen = not len(numberOfCategory) > 1
     for state in entry:
         categoryName = entry[state].get("category", "main")
+        state = entry[state]
         if not categoryName in filterCategory:
+            categoryRealName = getCategoryName(categoryId=state.get('category'), categoryStruct=categoryStruct)
+            categoryLinkAddress = getCategoryId(state.get('category'), categoryStruct).get("id") + "states"
             filterCategory[categoryName] = ""
-            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category:</b> {entry[state].get('category')} <ins>(Click to expand)</ins></summary>\n"
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <ins>(Click to expand)</ins></summary>\n"
             filterCategory[categoryName] += "\n\n| Id | Description | DefaultValue | parentGroup |\n"
             filterCategory[categoryName] += "| --- | --- | --- | --- |\n"
 
-        filterCategory[categoryName] += f"| {entry[state]['id'].split(baseid)[-1]} | {entry[state]['desc']} | {entry[state]['default']} | {entry[state].get('parentGroup', ' ')} |\n"
+        filterCategory[categoryName] += f"| {state['id'].split(baseid)[-1]} | {state['desc']} | {state['default']} | {state.get('parentGroup', ' ')} |\n"
 
     for category in filterCategory:
         stateDoc += filterCategory[category]
@@ -271,18 +313,21 @@ def generateState(entry, baseid):
 
     return stateDoc
 
-def generateEvent(entry, baseid):
+def generateEvent(entry, baseid, categoryStruct):
     eventDoc = "\n## Events\n\n"
     filterCategory = {}
-
+    numberOfCategory = [entry[x].get("category") for x in entry]
+    allowDetailOpen = not len(numberOfCategory) > 1
     for event in entry:
         event = entry[event] # dict looks like {'0': {}, '1': {}}. so when looping It will give `0` etc..
         needDropdown = False
 
         categoryName = event.get("category", "main")
         if not categoryName in filterCategory:
+            categoryRealName = getCategoryName(categoryId=categoryName, categoryStruct=categoryStruct)
+            categoryLinkAddress = getCategoryId(categoryName, categoryStruct).get("id") + "events"
             filterCategory[categoryName] = ""
-            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 else ''}><summary><b>Base Id:</b> {baseid} <b>Category: </b>{categoryName}</summary>\n\n"
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category: </b>{categoryRealName}</summary>\n\n"
             filterCategory[categoryName] += "<table>\n"
             filterCategory[categoryName] += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
                                                  "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"
@@ -380,25 +425,27 @@ def main(docArg=None):
         documentation += setting
 
     documentation += "\n# Features\n"
+    categoryStruct = entry.TP_PLUGIN_CATEGORIES
 
     if "TP_PLUGIN_ACTIONS" in dir(entry) and entry.TP_PLUGIN_ACTIONS:
         print("Generating action section\n")
-        action = generateAction(entry.TP_PLUGIN_ACTIONS)
+        action = generateAction(entry.TP_PLUGIN_ACTIONS, categoryStruct)
         documentation += action
+
 
     if "TP_PLUGIN_CONNECTORS" in dir(entry) and entry.TP_PLUGIN_CONNECTORS:
         print("Generating connector section\n")
-        connector = generateConnectors(entry.TP_PLUGIN_CONNECTORS)
+        connector = generateConnectors(entry.TP_PLUGIN_CONNECTORS, categoryStruct)
         documentation += connector
 
     if "TP_PLUGIN_STATES" in dir(entry) and entry.TP_PLUGIN_STATES:
         print("Generating state section\n")
-        state = generateState(entry.TP_PLUGIN_STATES, entry.TP_PLUGIN_INFO['id'])
+        state = generateState(entry.TP_PLUGIN_STATES, entry.TP_PLUGIN_INFO['id'], categoryStruct)
         documentation += state
 
     if "TP_PLUGIN_EVENTS" in dir(entry) and entry.TP_PLUGIN_EVENTS:
         print("Generating event section\n")
-        event = generateEvent(entry.TP_PLUGIN_EVENTS, entry.TP_PLUGIN_INFO['id'])
+        event = generateEvent(entry.TP_PLUGIN_EVENTS, entry.TP_PLUGIN_INFO['id'], categoryStruct)
         documentation += event
 
     if entry.TP_PLUGIN_INFO.get("doc") and entry.TP_PLUGIN_INFO['doc'].get('Install'):
