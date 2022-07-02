@@ -129,6 +129,11 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7.5 (7/2/2022)
+-------------------
+- Fixed typo where It can't generate states
+- when generating doc `(click to expand)` is now smaller
+
 1.7.4 (6/26/2022)
 -------------------
 - Fixed doc gen and Python struct gen `format` and `readOnly` is not required key. so It will ignore this.
