@@ -222,7 +222,7 @@ def generateAction(entry, categoryStruct):
     for category in filterActionbyCategory:
         categoryRealName = getCategoryName(categoryId=category, categoryStruct=categoryStruct)
         categoryLinkAddress = getCategoryId(category, categoryStruct).get("id") + "actions" # to make it unique
-        actionDoc += f"<details {'open' if list(filterActionbyCategory.keys()).index(category) == 0 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <ins>(Click to expand)</ins></summary>"
+        actionDoc += f"<details {'open' if list(filterActionbyCategory.keys()).index(category) == 0 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <small><ins>(Click to expand)</ins></small></summary>"
         actionDoc += filterActionbyCategory[category]
         actionDoc += "</tr></table></details>\n"
     
@@ -252,7 +252,7 @@ def generateConnectors(entry, categoryStruct):
     for category in filterConnectorsbyCategory:
         categoryRealName = getCategoryName(categoryId=category, categoryStruct=categoryStruct)
         categoryLinkAddress = getCategoryId(category, categoryStruct).get("id") + "connectors"
-        connectorDoc += f"<details {'open' if list(filterConnectorsbyCategory.keys()).index(category) == 0 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <ins>(Click to expand)</ins></summary>"
+        connectorDoc += f"<details {'open' if list(filterConnectorsbyCategory.keys()).index(category) == 0 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <small><ins>(Click to expand)</ins></small></summary>"
         connectorDoc += filterConnectorsbyCategory[category]
         connectorDoc += "</table></details>\n"
     connectorDoc += "<br>\n"
@@ -300,7 +300,7 @@ def generateState(entry, baseid, categoryStruct):
             categoryRealName = getCategoryName(categoryId=state.get('category'), categoryStruct=categoryStruct)
             categoryLinkAddress = getCategoryId(state.get('category'), categoryStruct).get("id") + "states"
             filterCategory[categoryName] = ""
-            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <ins>(Click to expand)</ins></summary>\n"
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category:</b> {categoryRealName} <small><ins>(Click to expand)</ins></small></summary>\n"
             filterCategory[categoryName] += "\n\n| Id | Description | DefaultValue | parentGroup |\n"
             filterCategory[categoryName] += "| --- | --- | --- | --- |\n"
 
@@ -327,7 +327,7 @@ def generateEvent(entry, baseid, categoryStruct):
             categoryRealName = getCategoryName(categoryId=categoryName, categoryStruct=categoryStruct)
             categoryLinkAddress = getCategoryId(categoryName, categoryStruct).get("id") + "events"
             filterCategory[categoryName] = ""
-            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category: </b>{categoryRealName}</summary>\n\n"
+            filterCategory[categoryName] += f"<details{' open' if len(filterCategory) == 1 and allowDetailOpen else ''} id='{categoryLinkAddress}'><summary><b>Category: </b>{categoryRealName} <small><ins>(Click to expand)</ins></small></summary>\n\n"
             filterCategory[categoryName] += "<table>\n"
             filterCategory[categoryName] += "<tr valign='buttom'>" + "<th>Id</th>" + "<th>Name</th>" + "<th nowrap>Evaluated State Id</th>" + \
                                                  "<th>Format</th>" + "<th>Type</th>" + "<th>Choice(s)</th>" + "</tr>\n"

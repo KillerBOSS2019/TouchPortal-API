@@ -52,7 +52,7 @@ class TpToPy():
         return generatedSetting
 
     def generateStates(self, data, category):
-        startIndex = len(self.structAction)
+        startIndex = len(self.structState)
 
         for state in data:
             self.structState[startIndex] = state
