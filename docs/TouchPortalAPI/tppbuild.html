@@ -39,27 +39,48 @@
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
-                    <a class="function" href="#getInfoFromBuildScript">getInfoFromBuildScript</a>
+                    <a class="variable" href="#PLUGIN_MAIN">PLUGIN_MAIN</a>
             </li>
             <li>
-                    <a class="function" href="#build_tpp">build_tpp</a>
+                    <a class="variable" href="#PLUGIN_EXE_NAME">PLUGIN_EXE_NAME</a>
             </li>
             <li>
-                    <a class="function" href="#zip_dir">zip_dir</a>
+                    <a class="variable" href="#PLUGIN_EXE_ICON">PLUGIN_EXE_ICON</a>
             </li>
             <li>
-                    <a class="function" href="#build_distro">build_distro</a>
+                    <a class="variable" href="#PLUGIN_ENTRY">PLUGIN_ENTRY</a>
             </li>
             <li>
-                    <a class="function" href="#build_clean">build_clean</a>
+                    <a class="variable" href="#PLUGIN_ENTRY_INDENT">PLUGIN_ENTRY_INDENT</a>
             </li>
             <li>
-                    <a class="function" href="#main">main</a>
+                    <a class="variable" href="#PLUGIN_ROOT">PLUGIN_ROOT</a>
+            </li>
+            <li>
+                    <a class="variable" href="#PLUGIN_ICON">PLUGIN_ICON</a>
+            </li>
+            <li>
+                    <a class="variable" href="#OUTPUT_PATH">OUTPUT_PATH</a>
+            </li>
+            <li>
+                    <a class="variable" href="#PLUGIN_VERSION">PLUGIN_VERSION</a>
+            </li>
+            <li>
+                    <a class="variable" href="#ADDITIONAL_FILES">ADDITIONAL_FILES</a>
+            </li>
+            <li>
+                    <a class="variable" href="#ADDITIONAL_PYINSTALLER_ARGS">ADDITIONAL_PYINSTALLER_ARGS</a>
+            </li>
+            <li>
+                    <a class="function" href="#validateBuild">validateBuild</a>
+            </li>
+            <li>
+                    <a class="function" href="#runBuild">runBuild</a>
             </li>
     </ul>
 
 
-    <footer>Documentation for TouchPortalAPI v1.7<br/>generated: 2022-06-05 06:06 UTC<br/>git version: <a href='https://github.com/KillerBOSS2019/TouchPortal-API/commit/f2349833' class='inline' target='_blank'>1.6.3-17-gf2349833</a><br/></footer>
+    <footer>Documentation for TouchPortalAPI v1.7.7<br/>generated: 2022-07-09 03:49 UTC<br/>git version: <a href='https://github.com/KillerBOSS2019/TouchPortal-API/commit/89db7b09' class='inline' target='_blank'>1.6.3-27-g89db7b09</a><br/></footer>
 
                     <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev">
                         built with <span class="visually-hidden">pdoc</span><img
@@ -70,7 +91,7 @@
         </nav>
     <main class="pdoc">
             <section>
-        <div class="version_header">TouchPortalAPI v1.7</div>
+        <div class="version_header">TouchPortalAPI v1.7.7</div>
 <a href="https://github.com/KillerBOSS2019/TouchPortal-API/blob/main/TouchPortalAPI/tppbuild.py" target="_blank" class="github-corner" title="View the latest source on GitHub" aria-label="View source on GitHub">
     <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#3bb300; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true" class="corner-svg">
         <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
@@ -184,7 +205,7 @@
 <span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">This file is part of the TouchPortal-API project.</span>
 <span class="s2">Copyright TouchPortal-API Developers</span>
-<span class="s2">Copyright (c) 2021 Maxim Paperno</span>
+<span class="s2">Copyright (c) 2021 DamienS</span>
 <span class="s2">All rights reserved.</span>
 
 <span class="s2">This program is free software: you can redistribute it and/or modify</span>
@@ -201,6 +222,9 @@
 <span class="s2">along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PLUGIN_MAIN&#39;</span><span class="p">,</span> <span class="s1">&#39;PLUGIN_EXE_NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;PLUGIN_EXE_ICON&#39;</span><span class="p">,</span> <span class="s1">&#39;PLUGIN_ENTRY&#39;</span><span class="p">,</span> <span class="s1">&#39;PLUGIN_ENTRY_INDENT&#39;</span><span class="p">,</span> <span class="s1">&#39;PLUGIN_ROOT&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;PLUGIN_ICON&#39;</span><span class="p">,</span> <span class="s1">&#39;OUTPUT_PATH&#39;</span><span class="p">,</span> <span class="s1">&#39;PLUGIN_VERSION&#39;</span><span class="p">,</span> <span class="s1">&#39;ADDITIONAL_FILES&#39;</span><span class="p">,</span> <span class="s1">&#39;ADDITIONAL_PYINSTALLER_ARGS&#39;</span><span class="p">,</span> <span class="s1">&#39;validateBuild&#39;</span><span class="p">,</span> <span class="s1">&#39;runBuild&#39;</span><span class="p">]</span>
+
 <span class="kn">import</span> <span class="nn">importlib</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -208,7 +232,7 @@
 <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
 <span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
 <span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">rmtree</span>
-<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="k">try</span><span class="p">:</span>
 	<span class="kn">import</span> <span class="nn">PyInstaller.__main__</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -216,10 +240,11 @@
 	<span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
-<span class="kn">from</span> <span class="nn">sdk_tools</span> <span class="kn">import</span> <span class="n">generateDefinitionFromScript</span><span class="p">,</span> <span class="n">_validateDefinition</span>
+<span class="kn">import</span> <span class="nn">sdk_tools</span>
 
 <span class="k">def</span> <span class="nf">getInfoFromBuildScript</span><span class="p">(</span><span class="n">script</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
 	<span class="k">try</span><span class="p">:</span>
+		<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span> <span class="c1"># This allows build config to import stuff</span>
 		<span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">spec_from_file_location</span><span class="p">(</span><span class="s2">&quot;buildScript&quot;</span><span class="p">,</span> <span class="n">script</span><span class="p">)</span>
 		<span class="n">buildScript</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 		<span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">buildScript</span><span class="p">)</span>
@@ -247,7 +272,14 @@
 				<span class="n">zip_dir</span><span class="p">(</span><span class="n">zf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">base_path</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">build_distro</span><span class="p">(</span><span class="n">opsys</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">pluginname</span><span class="p">,</span> <span class="n">packingList</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
-	<span class="n">os_name</span> <span class="o">=</span> <span class="s2">&quot;Windows&quot;</span> <span class="k">if</span> <span class="n">opsys</span> <span class="o">==</span> <span class="n">OS_WIN</span> <span class="k">else</span> <span class="s2">&quot;MacOS&quot;</span>
+	<span class="k">if</span> <span class="n">opsys</span> <span class="o">==</span> <span class="n">OS_WIN</span><span class="p">:</span>
+		<span class="n">os_name</span> <span class="o">=</span> <span class="s2">&quot;Windows&quot;</span>
+	<span class="k">elif</span> <span class="n">opsys</span> <span class="o">==</span> <span class="n">OS_MAC</span><span class="p">:</span>
+		<span class="n">os_name</span> <span class="o">=</span> <span class="s2">&quot;MacOS&quot;</span>
+	<span class="k">elif</span> <span class="n">opsys</span> <span class="o">==</span> <span class="n">OS_LINUX</span><span class="p">:</span>
+		<span class="n">os_name</span> <span class="o">=</span> <span class="s2">&quot;Linux&quot;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown OS&quot;</span><span class="p">)</span>
 	<span class="n">zip_name</span> <span class="o">=</span> <span class="n">pluginname</span> <span class="o">+</span> <span class="s2">&quot;_v&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">os_name</span> <span class="o">+</span> <span class="s2">&quot;.tpp&quot;</span>
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating archive: &quot;</span><span class="o">+</span> <span class="n">zip_name</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
@@ -261,13 +293,11 @@
 
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">build_clean</span><span class="p">(</span><span class="n">morefile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">build_clean</span><span class="p">(</span><span class="n">distPath</span><span class="p">,</span> <span class="n">dirPath</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cleaning up...&quot;</span><span class="p">)</span>
-	<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;./*.spec&quot;</span><span class="p">)</span>
-	<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;./*.exe&quot;</span><span class="p">))</span>
-	<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;./build&quot;</span><span class="p">,</span> <span class="s2">&quot;__pycache__&quot;</span><span class="p">])</span>
-	<span class="k">if</span> <span class="n">morefile</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">morefile</span><span class="p">)</span>
+	<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="n">distPath</span><span class="p">)</span>
+	<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;__pycache__&quot;</span><span class="p">))</span>
+
 	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
 		<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;removing: &quot;</span> <span class="o">+</span> <span class="n">file</span><span class="p">)</span>
@@ -277,16 +307,34 @@
 				<span class="n">rmtree</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
+<span class="k">def</span> <span class="nf">filePath</span><span class="p">(</span><span class="o">*</span><span class="n">file</span><span class="p">):</span>
+	<span class="n">fullpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="o">*</span><span class="n">file</span><span class="p">)</span>
+	<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">fullpath</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+
+		
+
 <span class="n">EXE_SFX</span> <span class="o">=</span> <span class="s2">&quot;.exe&quot;</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
 <span class="n">OS_WIN</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">OS_MAC</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">OS_LINUX</span> <span class="o">=</span> <span class="mi">3</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="n">requiredVar</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;PLUGIN_ENTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_MAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ROOT&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_EXE_NAME&quot;</span>
+    <span class="p">]</span>
+<span class="n">optionalVar</span> <span class="o">=</span> <span class="p">[</span>
+	<span class="s2">&quot;ADDITIONAL_PYINSTALLER_ARGS&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ICON&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_EXE_ICON&quot;</span><span class="p">,</span>
+	<span class="s2">&quot;ADDITIONAL_FILES&quot;</span><span class="p">,</span> <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_VERSION&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ENTRY_INDENT&quot;</span>
+<span class="p">]</span>
+<span class="n">attri_list</span> <span class="o">=</span> <span class="n">requiredVar</span> <span class="o">+</span> <span class="n">optionalVar</span>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">buildArgs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 	<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>
 		<span class="n">opsys</span> <span class="o">=</span> <span class="n">OS_WIN</span>
 	<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
 		<span class="n">opsys</span> <span class="o">=</span> <span class="n">OS_MAC</span>
+	<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
+		<span class="n">opsys</span> <span class="o">=</span> <span class="n">OS_LINUX</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="s2">&quot;Unsupported OS: &quot;</span> <span class="o">+</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
 
@@ -295,122 +343,457 @@
 	<span class="p">)</span>
 
 	<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-		<span class="s2">&quot;--target&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;target&gt;&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+		<span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;target&gt;&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
 		<span class="n">help</span><span class="o">=</span><span class="s1">&#39;A build script that contains some infomations about the plugin. &#39;</span> <span class="o">+</span>
 		<span class="s1">&#39;Using given infomation about the plugin, this script will automatically build entry.tp (if given file is .py) and it will build the distro &#39;</span> <span class="o">+</span>
 		<span class="s1">&#39;based on which operating system you</span><span class="se">\&#39;</span><span class="s1">re using.&#39;</span>
 	<span class="p">)</span>
 
-	<span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+	<span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">buildArgs</span><span class="p">)</span>
 	<span class="k">del</span> <span class="n">parser</span>
+
+	<span class="n">out_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">out_dir</span><span class="p">:</span>
+		<span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tppbuild started with target: &quot;</span> <span class="o">+</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-	<span class="n">buildfile</span> <span class="o">=</span> <span class="n">getInfoFromBuildScript</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-
-
-	<span class="n">attri_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PLUGIN_ENTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_MAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ROOT&quot;</span><span class="p">,</span> <span class="s2">&quot;Pyinstaller_arg&quot;</span><span class="p">,</span>
-				  <span class="s2">&quot;PLUGIN_EXE_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ICON&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ICON&quot;</span><span class="p">,</span> <span class="s2">&quot;FileRequired&quot;</span><span class="p">,</span>
-				  <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_VERSION&quot;</span><span class="p">]</span>
+	<span class="n">buildfile</span> <span class="o">=</span> <span class="n">getInfoFromBuildScript</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">))</span>
 
 	<span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span><span class="n">attri</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">buildfile</span><span class="p">)</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span><span class="p">]</span>
 	<span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">checklist</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> is missing these variables: &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">attri</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span> <span class="k">if</span> <span class="n">attri</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">buildfile</span><span class="p">)]))</span>
 		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
 
-	<span class="n">isPyEntry</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">TPP_PACK_LIST</span> <span class="o">=</span> <span class="p">{}</span>
 
 	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Building </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="si">}</span><span class="s2"> v</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_VERSION</span><span class="si">}</span><span class="s2"> target(s) on </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Step 1</span>
-<span class="sd">		Checking if python entry or entry.tp exists or not. and only move on if it exists</span>
-<span class="sd">	Step 2</span>
-<span class="sd">		If file is entry.tp It will automatically validdate.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">):</span>
-		<span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">):</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating entry.tp from &quot;</span> <span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">)</span>
-			<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">))))</span>
-			<span class="n">generatedJson</span> <span class="o">=</span> <span class="n">generateDefinitionFromScript</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">))</span>
-			<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;entry.tp&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-				<span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">generatedJson</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Successfully generated entry.tp&quot;</span><span class="p">)</span>
-			<span class="n">isPyEntry</span> <span class="o">=</span> <span class="kc">True</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">result</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">)</span>
-			<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.&quot;</span><span class="p">)</span>
-				<span class="k">return</span> <span class="mi">0</span> <span class="c1"># Exit build process because entry.tp is invalid</span>
+	<span class="c1">#buildfiledir = filePath(out_dir)</span>
 
-		<span class="c1"># If everything goes well It will add to TPP packing list</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Adding entry.tp to packing list.&quot;</span><span class="p">)</span>
-		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="s2">&quot;entry.tp&quot;</span> <span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dirPath</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="s2">&quot;dist&quot;</span><span class="p">)):</span>
+		<span class="n">rmtree</span><span class="p">(</span><span class="n">dirPath</span><span class="p">)</span>
+	<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dirPath</span><span class="p">)</span>
+
+	<span class="n">distdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="p">(</span><span class="n">entry_abs_path</span> <span class="o">:=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">entry_abs_path</span><span class="p">):</span>
+		<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">entry_abs_path</span><span class="p">)))</span>
+		<span class="n">entry_output_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">distdir</span><span class="p">,</span> <span class="s2">&quot;entry.tp&quot;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">):</span>
+			<span class="n">sdk_arg</span> <span class="o">=</span> <span class="p">[</span><span class="n">entry_abs_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;-i=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY_INDENT</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;-o=</span><span class="si">{</span><span class="n">entry_output_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sdk_arg</span> <span class="o">=</span> <span class="p">[</span><span class="n">entry_abs_path</span><span class="p">,</span> <span class="s2">&quot;-v&quot;</span><span class="p">]</span>
+			<span class="n">entry_output_path</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span>
+
+		<span class="n">result</span> <span class="o">=</span> <span class="n">sdk_tools</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">sdk_arg</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Adding entry.tp to packing list.&quot;</span><span class="p">)</span>
+			<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">entry_output_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.&quot;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="mi">0</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning could not find </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="si">}</span><span class="s2">. Canceling build process.&quot;</span><span class="p">)</span>
 		<span class="k">return</span> <span class="mi">0</span>
-
+	
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="p">):</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="si">}</span><span class="s2"> does not exist. TouchPortal will use default plugin icon.&quot;</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="si">}</span><span class="s2"> adding it to packing list.&quot;</span><span class="p">)</span>
-		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> \
+			 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
 	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compiling </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 	<span class="n">PI_RUN</span> <span class="o">=</span> <span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="p">]</span>
-	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--distpath=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">OUTPUT_PATH</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--distpath=</span><span class="si">{</span><span class="n">distdir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--onefile&#39;</span><span class="p">)</span>
+	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--clean&quot;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
 		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--name=</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--name=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">):</span>
-		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--icon=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">Pyinstaller_arg</span><span class="p">)</span>
+		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--icon=</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--specpath=</span><span class="si">{</span><span class="n">distdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--workpath=</span><span class="si">{</span><span class="n">distdir</span><span class="si">}</span><span class="s2">/build&quot;</span><span class="p">)</span>
+
+	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">ADDITIONAL_PYINSTALLER_ARGS</span><span class="p">)</span>
 
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running pyinstaller with arguments:&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PI_RUN</span><span class="p">))</span>
 	<span class="n">PyInstaller</span><span class="o">.</span><span class="n">__main__</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">PI_RUN</span><span class="p">)</span>
 	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done compiling. adding to packing list:&quot;</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">+</span> <span class="n">EXE_SFX</span><span class="p">)</span>
-	<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">+</span> <span class="n">EXE_SFX</span><span class="p">]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
-
+	<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">filePath</span><span class="p">(</span><span class="n">distdir</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">+</span> <span class="n">EXE_SFX</span><span class="p">)]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking for any additional required files&quot;</span><span class="p">)</span>
-	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">FileRequired</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">ADDITIONAL_FILES</span><span class="p">:</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> to plugin&quot;</span><span class="p">)</span>
-		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packing everything into tpp file&quot;</span><span class="p">)</span>
 	<span class="n">build_distro</span><span class="p">(</span><span class="n">opsys</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_VERSION</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="p">,</span> <span class="n">TPP_PACK_LIST</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">OUTPUT_PATH</span><span class="p">)</span>
 
-	<span class="n">build_clean</span><span class="p">([</span><span class="s2">&quot;entry.tp&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">isPyEntry</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+	<span class="n">build_clean</span><span class="p">(</span><span class="n">distdir</span><span class="p">)</span>
 	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
 
 	<span class="k">return</span> <span class="mi">0</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
 	<span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+
+<span class="n">PLUGIN_MAIN</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*REQUIRED*</span>
+<span class="sd">PLUGIN_MAIN: This lets tppbuild know where your main python plugin file is located so it will know which file to compile.</span>
+<span class="sd">Note: This can be ether relative or absolute to the main script.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">PLUGIN_EXE_NAME</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*REQUIRED*</span>
+<span class="sd">PLUGIN_EXE_NAME: This defines what you want your plugin executable to be named. tppbuild will also use this for the .tpp file in the format:</span>
+<span class="sd">                `pluginname + &quot;_v&quot; + version + &quot;_&quot; + os_name + &quot;.tpp&quot;`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">PLUGIN_EXE_ICON</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">PLUGIN_EXE_ICON: This should be a path to a .ico file. However if png is passed in, it will tries to automatically converted to ico. if `PILLOW` is installed.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">PLUGIN_ENTRY</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*REQUIRED*</span>
+<span class="sd">PLUGIN_ENTRY: This can be either path to entry.tp or path to a python file that contains infomation about entry.</span>
+<span class="sd">Note if you pass in a entry.tp, tppbuild will automatically validate the json. If you pass in a python file, it will</span>
+<span class="sd">build entry.tp &amp; validate it for you. If validation fails, tppbuild will exit.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">PLUGIN_ENTRY_INDENT</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">This allows you to set indent for the `entry.tp` json data. Default is `2`</span>
+<span class="sd">but if you want to save space use `-1` meaning no indent. This is only used if `PLUGIN_ENTRY` is a py file.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">PLUGIN_ROOT</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">*REQUIRED*</span>
+<span class="sd">This is the root folder name that will be inside of .tpp</span>
+<span class="sd"> &quot;&quot;&quot;</span>
+
+
+<span class="n">PLUGIN_ICON</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">Path to icon file that is used in entry.tp for category `imagepath`, if any.</span>
+<span class="sd"> If left blank, TP will use a default icon. &quot;&quot;&quot;</span>
+
+<span class="n">OUTPUT_PATH</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;./&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">This tells tppbuild where you want finished build tpp to be saved at. </span>
+<span class="sd">If leaved empty it will store tpp to current dir where this build config is located. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">PLUGIN_VERSION</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">A version string will be used as part of .tpp file. example input `PLUGIN_VERSION = &quot;1.0.0-beta1&quot;`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">ADDITIONAL_FILES</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">If you have any required file(s) that your plugin needs, put them in this list.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">ADDITIONAL_PYINSTALLER_ARGS</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">*OPTIONAL*</span>
+<span class="sd">Any additional arguments to be passed to Pyinstaller. Optional.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">validateBuild() this takes no arguments. when It&#39;s called it will check for all</span>
+<span class="sd">required constants variable are vaild It will check if path is vaild, is a file etc... If </span>
+<span class="sd">any error is found, It will list all the error during the process.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">validateBuild</span><span class="p">():</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">constants</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="fm">__dir__</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span><span class="n">attri</span> <span class="ow">in</span> <span class="n">constants</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking if all constants variable exists&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">checklist</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s2"> is missing these variables: &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">attri</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span> <span class="k">if</span> <span class="n">attri</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">constants</span><span class="p">)]))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking variable is vaild&quot;</span><span class="p">)</span>
+
+    <span class="n">anyError</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PLUGIN_MAIN is ether empty or invalid file path.&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PLUGIN_ENTRY is ether empty or invalid file path.&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_ROOT is empty. Please give a plugin root folder name.&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_EXE_NAME is empty. Please input a name for plugin&#39;s exe&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ICON</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="p">)</span> <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_ICON has a value but the value is invaild. It needs a path to a png file.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.ico&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">PIL</span>
+            <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_EXE_ICON icon format is not ico and cannot perform auto convert due to missing module. Please install Pillow &#39;pip install Pillow&#39;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PLUGIN_EXE_ICON is ether empty or invaild path&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">ADDITIONAL_FILES</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">ADDITIONAL_FILES</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ADDITIONAL_FILES Cannot find&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+    
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">anyError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validation completed successfully, No error found.&quot;</span><span class="p">)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">runBuild() this takes no arguments. This is the same as `tppbuild file.py` you do not need to pass your build config,</span>
+<span class="sd">It will automatically find it.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">runBuild</span><span class="p">():</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__file__</span>
+
+    <span class="n">main</span><span class="p">([</span><span class="n">file</span><span class="p">])</span>
 </pre></div>
 
         </details>
 
             </section>
-                <section id="getInfoFromBuildScript">
-                            <div class="attr function"><a class="headerlink" href="#getInfoFromBuildScript">#&nbsp;&nbsp</a>
+                <section id="PLUGIN_MAIN">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_MAIN">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_MAIN</span><span class="default_value"> = &#39;&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>REQUIRED</em>
+PLUGIN_MAIN: This lets tppbuild know where your main python plugin file is located so it will know which file to compile.
+Note: This can be ether relative or absolute to the main script.</p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_EXE_NAME">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_EXE_NAME">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_EXE_NAME</span><span class="default_value"> = &#39;&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>REQUIRED</em>
+PLUGIN_EXE_NAME: This defines what you want your plugin executable to be named. tppbuild will also use this for the .tpp file in the format:
+                <code>pluginname + "_v" + version + "_" + os_name + ".tpp"</code></p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_EXE_ICON">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_EXE_ICON">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_EXE_ICON</span><span class="default_value"> = &#39;&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+PLUGIN_EXE_ICON: This should be a path to a .ico file. However if png is passed in, it will tries to automatically converted to ico. if <code>PILLOW</code> is installed.</p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_ENTRY">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_ENTRY">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_ENTRY</span><span class="default_value"> = &#39;&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>REQUIRED</em>
+PLUGIN_ENTRY: This can be either path to entry.tp or path to a python file that contains infomation about entry.
+Note if you pass in a entry.tp, tppbuild will automatically validate the json. If you pass in a python file, it will
+build entry.tp &amp; validate it for you. If validation fails, tppbuild will exit.</p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_ENTRY_INDENT">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_ENTRY_INDENT">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_ENTRY_INDENT</span><span class="default_value"> = 2</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+This allows you to set indent for the <code>entry.tp</code> json data. Default is <code>2</code>
+but if you want to save space use <code>-1</code> meaning no indent. This is only used if <code><a href="#PLUGIN_ENTRY">PLUGIN_ENTRY</a></code> is a py file.</p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_ROOT">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_ROOT">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_ROOT</span><span class="default_value"> = &#39;&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>REQUIRED</em>
+This is the root folder name that will be inside of .tpp</p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_ICON">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_ICON">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_ICON</span><span class="default_value"> = &#39;&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+Path to icon file that is used in entry.tp for category <code>imagepath</code>, if any.
+ If left blank, TP will use a default icon.</p>
+</div>
+
+
+                </section>
+                <section id="OUTPUT_PATH">
+                                <div class="attr variable"><a class="headerlink" href="#OUTPUT_PATH">#&nbsp;&nbsp</a>
+
+        <span class="name">OUTPUT_PATH</span><span class="default_value"> = &#39;./&#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+This tells tppbuild where you want finished build tpp to be saved at. 
+If leaved empty it will store tpp to current dir where this build config is located.</p>
+</div>
+
+
+                </section>
+                <section id="PLUGIN_VERSION">
+                                <div class="attr variable"><a class="headerlink" href="#PLUGIN_VERSION">#&nbsp;&nbsp</a>
+
+        <span class="name">PLUGIN_VERSION</span><span class="default_value"> = &#39; &#39;</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+A version string will be used as part of .tpp file. example input <code>PLUGIN_VERSION = "1.0.0-beta1"</code></p>
+</div>
+
+
+                </section>
+                <section id="ADDITIONAL_FILES">
+                                <div class="attr variable"><a class="headerlink" href="#ADDITIONAL_FILES">#&nbsp;&nbsp</a>
+
+        <span class="name">ADDITIONAL_FILES</span><span class="default_value"> = []</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+If you have any required file(s) that your plugin needs, put them in this list.</p>
+</div>
+
+
+                </section>
+                <section id="ADDITIONAL_PYINSTALLER_ARGS">
+                                <div class="attr variable"><a class="headerlink" href="#ADDITIONAL_PYINSTALLER_ARGS">#&nbsp;&nbsp</a>
+
+        <span class="name">ADDITIONAL_PYINSTALLER_ARGS</span><span class="default_value"> = []</span>
+    </div>
+
+            <div class="docstring"><p><em>OPTIONAL</em>
+Any additional arguments to be passed to Pyinstaller. Optional.</p>
+</div>
+
+
+                </section>
+                <section id="validateBuild">
+                            <div class="attr function"><a class="headerlink" href="#validateBuild">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">getInfoFromBuildScript</span><span class="signature">(script: str)</span>:
+            <span class="name">validateBuild</span><span class="signature">()</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">getInfoFromBuildScript</span><span class="p">(</span><span class="n">script</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
-	<span class="k">try</span><span class="p">:</span>
-		<span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">spec_from_file_location</span><span class="p">(</span><span class="s2">&quot;buildScript&quot;</span><span class="p">,</span> <span class="n">script</span><span class="p">)</span>
-		<span class="n">buildScript</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
-		<span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">buildScript</span><span class="p">)</span>
-	<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-		<span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR while trying to import plugin code from &#39;</span><span class="si">{</span><span class="n">script</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-	<span class="k">return</span> <span class="n">buildScript</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">validateBuild</span><span class="p">():</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">constants</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="fm">__dir__</span><span class="p">()</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span><span class="n">attri</span> <span class="ow">in</span> <span class="n">constants</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking if all constants variable exists&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">checklist</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="si">}</span><span class="s2"> is missing these variables: &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">attri</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span> <span class="k">if</span> <span class="n">attri</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">constants</span><span class="p">)]))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking variable is vaild&quot;</span><span class="p">)</span>
+
+    <span class="n">anyError</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PLUGIN_MAIN is ether empty or invalid file path.&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PLUGIN_ENTRY is ether empty or invalid file path.&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_ROOT is empty. Please give a plugin root folder name.&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_EXE_NAME is empty. Please input a name for plugin&#39;s exe&quot;</span><span class="p">)</span>
+        <span class="n">anyError</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ICON</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="p">)</span> <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_ICON has a value but the value is invaild. It needs a path to a png file.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.ico&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">PIL</span>
+            <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PLUGIN_EXE_ICON icon format is not ico and cannot perform auto convert due to missing module. Please install Pillow &#39;pip install Pillow&#39;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PLUGIN_EXE_ICON is ether empty or invaild path&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">ADDITIONAL_FILES</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">ADDITIONAL_FILES</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ADDITIONAL_FILES Cannot find&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+    
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">anyError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Validation completed successfully, No error found.&quot;</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -418,233 +801,22 @@
     
 
                 </section>
-                <section id="build_tpp">
-                            <div class="attr function"><a class="headerlink" href="#build_tpp">#&nbsp;&nbsp</a>
+                <section id="runBuild">
+                            <div class="attr function"><a class="headerlink" href="#runBuild">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">build_tpp</span><span class="signature">(zip_name, tpp_pack_list)</span>:
+            <span class="name">runBuild</span><span class="signature">()</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_tpp</span><span class="p">(</span><span class="n">zip_name</span><span class="p">,</span> <span class="n">tpp_pack_list</span><span class="p">):</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating archive: &quot;</span> <span class="o">+</span> <span class="n">zip_name</span><span class="p">)</span>
-	<span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
-		<span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dest</span> <span class="ow">in</span> <span class="n">tpp_pack_list</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-			<span class="n">zf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dest</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</pre></div>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">runBuild</span><span class="p">():</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__file__</span>
 
-        </details>
-
-    
-
-                </section>
-                <section id="zip_dir">
-                            <div class="attr function"><a class="headerlink" href="#zip_dir">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">zip_dir</span><span class="signature">(zf, path, base_path=&#39;./&#39;, recurse=True)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">zip_dir</span><span class="p">(</span><span class="n">zf</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">base_path</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-	<span class="n">relroot</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">pardir</span><span class="p">))</span>
-	<span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-		<span class="n">zf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">))</span>
-		<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-			<span class="n">src</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-				<span class="n">dst</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">relroot</span><span class="p">),</span> <span class="n">file</span><span class="p">)</span>
-				<span class="n">zf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">)</span>
-			<span class="k">elif</span> <span class="n">recurse</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-				<span class="n">zip_dir</span><span class="p">(</span><span class="n">zf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">base_path</span><span class="p">)</span>
-</pre></div>
-
-        </details>
-
-    
-
-                </section>
-                <section id="build_distro">
-                            <div class="attr function"><a class="headerlink" href="#build_distro">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">build_distro</span><span class="signature">(opsys, version, pluginname, packingList, output)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_distro</span><span class="p">(</span><span class="n">opsys</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">pluginname</span><span class="p">,</span> <span class="n">packingList</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
-	<span class="n">os_name</span> <span class="o">=</span> <span class="s2">&quot;Windows&quot;</span> <span class="k">if</span> <span class="n">opsys</span> <span class="o">==</span> <span class="n">OS_WIN</span> <span class="k">else</span> <span class="s2">&quot;MacOS&quot;</span>
-	<span class="n">zip_name</span> <span class="o">=</span> <span class="n">pluginname</span> <span class="o">+</span> <span class="s2">&quot;_v&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">version</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">os_name</span> <span class="o">+</span> <span class="s2">&quot;.tpp&quot;</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating archive: &quot;</span><span class="o">+</span> <span class="n">zip_name</span><span class="p">)</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
-		<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-	<span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">zip_name</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
-		<span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dest</span> <span class="ow">in</span> <span class="n">packingList</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-				<span class="n">zip_dir</span><span class="p">(</span><span class="n">zf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
-			<span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-				<span class="n">zf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dest</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
-
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</pre></div>
-
-        </details>
-
-    
-
-                </section>
-                <section id="build_clean">
-                            <div class="attr function"><a class="headerlink" href="#build_clean">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">build_clean</span><span class="signature">(morefile=None)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">build_clean</span><span class="p">(</span><span class="n">morefile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cleaning up...&quot;</span><span class="p">)</span>
-	<span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="s2">&quot;./*.spec&quot;</span><span class="p">)</span>
-	<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;./*.exe&quot;</span><span class="p">))</span>
-	<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;./build&quot;</span><span class="p">,</span> <span class="s2">&quot;__pycache__&quot;</span><span class="p">])</span>
-	<span class="k">if</span> <span class="n">morefile</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="n">files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">morefile</span><span class="p">)</span>
-	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-		<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;removing: &quot;</span> <span class="o">+</span> <span class="n">file</span><span class="p">)</span>
-			<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-				<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-			<span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-				<span class="n">rmtree</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</pre></div>
-
-        </details>
-
-    
-
-                </section>
-                <section id="main">
-                            <div class="attr function"><a class="headerlink" href="#main">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">main</span><span class="signature">()</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-	<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>
-		<span class="n">opsys</span> <span class="o">=</span> <span class="n">OS_WIN</span>
-	<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
-		<span class="n">opsys</span> <span class="o">=</span> <span class="n">OS_MAC</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="k">return</span> <span class="s2">&quot;Unsupported OS: &quot;</span> <span class="o">+</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span>
-
-	<span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span>
-		<span class="s2">&quot;Script to automatically compile a Python plugin into a standalone exe, generate entry.tp, and package them into importable tpp file.&quot;</span>
-	<span class="p">)</span>
-
-	<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-		<span class="s2">&quot;--target&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;target&gt;&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-		<span class="n">help</span><span class="o">=</span><span class="s1">&#39;A build script that contains some infomations about the plugin. &#39;</span> <span class="o">+</span>
-		<span class="s1">&#39;Using given infomation about the plugin, this script will automatically build entry.tp (if given file is .py) and it will build the distro &#39;</span> <span class="o">+</span>
-		<span class="s1">&#39;based on which operating system you</span><span class="se">\&#39;</span><span class="s1">re using.&#39;</span>
-	<span class="p">)</span>
-
-	<span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-	<span class="k">del</span> <span class="n">parser</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tppbuild started with target: &quot;</span> <span class="o">+</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-	<span class="n">buildfile</span> <span class="o">=</span> <span class="n">getInfoFromBuildScript</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-
-
-	<span class="n">attri_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PLUGIN_ENTRY&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_MAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ROOT&quot;</span><span class="p">,</span> <span class="s2">&quot;Pyinstaller_arg&quot;</span><span class="p">,</span>
-				  <span class="s2">&quot;PLUGIN_EXE_NAME&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ICON&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_ICON&quot;</span><span class="p">,</span> <span class="s2">&quot;FileRequired&quot;</span><span class="p">,</span>
-				  <span class="s2">&quot;OUTPUT_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;PLUGIN_VERSION&quot;</span><span class="p">]</span>
-
-	<span class="n">checklist</span> <span class="o">=</span> <span class="p">[</span><span class="n">attri</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">buildfile</span><span class="p">)</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span><span class="p">]</span>
-	<span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">checklist</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="si">}</span><span class="s2"> is missing these variables: &quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">attri</span> <span class="k">for</span> <span class="n">attri</span> <span class="ow">in</span> <span class="n">attri_list</span> <span class="k">if</span> <span class="n">attri</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">buildfile</span><span class="p">)]))</span>
-		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
-
-	<span class="n">isPyEntry</span> <span class="o">=</span> <span class="kc">False</span>
-	<span class="n">TPP_PACK_LIST</span> <span class="o">=</span> <span class="p">{}</span>
-
-	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Building </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="si">}</span><span class="s2"> v</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_VERSION</span><span class="si">}</span><span class="s2"> target(s) on </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Step 1</span>
-<span class="sd">		Checking if python entry or entry.tp exists or not. and only move on if it exists</span>
-<span class="sd">	Step 2</span>
-<span class="sd">		If file is entry.tp It will automatically validdate.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">):</span>
-		<span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">):</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating entry.tp from &quot;</span> <span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">)</span>
-			<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">))))</span>
-			<span class="n">generatedJson</span> <span class="o">=</span> <span class="n">generateDefinitionFromScript</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">))</span>
-			<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;entry.tp&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-				<span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">generatedJson</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Successfully generated entry.tp&quot;</span><span class="p">)</span>
-			<span class="n">isPyEntry</span> <span class="o">=</span> <span class="kc">True</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">result</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">)</span>
-			<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
-				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot contiune because entry.tp is invalid. Please check the error message above. and try again.&quot;</span><span class="p">)</span>
-				<span class="k">return</span> <span class="mi">0</span> <span class="c1"># Exit build process because entry.tp is invalid</span>
-
-		<span class="c1"># If everything goes well It will add to TPP packing list</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Adding entry.tp to packing list.&quot;</span><span class="p">)</span>
-		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="s2">&quot;entry.tp&quot;</span> <span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="p">]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning could not find </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ENTRY</span><span class="si">}</span><span class="s2">. Canceling build process.&quot;</span><span class="p">)</span>
-		<span class="k">return</span> <span class="mi">0</span>
-
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="p">):</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="si">}</span><span class="s2"> does not exist. TouchPortal will use default plugin icon.&quot;</span><span class="p">)</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="si">}</span><span class="s2"> adding it to packing list.&quot;</span><span class="p">)</span>
-		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ICON</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compiling </span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-	<span class="n">PI_RUN</span> <span class="o">=</span> <span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="p">]</span>
-	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--distpath=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">OUTPUT_PATH</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--onefile&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--name=</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_MAIN</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--name=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="p">):</span>
-		<span class="n">PI_RUN</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;--icon=</span><span class="si">{</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_ICON</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-	<span class="n">PI_RUN</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">buildfile</span><span class="o">.</span><span class="n">Pyinstaller_arg</span><span class="p">)</span>
-
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running pyinstaller with arguments:&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PI_RUN</span><span class="p">))</span>
-	<span class="n">PyInstaller</span><span class="o">.</span><span class="n">__main__</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">PI_RUN</span><span class="p">)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done compiling. adding to packing list:&quot;</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">+</span> <span class="n">EXE_SFX</span><span class="p">)</span>
-	<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span> <span class="o">+</span> <span class="n">EXE_SFX</span><span class="p">]</span> <span class="o">=</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_ROOT</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
-
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Checking for any additional required files&quot;</span><span class="p">)</span>
-	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">FileRequired</span><span class="p">:</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> to plugin&quot;</span><span class="p">)</span>
-		<span class="n">TPP_PACK_LIST</span><span class="p">[</span><span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packing everything into tpp file&quot;</span><span class="p">)</span>
-	<span class="n">build_distro</span><span class="p">(</span><span class="n">opsys</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_VERSION</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">PLUGIN_EXE_NAME</span><span class="p">,</span> <span class="n">TPP_PACK_LIST</span><span class="p">,</span> <span class="n">buildfile</span><span class="o">.</span><span class="n">OUTPUT_PATH</span><span class="p">)</span>
-
-	<span class="n">build_clean</span><span class="p">([</span><span class="s2">&quot;entry.tp&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="n">isPyEntry</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
-
-	<span class="k">return</span> <span class="mi">0</span>
+    <span class="n">main</span><span class="p">([</span><span class="n">file</span><span class="p">])</span>
 </pre></div>
 
         </details>

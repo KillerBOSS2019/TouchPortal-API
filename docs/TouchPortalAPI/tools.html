@@ -51,7 +51,7 @@
     </ul>
 
 
-    <footer>Documentation for TouchPortalAPI v1.7<br/>generated: 2022-06-05 06:06 UTC<br/>git version: <a href='https://github.com/KillerBOSS2019/TouchPortal-API/commit/f2349833' class='inline' target='_blank'>1.6.3-17-gf2349833</a><br/></footer>
+    <footer>Documentation for TouchPortalAPI v1.7.7<br/>generated: 2022-07-09 03:49 UTC<br/>git version: <a href='https://github.com/KillerBOSS2019/TouchPortal-API/commit/89db7b09' class='inline' target='_blank'>1.6.3-27-g89db7b09</a><br/></footer>
 
                     <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev">
                         built with <span class="visually-hidden">pdoc</span><img
@@ -62,7 +62,7 @@
         </nav>
     <main class="pdoc">
             <section>
-        <div class="version_header">TouchPortalAPI v1.7</div>
+        <div class="version_header">TouchPortalAPI v1.7.7</div>
 <a href="https://github.com/KillerBOSS2019/TouchPortal-API/blob/main/TouchPortalAPI/tools.py" target="_blank" class="github-corner" title="View the latest source on GitHub" aria-label="View source on GitHub">
     <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#3bb300; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true" class="corner-svg">
         <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
@@ -116,7 +116,6 @@
 <span class="s2">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">base64</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">SimpleNamespace</span>
@@ -144,7 +143,7 @@
         <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Auto&quot;</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Web&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">image_formats</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;image/png&#39;</span> <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Web&quot;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">image_formats</span><span class="p">:</span>
                     <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returned image content type (</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">) is not one of: </span><span class="si">{</span><span class="n">image_formats</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -239,7 +238,7 @@
         <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Auto&quot;</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Web&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">image_formats</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;image/png&#39;</span> <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Web&quot;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">image_formats</span><span class="p">:</span>
                     <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returned image content type (</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">) is not one of: </span><span class="si">{</span><span class="n">image_formats</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -347,7 +346,7 @@
         <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Auto&quot;</span> <span class="ow">or</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Web&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">image_formats</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content-type&#39;</span><span class="p">,</span> <span class="s1">&#39;image/png&#39;</span> <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;Web&quot;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">image_formats</span><span class="p">:</span>
                     <span class="n">data</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returned image content type (</span><span class="si">{</span><span class="n">r</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;content-type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">) is not one of: </span><span class="si">{</span><span class="n">image_formats</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>

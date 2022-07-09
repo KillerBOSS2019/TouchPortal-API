@@ -69,12 +69,15 @@
                     <a class="function" href="#validateDefinitionFile">validateDefinitionFile</a>
             </li>
             <li>
+                    <a class="function" href="#generatePythonStruct">generatePythonStruct</a>
+            </li>
+            <li>
                     <a class="function" href="#main">main</a>
             </li>
     </ul>
 
 
-    <footer>Documentation for TouchPortalAPI v1.7<br/>generated: 2022-06-05 06:06 UTC<br/>git version: <a href='https://github.com/KillerBOSS2019/TouchPortal-API/commit/f2349833' class='inline' target='_blank'>1.6.3-17-gf2349833</a><br/></footer>
+    <footer>Documentation for TouchPortalAPI v1.7.7<br/>generated: 2022-07-09 03:49 UTC<br/>git version: <a href='https://github.com/KillerBOSS2019/TouchPortal-API/commit/89db7b09' class='inline' target='_blank'>1.6.3-27-g89db7b09</a><br/></footer>
 
                     <a class="attribution" title="pdoc: Python API documentation generator" href="https://pdoc.dev">
                         built with <span class="visually-hidden">pdoc</span><img
@@ -85,7 +88,7 @@
         </nav>
     <main class="pdoc">
             <section>
-        <div class="version_header">TouchPortalAPI v1.7</div>
+        <div class="version_header">TouchPortalAPI v1.7.7</div>
 <a href="https://github.com/KillerBOSS2019/TouchPortal-API/blob/main/TouchPortalAPI/sdk_tools.py" target="_blank" class="github-corner" title="View the latest source on GitHub" aria-label="View source on GitHub">
     <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#3bb300; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true" class="corner-svg">
         <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
@@ -175,8 +178,10 @@ SDK version, value type, value content, etc. (<code><a href="#validateAttribValu
 <pre><code>&lt;script_command&gt; [-h] [-g] [-v] [-o &lt;file&gt;] [-s] [-i &lt;n&gt;] [target]
 
 positional arguments:
-  target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory.
-                        Defaults to './main.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead.
+  target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working
+                        directory. Defaults to './TPPEntry.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input
+                        stream instead. Another usage is if you pass in a normal entry.tp without `validate` argument, It can generate
+                        Python version of entry.tp struct. It will be saved in `TPPEntry.py` if `output` is not given.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -188,7 +193,7 @@ generator arguments:
                         Paths are relative to current working directory. Use 'stdout' (or '-') to print the output to the console/stream instead.
   -s, --skip-invalid    Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.
   -i &lt;n&gt;, --indent &lt;n&gt;  Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.
-
+  --noconfirm           When generating python struct from entry.tp, you can pass this arg to bypass confirm if you want to contiune if any error is given for vaildating entry.tp before generate python struct.
 This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data.
 All progress and warning messages are printed to stderr stream.
 </code></pre>
@@ -264,8 +269,10 @@ All progress and warning messages are printed to stderr stream.
 <span class="sd">&lt;script_command&gt; [-h] [-g] [-v] [-o &lt;file&gt;] [-s] [-i &lt;n&gt;] [target]</span>
 
 <span class="sd">positional arguments:</span>
-<span class="sd">  target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory.</span>
-<span class="sd">                        Defaults to &#39;./main.py&#39; and &#39;./entry.tp&#39; respectively. Use &#39;stdin&#39; (or &#39;-&#39;) to read from input stream instead.</span>
+<span class="sd">  target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working</span>
+<span class="sd">                        directory. Defaults to &#39;./TPPEntry.py&#39; and &#39;./entry.tp&#39; respectively. Use &#39;stdin&#39; (or &#39;-&#39;) to read from input</span>
+<span class="sd">                        stream instead. Another usage is if you pass in a normal entry.tp without `validate` argument, It can generate</span>
+<span class="sd">                        Python version of entry.tp struct. It will be saved in `TPPEntry.py` if `output` is not given.</span>
 
 <span class="sd">optional arguments:</span>
 <span class="sd">  -h, --help            show this help message and exit</span>
@@ -277,7 +284,7 @@ All progress and warning messages are printed to stderr stream.
 <span class="sd">                        Paths are relative to current working directory. Use &#39;stdout&#39; (or &#39;-&#39;) to print the output to the console/stream instead.</span>
 <span class="sd">  -s, --skip-invalid    Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.</span>
 <span class="sd">  -i &lt;n&gt;, --indent &lt;n&gt;  Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.</span>
-
+<span class="sd">  --noconfirm           When generating python struct from entry.tp, you can pass this arg to bypass confirm if you want to contiune if any error is given for vaildating entry.tp before generate python struct.</span>
 <span class="sd">This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data.</span>
 <span class="sd">All progress and warning messages are printed to stderr stream.</span>
 <span class="sd">```</span>
@@ -320,6 +327,7 @@ All progress and warning messages are printed to stderr stream.
 
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
 <span class="kn">from</span> <span class="nn">sdk_spec</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">TpToPy</span> <span class="kn">import</span> <span class="n">TpToPy</span>
 
 <span class="c1">## globals</span>
 <span class="n">g_messages</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># validation reporting</span>
@@ -381,6 +389,7 @@ All progress and warning messages are printed to stderr stream.
         <span class="k">return</span> <span class="n">ret</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="c1"># try get explicit value from item</span>
+        <span class="c1">#if not data.get(&quot;doc&quot;): continue</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="o">:=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># try get default value</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span>
@@ -639,14 +648,14 @@ All progress and warning messages are printed to stderr stream.
     <span class="n">_validateDefinitionDict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">TPSDK_ATTRIBS_ROOT</span><span class="p">,</span> <span class="n">sdk_v</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_messages</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
-<span class="k">def</span> <span class="nf">validateDefinitionString</span><span class="p">(</span><span class="n">data</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">validateDefinitionString</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validates a TP plugin definition structure from JSON string.</span>
 <span class="sd">    `data` is an entry.tp JSON string</span>
 <span class="sd">    Returns `True` if no problems were found, `False` otherwise.</span>
 <span class="sd">    Use `getMessages()` to check for any validation warnings which may be generated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">validateDefinitionObject</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">validateDefinitionObject</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">validateDefinitionFile</span><span class="p">(</span><span class="n">file</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">]):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -709,8 +718,18 @@ All progress and warning messages are printed to stderr stream.
     <span class="n">_printToErr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Finished validating &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">res</span>
 
+<span class="k">def</span> <span class="nf">generatePythonStruct</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;Generating Python struct from entry json...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tp_to_py</span> <span class="o">=</span> <span class="n">TpToPy</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+        <span class="n">tp_to_py</span><span class="o">.</span><span class="n">writetoFile</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">_printToErr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved generated Python struct to &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">_printToErr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">sdk_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
 
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">epilog</span><span class="o">=</span><span class="s2">&quot;This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data. &quot;</span>
@@ -721,7 +740,9 @@ All progress and warning messages are printed to stderr stream.
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output.&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory. &quot;</span>
-                             <span class="s2">&quot;Defaults to &#39;./main.py&#39; and &#39;./entry.tp&#39; respectively. Use &#39;stdin&#39; (or &#39;-&#39;) to read from input stream instead. &quot;</span><span class="p">)</span>
+                             <span class="s2">&quot;Defaults to &#39;./TPPEntry.py&#39; and &#39;./entry.tp&#39; respectively. Use &#39;stdin&#39; (or &#39;-&#39;) to read from input stream instead. &quot;</span>
+                             <span class="s2">&quot;Another usage is if you pass in a normal entry.tp without `validate` argument, It can generate &quot;</span>
+                             <span class="s2">&quot;Python version of entry.tp struct. It will be saved in `TPPEntry.py` if `output` is not given.&quot;</span><span class="p">)</span>
     <span class="n">gen_grp</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;Generator arguments&quot;</span><span class="p">)</span>
     <span class="n">gen_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;&lt;file&gt;&quot;</span><span class="p">,</span>
                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file for `generate` action. Default will be a file named &#39;entry.tp&#39; in the same folder as the input script. &quot;</span>
@@ -730,13 +751,26 @@ All progress and warning messages are printed to stderr stream.
                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.&quot;</span><span class="p">)</span>
     <span class="n">gen_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="s2">&quot;--indent&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;&lt;n&gt;&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is </span><span class="si">%(default)s</span><span class="s2"> spaces.&quot;</span><span class="p">)</span>
-    <span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">gen_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--noconfirm&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;When generating python struct from entry.tp, you can pass this arg to bypass confirm if you want to contiune if any error is given for vaildating entry.tp before generate python struct&quot;</span><span class="p">)</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sdk_args</span><span class="p">)</span>
     <span class="k">del</span> <span class="n">parser</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;TPPEntry.py&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.tp&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opts</span><span class="o">.</span><span class="n">validate</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="c1"># Incase if file is invaild they will have choice to either contiune. but --noconfirm can override this.</span>
+        <span class="c1"># so that way if they use on github action it can still contiune if they wish.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opts</span><span class="o">.</span><span class="n">noconfirm</span><span class="p">:</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Found errors. Press Enter to build or Ctrl+C to exit...&quot;</span><span class="p">)</span>
+        <span class="n">successful</span> <span class="o">=</span> <span class="n">generatePythonStruct</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">o</span> <span class="ow">or</span> <span class="s2">&quot;TPPEntry.py&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">successful</span><span class="p">:</span> <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;Failed to generate exiting...&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">successful</span>
 
     <span class="c1"># default action</span>
     <span class="n">opts</span><span class="o">.</span><span class="n">generate</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">generate</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">opts</span><span class="o">.</span><span class="n">validate</span>
 
-    <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
 
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="s2">&quot;stdin&quot;</span><span class="p">):</span>
         <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span>
@@ -744,7 +778,7 @@ All progress and warning messages are printed to stderr stream.
     <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">entry_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">generate</span><span class="p">:</span>
-        <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;main.py&quot;</span><span class="p">)</span>
+        <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;TPPEntry.py&quot;</span><span class="p">)</span>
         <span class="n">output_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">o</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">o</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="s2">&quot;stdout&quot;</span><span class="p">):</span>
@@ -760,6 +794,8 @@ All progress and warning messages are printed to stderr stream.
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">validate</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entry_str</span><span class="p">:</span>
             <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">entry_str</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">):</span> <span class="c1"># checks if is python file if It is then It will vaildate the python file by converting it to json first</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">generateDefinitionFromScript</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">),</span> <span class="n">as_str</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># little hacky lol</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;entry.tp&quot;</span><span class="p">)</span>
             <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
@@ -1145,19 +1181,19 @@ Use <code><a href="#getMessages">getMessages()</a></code> to check for any valid
 
         
             <span class="def">def</span>
-            <span class="name">validateDefinitionString</span><span class="signature">(data: str)</span>:
+            <span class="name">validateDefinitionString</span><span class="signature">(data: dict)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">validateDefinitionString</span><span class="p">(</span><span class="n">data</span><span class="p">:</span><span class="nb">str</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">validateDefinitionString</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validates a TP plugin definition structure from JSON string.</span>
 <span class="sd">    `data` is an entry.tp JSON string</span>
 <span class="sd">    Returns `True` if no problems were found, `False` otherwise.</span>
 <span class="sd">    Use `getMessages()` to check for any validation warnings which may be generated.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">validateDefinitionObject</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">validateDefinitionObject</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -1206,17 +1242,44 @@ Use <code><a href="#getMessages">getMessages()</a></code> to check for any valid
 
 
                 </section>
+                <section id="generatePythonStruct">
+                            <div class="attr function"><a class="headerlink" href="#generatePythonStruct">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">generatePythonStruct</span><span class="signature">(entry, name)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">generatePythonStruct</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;Generating Python struct from entry json...</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tp_to_py</span> <span class="o">=</span> <span class="n">TpToPy</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+        <span class="n">tp_to_py</span><span class="o">.</span><span class="n">writetoFile</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">_printToErr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved generated Python struct to &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">_printToErr</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+
+        </details>
+
+    
+
+                </section>
                 <section id="main">
                             <div class="attr function"><a class="headerlink" href="#main">#&nbsp;&nbsp</a>
 
         
             <span class="def">def</span>
-            <span class="name">main</span><span class="signature">()</span>:
+            <span class="name">main</span><span class="signature">(sdk_args=None)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">sdk_args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
 
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">epilog</span><span class="o">=</span><span class="s2">&quot;This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data. &quot;</span>
@@ -1227,7 +1290,9 @@ Use <code><a href="#getMessages">getMessages()</a></code> to check for any valid
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output.&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;?&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory. &quot;</span>
-                             <span class="s2">&quot;Defaults to &#39;./main.py&#39; and &#39;./entry.tp&#39; respectively. Use &#39;stdin&#39; (or &#39;-&#39;) to read from input stream instead. &quot;</span><span class="p">)</span>
+                             <span class="s2">&quot;Defaults to &#39;./TPPEntry.py&#39; and &#39;./entry.tp&#39; respectively. Use &#39;stdin&#39; (or &#39;-&#39;) to read from input stream instead. &quot;</span>
+                             <span class="s2">&quot;Another usage is if you pass in a normal entry.tp without `validate` argument, It can generate &quot;</span>
+                             <span class="s2">&quot;Python version of entry.tp struct. It will be saved in `TPPEntry.py` if `output` is not given.&quot;</span><span class="p">)</span>
     <span class="n">gen_grp</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s2">&quot;Generator arguments&quot;</span><span class="p">)</span>
     <span class="n">gen_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;&lt;file&gt;&quot;</span><span class="p">,</span>
                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file for `generate` action. Default will be a file named &#39;entry.tp&#39; in the same folder as the input script. &quot;</span>
@@ -1236,13 +1301,26 @@ Use <code><a href="#getMessages">getMessages()</a></code> to check for any valid
                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.&quot;</span><span class="p">)</span>
     <span class="n">gen_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="s2">&quot;--indent&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;&lt;n&gt;&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                          <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is </span><span class="si">%(default)s</span><span class="s2"> spaces.&quot;</span><span class="p">)</span>
-    <span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">gen_grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--noconfirm&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;When generating python struct from entry.tp, you can pass this arg to bypass confirm if you want to contiune if any error is given for vaildating entry.tp before generate python struct&quot;</span><span class="p">)</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">sdk_args</span><span class="p">)</span>
     <span class="k">del</span> <span class="n">parser</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;TPPEntry.py&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.tp&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opts</span><span class="o">.</span><span class="n">validate</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="c1"># Incase if file is invaild they will have choice to either contiune. but --noconfirm can override this.</span>
+        <span class="c1"># so that way if they use on github action it can still contiune if they wish.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opts</span><span class="o">.</span><span class="n">noconfirm</span><span class="p">:</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Found errors. Press Enter to build or Ctrl+C to exit...&quot;</span><span class="p">)</span>
+        <span class="n">successful</span> <span class="o">=</span> <span class="n">generatePythonStruct</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">o</span> <span class="ow">or</span> <span class="s2">&quot;TPPEntry.py&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">successful</span><span class="p">:</span> <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;Failed to generate exiting...&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">successful</span>
 
     <span class="c1"># default action</span>
     <span class="n">opts</span><span class="o">.</span><span class="n">generate</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">generate</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">opts</span><span class="o">.</span><span class="n">validate</span>
 
-    <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">_printToErr</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span> 
 
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="s2">&quot;stdin&quot;</span><span class="p">):</span>
         <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span>
@@ -1250,7 +1328,7 @@ Use <code><a href="#getMessages">getMessages()</a></code> to check for any valid
     <span class="n">valid</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">entry_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">generate</span><span class="p">:</span>
-        <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;main.py&quot;</span><span class="p">)</span>
+        <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;TPPEntry.py&quot;</span><span class="p">)</span>
         <span class="n">output_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">o</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">o</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="s2">&quot;stdout&quot;</span><span class="p">):</span>
@@ -1266,6 +1344,8 @@ Use <code><a href="#getMessages">getMessages()</a></code> to check for any valid
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">validate</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entry_str</span><span class="p">:</span>
             <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">entry_str</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">):</span> <span class="c1"># checks if is python file if It is then It will vaildate the python file by converting it to json first</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">generateDefinitionFromScript</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">),</span> <span class="n">as_str</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># little hacky lol</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="o">=</span> <span class="n">_normPath</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span> <span class="ow">or</span> <span class="s2">&quot;entry.tp&quot;</span><span class="p">)</span>
             <span class="n">valid</span> <span class="o">=</span> <span class="n">_validateDefinition</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
