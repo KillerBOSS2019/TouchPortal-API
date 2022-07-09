@@ -2,6 +2,7 @@
 
 {% block style_theme %}
     {{ super() }}
+    <style>
     @media (prefers-color-scheme: dark) {
         :root {
             --pdoc-background: #212529;
@@ -21,10 +22,12 @@
             --annotation: #00c037;
         }
     }
+    </style>
 {% endblock %}
 
 {% block style_layout %}
     {{ super() }}
+    <style>
     .version_header {
         font-size: .75rem;
         float: right;
@@ -57,13 +60,16 @@
             margin-top: -2em;
         }
     }
+    </style>
 {% endblock %}
 
 {% block style_content %}
     {{ super() }}
     /* shrink the attribution a little */
+    <style>
     .pdoc .attribution { font-size: small; }
     .pdoc .attribution img { height: 25px; width: auto; }
+    </style>
 {% endblock %}
 
 {% block edit_button %}

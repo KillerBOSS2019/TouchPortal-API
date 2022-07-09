@@ -1,5 +1,6 @@
 {% extends "default/index.html.jinja2" %}
 {% block style_theme %}
+    <style>
     @media (prefers-color-scheme: dark) {
         :root {
             --pdoc-background: #212529;
@@ -10,6 +11,7 @@
             --active: #9e7700;
         }
     }
+    </style>
 {% endblock %}
 {% block head %}
     <meta http-equiv="Refresh" content="0; url=TouchPortalAPI.html" />

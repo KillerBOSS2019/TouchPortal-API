@@ -3,38 +3,37 @@
 
 ## Features
 
- This SDK tools makes compile, packaging and distribution of your plugin easier.
+This SDK tools makes compile, packaging and distribution of your plugin easier.
 
- These are the steps the tppbuild will do for you:
- - Generate entry.tp if you passed in .py file otherwise it will validate the .tp file and raise an error if it's not valid.
- - Compile your main script for your system (Windows, MacOS) depending on the platform you're running on.
- - Create a .tpp file with all the files include compiled script, (generated or existing) entry.tp file.
- - Also the .tpp file will be renamed into this format pluginname_version_os.tpp
+These are the steps the tppbuild will do for you:
+- Generate entry.tp if you passed in .py file otherwise it will validate the .tp file and raise an error if it's not valid.
+- Compile your main script for your system (Windows, MacOS) depending on the platform you're running on.
+- Create a .tpp file with all the files include compiled script, (generated or existing) entry.tp file.
+- Also the .tpp file will be renamed into this format pluginname_version_os.tpp
 
- Note that running this script requires `pyinstaller` to be installed. You can install it by running `pip install pyinstaller` in your terminal.
+Note that running this script requires `pyinstaller` to be installed. You can install it by running `pip install pyinstaller` in your terminal.
 
- Using it in [example](https://github.com/KillerBOSS2019/TouchPortal-API/tree/main/examples)
+Using it in [example](https://github.com/KillerBOSS2019/TouchPortal-API/tree/main/examples)
 
- ```
- tppbuild --target example_build.py
- ```
- In this example we targed the example_build.py file because that file contains infomations on how to build the plugin.
+```
+tppbuild --target example_build.py
+```
+In this example we targed the example_build.py file because that file contains infomations on how to build the plugin.
 
- ## Command-line Usage
- The script command is `tppbuild` when the TouchPortalAPI is installed (via pip or setup), or `tppbuild.py` when run directly from this source.
+## Command-line Usage
+The script command is `tppbuild` when the TouchPortalAPI is installed (via pip or setup), or `tppbuild.py` when run directly from this source.
 
- ```
+```
 <script-command> [-h] --target [<target> ...]
 
 buildScript automatically compile into exe, entry and package them into importable tpp file
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --target [<target> ...]
-                        target is target to a build file that contains some infomations about the plugin.Using given infomation about the plugin, It will
-                        automatically build entry.tp (if given file is .py) and it will build the distrobased on what system your using.
- ```
-
+-h, --help            show this help message and exit
+--target [<target> ...]
+					target is target to a build file that contains some infomations about the plugin.Using given infomation about the plugin, It will
+					automatically build entry.tp (if given file is .py) and it will build the distrobased on what system your using.
+```
 """
 
 __copyright__ = """

@@ -3,31 +3,31 @@
 
 ## Features
 
- This SDK tools will generate a markdown file that can be used to document your TouchPortal plugin.
+This SDK tools will generate a markdown file that can be used to document your TouchPortal plugin.
 
- This is what it includes:
-    - automatically generate a table of contents
-    - automatically generate a badges that shows total downloads, forks, stars and license
-    - automatically generate action section and show details of each data
-    - automatically generate connector section and show details of each data
-    - automatically generate state section
-    - automatically generate event section
-    - automatically generate settings section
-    - automatically generate installation section (if you include `"doc": {"install": ""})` in `TP_PLUGIN_INFO`)
-    - automatically generate bugs and support section
+This is what it includes:
+- automatically generate a table of contents
+- automatically generate a badges that shows total downloads, forks, stars and license
+- automatically generate action section and show details of each data
+- automatically generate connector section and show details of each data
+- automatically generate state section
+- automatically generate event section
+- automatically generate settings section
+- automatically generate installation section (if you include `"doc": {"install": ""})` in `TP_PLUGIN_INFO`)
+- automatically generate bugs and support section
 
- Using it in [example](https://github.com/KillerBOSS2019/TouchPortal-API/tree/main/examples)
+Using it in [example](https://github.com/KillerBOSS2019/TouchPortal-API/tree/main/examples)
 
- ```
- tppdoc plugin_example.py
- ```
- In this example we are using `plugin_example.py` file because that file contains entry infomations and using those information we can generate a markdown file.
+```
+tppdoc plugin_example.py
+```
+In this example we are using `plugin_example.py` file because that file contains entry infomations and using those information we can generate a markdown file.
 
- ## Command-line Usage
- The script command is `tppdoc` when the TouchPortalAPI is installed (via pip or setup), or `tppdoc.py` when run directly from this source.
+## Command-line Usage
+The script command is `tppdoc` when the TouchPortalAPI is installed (via pip or setup), or `tppdoc.py` when run directly from this source.
 
- ```
- <script-command> [-h] [-i] [-o OUTPUT] <target>
+```
+<script-command> [-h] [-i] [-o OUTPUT] <target>
 
 Script to automatically generates a documentation for a TouchPortal plugin.
 
@@ -40,7 +40,7 @@ options:
   -h, --help            show this help message and exit
   -i, --ignoreError     Ignore error when validating. Default is False.
   -o OUTPUT, --output OUTPUT Name of generated documentation. Default is "Documentation". You do not need to add the extension.
- ```
+```
 """
 
 __copyright__ = """
