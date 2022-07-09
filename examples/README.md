@@ -65,7 +65,7 @@ script is simple to setup. let me expain.
 4. You will also need to include `requirements.txt` by running `pip freeze > requirements.txt`
 5. Last step you will also need to change the path to your own. eg `examplePlugin/requirements.txt`, `examplePlugin/build.py` and `"./examplePlugin/*.tpp"` will not work for you.
 
-Lastly Linux and MacOS requires a special file to launch it. you will need @spdermn02 's `start.sh` file. to use this file your `entry.tp` will need `plugin_start_cmd_mac` and `plugin_start_cmd_linux` with `sh %TP_PLUGIN_FOLDER%/your_plugin_folder/start.sh your_plugin_executable`
+Lastly Linux and MacOS requires a special file to launch it. you will need [@spdermn02](https://github.com/spdermn02) 's `start.sh` file. to use this file your `entry.tp` will need `plugin_start_cmd_mac` and `plugin_start_cmd_linux` with `sh %TP_PLUGIN_FOLDER%/your_plugin_folder/start.sh your_plugin_executable`
 
 
 
