@@ -187,6 +187,10 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bo
         # check that the value is valid and add it to the dict if it is
         if validateAttribValue(k, v, data, sdk_v, path) or (not skip_invalid and v != None):
             ret[k] = v
+            # if this is the "sdk" value from TP_PLUGIN_INFO then reset the
+            # passed `sdk_v` param since it was originally set to TPSDK_DEFAULT_VERSION
+            if k == "sdk":
+                sdk_v = v
     return ret
 
 
@@ -558,7 +562,7 @@ def main(sdk_args=None):
     # default action
     opts.generate = opts.generate or not opts.validate
 
-    _printToErr("") 
+    _printToErr("")
 
     if opts.target in ("-","stdin"):
         opts.target = sys.stdin
