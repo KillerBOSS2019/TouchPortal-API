@@ -27,14 +27,19 @@
  The script command is `tppdoc` when the TouchPortalAPI is installed (via pip or setup), or `tppdoc.py` when run directly from this source.
 
  ```
- <script-command> [-h] <target>
+ <script-command> [-h] [-i] [-o OUTPUT] <target>
 
- Script to automatically generates a documentation for a TouchPortal plugin.
+Script to automatically generates a documentation for a TouchPortal plugin.
 
- positional arguments:
-   <target>    tppdoc is a documanentation generator for TouchPortal plugins. It uses py entry to generates a markdown
-               file.It can generate a table for the plugin settings, connectors, actions, state, and event. and It will
-               also show data field example, It can show max length, min value, max value for the data field.
+positional arguments:
+  <target>              tppdoc is a documanentation generator for TouchPortal plugins. It uses py entry to generates a markdown file.It
+                        can generate a table for the plugin settings, connectors, actions, state, and event. and It will also show data
+                        field example, It can show max length, min value, max value for the data field.
+
+options:
+  -h, --help            show this help message and exit
+  -i, --ignoreError     Ignore error when validating. Default is False.
+  -o OUTPUT, --output OUTPUT Name of generated documentation. Default is "Documentation". You do not need to add the extension.
  ```
 """
 
@@ -371,8 +376,8 @@ def main(docArg=None):
     )
 
     parser.add_argument(
-        "-ignoreError", action='store_true', default=False,
-        help='Ignore error when parsing the plugin. Default is False.'
+        "-i", "--ignoreError", action='store_true', default=False,
+        help='Ignore error when validating. Default is False.'
     )
 
     parser.add_argument(
@@ -384,25 +389,26 @@ def main(docArg=None):
     del parser
 
     out_dir = os.path.dirname(opts.target)
+    targetPathbaseName = os.path.basename(opts.target)
 
     if out_dir:
         os.chdir(out_dir)
 
-    entryType = "py" if os.path.basename(opts.target).endswith(".py") else "tp"
+    entryType = "py" if targetPathbaseName.endswith(".py") else "tp"
     if not opts.ignoreError:
         print("vaildating entry...\n")
-        if  entryType == "tp" and _validateDefinition(os.path.basename(opts.target)):
-            print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
-        elif entryType == "py" and _validateDefinition(generateDefinitionFromScript(os.path.basename(opts.target)), as_str=True):
-            print(os.path.basename(opts.target), "is vaild file. continue building document.\n")
+        if  entryType == "tp" and _validateDefinition(targetPathbaseName):
+            print(targetPathbaseName, "is vaild file. continue building document.\n")
+        elif entryType == "py" and _validateDefinition(generateDefinitionFromScript(targetPathbaseName), as_str=True):
+            print(targetPathbaseName, "is vaild file. continue building document.\n")
         else:
             print("File is invalid. Please above error for more information.")
-            return 0
+            return -1
     else:
         print("Ignoring errors, contiune building document.\n")
 
-    if entryType == "py": entry = getInfoFromBuildScript(os.path.basename(opts.target))
-    else: entry = TpToPy.toString(os.path.basename(opts.target))
+    if entryType == "py": entry = getInfoFromBuildScript(targetPathbaseName)
+    else: entry = TpToPy.toString(targetPathbaseName)
 
 
     documentation = """"""
