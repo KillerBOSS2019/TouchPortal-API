@@ -129,6 +129,34 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7.5 (7/2/2022)
+-------------------
+- Fixed typo where It can't generate states
+- when generating doc `(click to expand)` is now smaller
+
+1.7.4 (6/26/2022)
+-------------------
+- Fixed doc gen and Python struct gen `format` and `readOnly` is not required key. so It will ignore this.
+
+1.7.3 (6/26/2022)
+-------------------
+(All this fixes is for doc generator)
+- in ToC shows each category
+- changed from Sliders to Connectors
+- Made it so if theres more than one category for action/state/event/connector it will not show first detail open (Only if theres only 1)
+- Instead of showing category Id now it will show category name instead.
+
+1.7.2 (6/25/2022)
+-------------------
+- Improved efficiency of generating Python struct
+- Fixed Tools.convertImage_to_base64() (not all web image containing `content-type` header)
+- and many more fixes from first review [pull #24](https://github.com/KillerBOSS2019/TouchPortal-API/pull/24)
+
+1.7.1 (6/24/2022)
+-------------------
+- Introduced tppdoc
+- Introduced convert entry.tp to Python struct
+
 1.7 (6/4/2022)
 -------------------
 - Updated pdoc

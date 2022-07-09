@@ -37,7 +37,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-TPSDK_DEFAULT_VERSION = 3
+TPSDK_DEFAULT_VERSION = 6
 """ Default Touch Portal SDK version for generating entry.tp JSON. """
 
 TPSDK_ATTRIBS_SETTINGS = {
@@ -135,6 +135,9 @@ TPSDK_ATTRIBS_ROOT = {
   'id':               { 'v': 1, 'r': True,  't': str },
   'configuration':    { 'v': 1, 'r': False, 't': dict },
   'plugin_start_cmd': { 'v': 1, 'r': False, 't': str },
+  'plugin_start_cmd_windows': { 'v': 4, 'r': False, 't': str },
+  'plugin_start_cmd_linux':   { 'v': 4, 'r': False, 't': str },
+  'plugin_start_cmd_mac':     { 'v': 4, 'r': False, 't': str },
   'categories':       { 'v': 1, 'r': True,  't': list,  'd': [], 'l': TPSDK_ATTRIBS_CATEGORY },
   'settings':         { 'v': 3, 'r': False, 't': list,  'd': [], 'l': TPSDK_ATTRIBS_SETTINGS },
 }

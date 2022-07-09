@@ -57,6 +57,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+__all__ = ['PLUGIN_MAIN', 'PLUGIN_EXE_NAME', 'PLUGIN_EXE_ICON', 'PLUGIN_ENTRY', 'PLUGIN_ENTRY_INDENT', 'PLUGIN_ROOT',
+ 'PLUGIN_ICON', 'OUTPUT_PATH', 'PLUGIN_VERSION', 'ADDITIONAL_FILES', 'ADDITIONAL_PYINSTALLER_ARGS', 'validateBuild', 'runBuild']
+
 import importlib
 import os
 import sys
@@ -104,7 +107,14 @@ def zip_dir(zf, path, base_path="./", recurse=True):
 				zip_dir(zf, src, base_path)
 
 def build_distro(opsys, version, pluginname, packingList, output):
-	os_name = "Windows" if opsys == OS_WIN else "MacOS"
+	if opsys == OS_WIN:
+		os_name = "Windows"
+	elif opsys == OS_MAC:
+		os_name = "MacOS"
+	elif opsys == OS_LINUX:
+		os_name = "Linux"
+	else:
+		raise ValueError("Unknown OS")
 	zip_name = pluginname + "_v" + str(version) + "_" + os_name + ".tpp"
 	print("Creating archive: "+ zip_name)
 	if not os.path.exists(output):
@@ -142,6 +152,7 @@ EXE_SFX = ".exe" if sys.platform == "win32" else ""
 
 OS_WIN = 1
 OS_MAC = 2
+OS_LINUX = 3
 
 requiredVar = [
         "PLUGIN_ENTRY", "PLUGIN_MAIN", "PLUGIN_ROOT", "PLUGIN_EXE_NAME"
@@ -158,8 +169,7 @@ def main(buildArgs=None):
 	elif sys.platform == "darwin":
 		opsys = OS_MAC
 	elif sys.platform == "linux":
-		print("Linux is not supported yet.")
-		sys.exit(1)
+		opsys = OS_LINUX
 	else:
 		return "Unsupported OS: " + sys.platform
 
@@ -205,7 +215,12 @@ def main(buildArgs=None):
 	if (entry_abs_path := buildfile.PLUGIN_ENTRY) and os.path.isfile(entry_abs_path):
 		sys.path.append(os.path.dirname(os.path.realpath(entry_abs_path)))
 		entry_output_path = os.path.join(distdir, "entry.tp")
-		sdk_arg = [entry_abs_path, f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
+		if buildfile.PLUGIN_ENTRY.endswith(".py"):
+			sdk_arg = [entry_abs_path, f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
+		else:
+			sdk_arg = [entry_abs_path, "-v"]
+			entry_output_path = buildfile.PLUGIN_ENTRY
+
 		result = sdk_tools.main(sdk_arg)
 		if result == 0:
 			print("Adding entry.tp to packing list.")
@@ -238,7 +253,7 @@ def main(buildArgs=None):
 		PI_RUN.append(f"--icon={Path(buildfile.PLUGIN_EXE_ICON).resolve()}")
 
 	PI_RUN.append(f"--specpath={distdir}")
-	PI_RUN.append(f"--workpath={distdir}")
+	PI_RUN.append(f"--workpath={distdir}/build")
 
 	PI_RUN.extend(buildfile.ADDITIONAL_PYINSTALLER_ARGS)
 
@@ -249,7 +264,7 @@ def main(buildArgs=None):
 	print("Checking for any additional required files")
 	for file in buildfile.ADDITIONAL_FILES:
 		print(f"Adding {file} to plugin")
-		TPP_PACK_LIST[os.path.basename(file)] = os.path.split(file)[0]
+		TPP_PACK_LIST[os.path.basename(file)] = os.path.join(buildfile.PLUGIN_ROOT, os.path.split(file)[0])
 
 	print("Packing everything into tpp file")
 	build_distro(opsys, buildfile.PLUGIN_VERSION, buildfile.PLUGIN_EXE_NAME, TPP_PACK_LIST, buildfile.OUTPUT_PATH)
@@ -407,6 +422,3 @@ def runBuild():
     file = module.__file__
 
     main([file])
-
-__all__ = [PLUGIN_MAIN, PLUGIN_EXE_NAME, PLUGIN_EXE_ICON, PLUGIN_ENTRY, PLUGIN_ENTRY_INDENT, PLUGIN_ROOT,
- PLUGIN_ICON, OUTPUT_PATH, PLUGIN_VERSION, ADDITIONAL_FILES, ADDITIONAL_PYINSTALLER_ARGS, validateBuild, runBuild]

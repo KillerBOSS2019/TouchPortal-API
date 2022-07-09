@@ -57,8 +57,10 @@ The script command is `tppsdk` when the TouchPortalAPI is installed (via pip or 
 <script_command> [-h] [-g] [-v] [-o <file>] [-s] [-i <n>] [target]
 
 positional arguments:
-  target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory.
-                        Defaults to './tppEntry.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead.
+  target                Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working
+                        directory. Defaults to './TPPEntry.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input
+                        stream instead. Another usage is if you pass in a normal entry.tp without `validate` argument, It can generate
+                        Python version of entry.tp struct. It will be saved in `TPPEntry.py` if `output` is not given.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -70,7 +72,7 @@ generator arguments:
                         Paths are relative to current working directory. Use 'stdout' (or '-') to print the output to the console/stream instead.
   -s, --skip-invalid    Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.
   -i <n>, --indent <n>  Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is 2 spaces.
-
+  --noconfirm           When generating python struct from entry.tp, you can pass this arg to bypass confirm if you want to contiune if any error is given for vaildating entry.tp before generate python struct.
 This script exits with status code -1 (error) if generation or validation produces warning messages about malformed data.
 All progress and warning messages are printed to stderr stream.
 ```
@@ -113,6 +115,7 @@ from re import compile as re_compile
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from sdk_spec import *
+from TpToPy import TpToPy
 
 ## globals
 g_messages = []  # validation reporting
@@ -174,6 +177,7 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bo
         return ret
     for k, data in table.items():
         # try get explicit value from item
+        #if not data.get("doc"): continue
         if (v := item.get(k)) is None:
             # try get default value
             v = data.get('d')
@@ -432,14 +436,14 @@ def validateDefinitionObject(data:dict):
     _validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
     return len(g_messages) == 0
 
-def validateDefinitionString(data:str):
+def validateDefinitionString(data: dict):
     """
     Validates a TP plugin definition structure from JSON string.
     `data` is an entry.tp JSON string
     Returns `True` if no problems were found, `False` otherwise.
     Use `getMessages()` to check for any validation warnings which may be generated.
     """
-    return validateDefinitionObject(json.loads(data))
+    return validateDefinitionObject(data)
 
 def validateDefinitionFile(file:Union[str, TextIO]):
     """
@@ -502,6 +506,16 @@ def _validateDefinition(entry, as_str=False):
     _printToErr(f"\nFinished validating '{name}'.\n")
     return res
 
+def generatePythonStruct(entry, name):
+    _printToErr("Generating Python struct from entry json...\n")
+    try:
+        tp_to_py = TpToPy(entry)
+        tp_to_py.writetoFile(name)
+        _printToErr(f"Saved generated Python struct to '{name}'\n")
+        return True
+    except Exception as e:
+        _printToErr(f"Error: {e}")
+        return False
 
 def main(sdk_args=None):
     from argparse import ArgumentParser
@@ -514,7 +528,9 @@ def main(sdk_args=None):
                         help="Validate a definition JSON file (entry.tp). If given with `generate` then will validate the generated JSON output.")
     parser.add_argument("target", metavar="target", nargs="?", default="",
                         help="Either a plugin script for `generate` or an entry.tp file for `validate`. Paths are relative to current working directory. "
-                             "Defaults to './main.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead. ")
+                             "Defaults to './TPPEntry.py' and './entry.tp' respectively. Use 'stdin' (or '-') to read from input stream instead. "
+                             "Another usage is if you pass in a normal entry.tp without `validate` argument, It can generate "
+                             "Python version of entry.tp struct. It will be saved in `TPPEntry.py` if `output` is not given.")
     gen_grp = parser.add_argument_group("Generator arguments")
     gen_grp.add_argument("-o", metavar="<file>",
                          help="Output file for `generate` action. Default will be a file named 'entry.tp' in the same folder as the input script. "
@@ -523,13 +539,26 @@ def main(sdk_args=None):
                          help="Skip attributes with invalid values (they will not be included in generated output). Default behavior is to only warn about them.")
     gen_grp.add_argument("-i", "--indent", metavar="<n>", type=int, default=2,
                          help="Indent level (spaces) for generated JSON. Use 0 for only newlines, or -1 for the most compact representation. Default is %(default)s spaces.")
+    gen_grp.add_argument("--noconfirm", action='store_true', default=False,
+                         help="When generating python struct from entry.tp, you can pass this arg to bypass confirm if you want to contiune if any error is given for vaildating entry.tp before generate python struct")
     opts = parser.parse_args(sdk_args)
     del parser
+
+    t = _normPath(opts.target or "TPPEntry.py")
+    if opts.target.endswith(".tp") and not opts.validate:
+        valid = _validateDefinition(t)
+        # Incase if file is invaild they will have choice to either contiune. but --noconfirm can override this.
+        # so that way if they use on github action it can still contiune if they wish.
+        if not valid and not opts.noconfirm: input("Found errors. Press Enter to build or Ctrl+C to exit...")
+        successful = generatePythonStruct(t, opts.o or "TPPEntry.py")
+        if not successful: _printToErr("Failed to generate exiting...")
+
+        return successful
 
     # default action
     opts.generate = opts.generate or not opts.validate
 
-    _printToErr("")
+    _printToErr("") 
 
     if opts.target in ("-","stdin"):
         opts.target = sys.stdin
@@ -537,7 +566,7 @@ def main(sdk_args=None):
     valid = True
     entry_str = ""
     if opts.generate:
-        opts.target = _normPath(opts.target or "tppEntry.py")
+        opts.target = _normPath(opts.target or "TPPEntry.py")
         output_path = None
         if opts.o:
             if opts.o not in ("-","stdout"):
@@ -553,6 +582,8 @@ def main(sdk_args=None):
     if opts.validate:
         if entry_str:
             valid = _validateDefinition(entry_str, True)
+        elif opts.target.endswith(".py"): # checks if is python file if It is then It will vaildate the python file by converting it to json first
+            valid = _validateDefinition(generateDefinitionFromScript(opts.target), as_str=True) # little hacky lol
         else:
             opts.target = _normPath(opts.target or "entry.tp")
             valid = _validateDefinition(opts.target)
