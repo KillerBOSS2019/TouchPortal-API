@@ -45,6 +45,11 @@ TP_PLUGIN_INFO = {
     'configuration': {
         'colorDark': "#25274c",
         'colorLight': "#707ab5"
+    },
+    "doc": {
+        "repository": "KillerBOSS2019:TouchPortal-API",
+        "Install": "example install instruction",
+        "description": "example description"
     }
 }
 
@@ -57,6 +62,7 @@ TP_PLUGIN_SETTINGS = {
         'type': "text",
         'default': "Example value",
         'readOnly': False,  # this is also the default
+        "doc": "example doc for example setting",
         'value': None  # we can optionally use the settings struct to hold the current value
     },
 }
@@ -76,10 +82,11 @@ TP_PLUGIN_ACTIONS = {
         # 'category' is optional, if omitted then this action will be added to all, or the only, category(ies)
         'category': "main",
         'id': PLUGIN_ID + ".act.example",
-        'name': "Set Example State",
+        'name': "Set Example Action",
         'prefix': TP_PLUGIN_CATEGORIES['main']['name'],
         'type': "communicate",
         'tryInline': True,
+        "doc": "Example doc string",
         # 'format' tokens like $[1] will be replaced in the generated JSON with the corresponding data id wrapped with "{$...$}".
         # Numeric token values correspond to the order in which the data items are listed here, while text tokens correspond
         # to the last part of a dotted data ID (the part after the last period; letters, numbers, and underscore allowed).
@@ -244,8 +251,8 @@ def main():
     del parser
 
     # trim option string (they may contain spaces if read from config file)
-    opts.l = opts.l.strip()
-    opts.s = opts.s.strip().lower()
+    opts.l = opts.l.strip() if opts.l else 'none'
+    opts.s = opts.s.strip().lower() if opts.s else 'stdout'
     print(opts)
 
     # Set minimum logging level based on passed arguments

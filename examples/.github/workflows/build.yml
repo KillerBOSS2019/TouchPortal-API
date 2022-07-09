@@ -1,0 +1,40 @@
+name: build
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run build on ${{ matrix.os }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          : # This installs dependencies thats required to run your plugin. It's best idea to include
+          : # requirements.txt (This can auto generated using `pip freeze > requirements.txt`) remember
+          : # This includes everything that you've installed in pip so using Python Venv will make things easier
+          python3 -m pip install --upgrade pip
+          pip3 install pyinstaller
+          pip install pillow
+          pip3 install -r examplePlugin/requirements.txt
+          
+      - name: Build tpp using tppbuild
+        run: |
+          python3 examplePlugin/build.py
+      - name: uploading tpp for ${{ matrix.os}}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "./Better Raids/*.tpp"
+          overwrite: true
+          file_glob: true

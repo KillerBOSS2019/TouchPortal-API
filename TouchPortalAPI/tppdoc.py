@@ -89,7 +89,7 @@ def generateCategoryLink(linkType, entry, categoryStruct):
             if (theItem := entry[item].get('category')) == category:
                 linkName = categoryStruct[theItem].get('name')
                 linkAdress = categoryStruct[theItem].get('id') + linkType
-                if (dataToAppend := f"\n        - [Category: {linkName}](#{linkAdress})") not in linkList:
+                if (dataToAppend := f"\n        - [{linkName}](#{linkAdress})") not in linkList:
                     linkList.append(dataToAppend)
 
     # print(linkList)
@@ -98,7 +98,7 @@ def generateCategoryLink(linkType, entry, categoryStruct):
 def generateTableContent(entry, entryFile):
     table_content = f"""
 # {entry['name'].replace(" ", "-")}"""
-    if entry.get('doc'):
+    if entry.get('doc') and (repository := entry['doc'].get("repository")) and repository.find(":") != -1:
         table_content += f"""
 ![Downloads](https://img.shields.io/github/downloads/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}/total) 
 ![Forks](https://img.shields.io/github/forks/{entry['doc']['repository'].split(":")[0]}/{entry['doc']['repository'].split(":")[1]}) 
@@ -135,7 +135,7 @@ def generateTableContent(entry, entryFile):
     - [Events](#events)"""
         table_content += generateCategoryLink("events", entryFile.TP_PLUGIN_EVENTS, entryFile.TP_PLUGIN_CATEGORIES)
 
-    if entry.get("doc") and "Install" in entry['doc'].keys() and entry['doc']['Install']:
+    if entry.get("doc") and entry['doc'].get("Install"):
         table_content += """
   - [Installation Guide](#installation)"""
         
@@ -205,7 +205,7 @@ def generateAction(entry, categoryStruct):
     actionDoc = "\n## Actions\n"
     filterActionbyCategory = {}
 
-    numberOfCategory = [entry[x].get("category") for x in entry]
+    numberOfCategory = [entry[x].get("category", "main") for x in entry]
     allowDetailOpen = not len(set(numberOfCategory)) > 1
 
     for action in entry:
@@ -238,7 +238,7 @@ def generateConnectors(entry, categoryStruct):
     connectorDoc = "\n## Connectors\n"
     filterConnectorsbyCategory = {}
 
-    numberOfCategory = [entry[x].get("category") for x in entry]
+    numberOfCategory = [entry[x].get("category", "main") for x in entry]
     allowDetailOpen = not len(set(numberOfCategory)) > 1
 
     for connector in entry:
@@ -291,13 +291,15 @@ def generateSetting(entry):
         settingDoc += " |\n\n"
         if entry[setting].get('doc'):
             settingDoc += f"{entry[setting]['doc']}\n\n"
-    return settingDoc
+    return settingDoc 
 
 def generateState(entry, baseid, categoryStruct):
     stateDoc = "\n## States\n"
     filterCategory = {}
-    numberOfCategory = [entry[x].get("category") for x in entry]
+    
+    numberOfCategory = [entry[x].get("category", "main") for x in entry]
     allowDetailOpen = not len(set(numberOfCategory)) > 1
+
     for state in entry:
         categoryName = entry[state].get("category", "main")
         state = entry[state]
@@ -321,7 +323,7 @@ def generateState(entry, baseid, categoryStruct):
 def generateEvent(entry, baseid, categoryStruct):
     eventDoc = "\n## Events\n\n"
     filterCategory = {}
-    numberOfCategory = [entry[x].get("category") for x in entry]
+    numberOfCategory = [entry[x].get("category", "main") for x in entry]
     allowDetailOpen = not len(set(numberOfCategory)) > 1
     for event in entry:
         event = entry[event] # dict looks like {'0': {}, '1': {}}. so when looping It will give `0` etc..
@@ -421,7 +423,7 @@ def main(docArg=None):
 # Description
 
 """
-    if entry.TP_PLUGIN_INFO.get('doc', False) and entry.TP_PLUGIN_INFO['doc'].get('description', False):
+    if entry.TP_PLUGIN_INFO.get('doc') and entry.TP_PLUGIN_INFO['doc'].get('description'):
         documentation += f"{entry.TP_PLUGIN_INFO['doc']['description']}\n\n"
     
     documentation += f"This documentation generated for {entry.TP_PLUGIN_INFO['name']} V{entry.TP_PLUGIN_INFO['version']} with [Python TouchPortal SDK](https://github.com/KillerBOSS2019/TouchPortal-API)."

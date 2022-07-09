@@ -129,6 +129,14 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7.7 (7/8/2022)
+-------------------
+- Updated example in examples folder
+
+1.7.6 (7/8/2022)
+-------------------
+- Merged [#24](https://github.com/KillerBOSS2019/TouchPortal-API/pull/24)
+
 1.7.5 (7/2/2022)
 -------------------
 - Fixed typo where It can't generate states
