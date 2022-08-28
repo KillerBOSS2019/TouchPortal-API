@@ -129,6 +129,10 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7.9 (8/28/2022)
+-------------------
+- Typo `ADDITINAL_TPPSDK_ARGS` changed to `ADDITIONAL_TPPSDK_ARGS`
+
 1.7.8 (8/27/2022)
 -------------------
 - Added ADDITIONAL_TPPSDK_ARGS for additional tppsdk args

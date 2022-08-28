@@ -60,7 +60,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 __all__ = ['PLUGIN_MAIN', 'PLUGIN_EXE_NAME', 'PLUGIN_EXE_ICON', 'PLUGIN_ENTRY', 'PLUGIN_ENTRY_INDENT', 'PLUGIN_ROOT',
- 'PLUGIN_ICON', 'OUTPUT_PATH', 'PLUGIN_VERSION', 'ADDITIONAL_FILES', 'ADDITIONAL_PYINSTALLER_ARGS', 'validateBuild', 'runBuild']
+ 'PLUGIN_ICON', 'OUTPUT_PATH', 'PLUGIN_VERSION', 'ADDITIONAL_FILES', 'ADDITIONAL_PYINSTALLER_ARGS', 'ADDITIONAL_TPPSDK_ARGS',
+ 'validateBuild', 'runBuild']
 
 import importlib
 import os
@@ -161,7 +162,7 @@ requiredVar = [
 optionalVar = [
 	"ADDITIONAL_PYINSTALLER_ARGS", "PLUGIN_ICON", "PLUGIN_EXE_ICON",
 	"ADDITIONAL_FILES", "OUTPUT_PATH", "PLUGIN_VERSION", "PLUGIN_ENTRY_INDENT",
-	"ADDITINAL_TPPSDK_ARGS"
+	"ADDITIONAL_TPPSDK_ARGS"
 ]
 attri_list = requiredVar + optionalVar
 
