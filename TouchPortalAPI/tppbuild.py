@@ -24,15 +24,18 @@ In this example we targed the example_build.py file because that file contains i
 The script command is `tppbuild` when the TouchPortalAPI is installed (via pip or setup), or `tppbuild.py` when run directly from this source.
 
 ```
-<script-command> [-h] --target [<target> ...]
+<script-command> [-h] <target>
 
-buildScript automatically compile into exe, entry and package them into importable tpp file
+Script to automatically compile a Python plugin into a standalone exe, generate entry.tp, and package them into
+importable tpp file.
 
-optional arguments:
--h, --help            show this help message and exit
---target [<target> ...]
-					target is target to a build file that contains some infomations about the plugin.Using given infomation about the plugin, It will
-					automatically build entry.tp (if given file is .py) and it will build the distrobased on what system your using.
+positional arguments:
+  <target>    A build script that contains some infomations about the plugin. Using given infomation about the plugin,
+              this script will automatically build entry.tp (if given file is .py) and it will build the distro based
+              on which operating system you're using.
+
+options:
+  -h, --help  show this help message and exit
 ```
 """
 
@@ -96,7 +99,6 @@ def build_tpp(zip_name, tpp_pack_list):
 def zip_dir(zf, path, base_path="./", recurse=True):
 	relroot = os.path.abspath(os.path.join(path, os.pardir))
 	for root, _, files in os.walk(path):
-		zf.write(os.path.join(root, "."))
 		for file in files:
 			src = os.path.join(root, file)
 			if os.path.isfile(src):
@@ -158,7 +160,8 @@ requiredVar = [
     ]
 optionalVar = [
 	"ADDITIONAL_PYINSTALLER_ARGS", "PLUGIN_ICON", "PLUGIN_EXE_ICON",
-	"ADDITIONAL_FILES", "OUTPUT_PATH", "PLUGIN_VERSION", "PLUGIN_ENTRY_INDENT"
+	"ADDITIONAL_FILES", "OUTPUT_PATH", "PLUGIN_VERSION", "PLUGIN_ENTRY_INDENT",
+	"ADDITINAL_TPPSDK_ARGS"
 ]
 attri_list = requiredVar + optionalVar
 
@@ -216,6 +219,7 @@ def main(buildArgs=None):
 		entry_output_path = os.path.join(distdir, "entry.tp")
 		if buildfile.PLUGIN_ENTRY.endswith(".py"):
 			sdk_arg = [entry_abs_path, f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
+			sdk_arg.extend(buildfile.ADDITINAL_TPPSDK_ARGS)
 		else:
 			sdk_arg = [entry_abs_path, "-v"]
 			entry_output_path = buildfile.PLUGIN_ENTRY
@@ -276,27 +280,27 @@ def main(buildArgs=None):
 if __name__ == "__main__":
 	sys.exit(main())
 
-PLUGIN_MAIN = ""
+PLUGIN_MAIN = " "
 """
 *REQUIRED*
 PLUGIN_MAIN: This lets tppbuild know where your main python plugin file is located so it will know which file to compile.
 Note: This can be ether relative or absolute to the main script.
 """
 
-PLUGIN_EXE_NAME = ""
+PLUGIN_EXE_NAME = " "
 """
 *REQUIRED*
 PLUGIN_EXE_NAME: This defines what you want your plugin executable to be named. tppbuild will also use this for the .tpp file in the format:
                 `pluginname + "_v" + version + "_" + os_name + ".tpp"`
 """
 
-PLUGIN_EXE_ICON = r""
+PLUGIN_EXE_ICON = r" "
 """
 *OPTIONAL*
 PLUGIN_EXE_ICON: This should be a path to a .ico file. However if png is passed in, it will tries to automatically converted to ico. if `PILLOW` is installed.
 """
 
-PLUGIN_ENTRY = ""
+PLUGIN_ENTRY = " "
 """
 *REQUIRED*
 PLUGIN_ENTRY: This can be either path to entry.tp or path to a python file that contains infomation about entry.
@@ -311,14 +315,14 @@ This allows you to set indent for the `entry.tp` json data. Default is `2`
 but if you want to save space use `-1` meaning no indent. This is only used if `PLUGIN_ENTRY` is a py file.
 """
 
-PLUGIN_ROOT = ""
+PLUGIN_ROOT = " "
 """ 
 *REQUIRED*
 This is the root folder name that will be inside of .tpp
  """
 
 
-PLUGIN_ICON = r""
+PLUGIN_ICON = r" "
 """ 
 *OPTIONAL*
 Path to icon file that is used in entry.tp for category `imagepath`, if any.
@@ -347,17 +351,23 @@ If you have any required file(s) that your plugin needs, put them in this list.
 ADDITIONAL_PYINSTALLER_ARGS = []
 """
 *OPTIONAL*
-Any additional arguments to be passed to Pyinstaller. Optional.
+Any additional arguments to be passed to Pyinstaller.
+"""
+
+ADDITIONAL_TPPSDK_ARGS = []
+"""
+*OPTIONAL*
+ADDITIONAL_TPPSDK_ARGS: This allows you to give additional arg when generating entry.tp
 """
 
 import inspect
 
-"""
-validateBuild() this takes no arguments. when It's called it will check for all
-required constants variable are vaild It will check if path is vaild, is a file etc... If 
-any error is found, It will list all the error during the process.
-"""
 def validateBuild():
+    """
+    validateBuild() this takes no arguments. when It's called it will check for all
+    required constants variable are vaild It will check if path is vaild, is a file etc... If 
+    any error is found, It will list all the error during the process.
+    """
     frame = inspect.stack()[1]
     module = inspect.getmodule(frame[0])
     constants = module.__dir__()
@@ -411,13 +421,13 @@ def validateBuild():
     if not anyError:
         print("Validation completed successfully, No error found.")
 
-"""
-runBuild() this takes no arguments. This is the same as `tppbuild file.py` you do not need to pass your build config,
-It will automatically find it.
-"""
 def runBuild():
-    frame = inspect.stack()[1]
-    module = inspect.getmodule(frame[0])
-    file = module.__file__
+	"""
+	runBuild() this takes no arguments. This is the same as `tppbuild file.py` you do not need to pass your build config,
+	It will automatically find it.
+	"""
+	frame = inspect.stack()[1]
+	module = inspect.getmodule(frame[0])
+	file = module.__file__
 
-    main([file])
+	main([file])

@@ -129,6 +129,11 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7.8 (8/27/2022)
+-------------------
+- Added ADDITIONAL_TPPSDK_ARGS for additional tppsdk args
+- Fixed in tppbuild it will add empty folder at root of the zip
+
 1.7.7 (7/8/2022)
 -------------------
 - Updated example in examples folder
