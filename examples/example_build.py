@@ -104,6 +104,7 @@ Any additional arguments to be passed to Pyinstaller. Optional.
 ADDITIONAL_PYINSTALLER_ARGS = [
     "--log-level=WARN"
 ]
+ADDITIONAL_TPPSDK_ARGS = []
 
 # validateBuild()
 
