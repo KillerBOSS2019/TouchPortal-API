@@ -423,8 +423,7 @@ class Client(ExecutorEventEmitter):
         
         if choiceId:
             if isinstance(values, list):
-                if self.choiceUpdateList.get(choiceId) == values:
-                else:
+                if self.choiceUpdateList.get(choiceId) != values:
                     self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
                     self.choiceUpdateList[choiceId] = values
             else:
