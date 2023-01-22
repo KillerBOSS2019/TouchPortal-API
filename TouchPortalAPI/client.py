@@ -420,10 +420,13 @@ class Client(ExecutorEventEmitter):
         This updates the list of choices in a previously-declared TP State with id `stateId`.
         See TP API reference for details on updating list values.
         """
+        
         if choiceId:
             if isinstance(values, list):
-                self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
-                self.choiceUpdateList[choiceId] = values
+                if self.choiceUpdateList.get(choiceId) == values:
+                else:
+                    self.send({"type": "choiceUpdate", "id": choiceId, "value": values})
+                    self.choiceUpdateList[choiceId] = values
             else:
                 self.__raiseException(f'choiceUpdate() values argument needs to be a list not a {type(values)}')
 
