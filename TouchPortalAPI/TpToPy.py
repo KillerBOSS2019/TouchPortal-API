@@ -50,8 +50,9 @@ class TpToPy():
         """
         newData = {}
         if isinstance(data, list):
-            for item in range(len(data)):
-                newData[item] = data[item]
+            for idx, item in enumerate(data):
+                newData[idx+1] = item
+                
         return newData
 
     def __convertFormat(self, actionFormat, data):
@@ -63,7 +64,6 @@ class TpToPy():
         for item in range(len(data)):
             if data[item]['id'] in actionFormat:
                 newFormat = newFormat.replace("{$" + data[item]['id'] + "$}", "$[" + str(item+1) + "]")
-
         return newFormat
 
     def generateInfo(self):
@@ -77,6 +77,7 @@ class TpToPy():
         for key in self.entry.keys():
             if key in infoKeys:
                 generatedInfo[key] = self.entry[key]
+                
 
         return generatedInfo
     
@@ -104,10 +105,9 @@ class TpToPy():
         startIndex = len(self.structState)
 
         for state in data:
+            startIndex += 1
             self.structState[startIndex] = state
             self.structState[startIndex]["category"] = category
-
-            startIndex += 1
 
         return self.structState
         
@@ -124,8 +124,10 @@ class TpToPy():
             self.structAction[startIndex] = action
             if self.structAction[startIndex].get("format", False):
                 self.structAction[startIndex]['format'] = self.__convertFormat(action["format"], action['data'])
+                
             if action.get('data', False):
                 self.structAction[startIndex]['data'] = self.__convertData(action['data'])
+                
             self.structAction[startIndex]["category"] = category
 
         return self.structAction
