@@ -25,7 +25,7 @@ classifiers = [
 ]
 
 setup(
-  name = 'TouchPortal API',
+  name = 'touchportal_api',
   version = api_version,
   description = 'Touch Portal API and SDK for Python',
   long_description = long_description,
