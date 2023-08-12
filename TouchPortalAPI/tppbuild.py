@@ -64,13 +64,15 @@ __all__ = ['PLUGIN_MAIN', 'PLUGIN_EXE_NAME', 'PLUGIN_EXE_ICON', 'PLUGIN_ENTRY', 
  'validateBuild', 'runBuild']
 
 import importlib
+import inspect
 import os
 import sys
-from zipfile import (ZipFile, ZIP_DEFLATED)
 from argparse import ArgumentParser
 from glob import glob
-from shutil import rmtree
 from pathlib import Path
+from shutil import rmtree
+from zipfile import ZIP_DEFLATED, ZipFile
+
 try:
 	import PyInstaller.__main__
 except ImportError:
@@ -117,7 +119,11 @@ def build_distro(opsys, version, pluginname, packingList, output):
 		os_name = "Linux"
 	else:
 		raise ValueError("Unknown OS")
-	zip_name = pluginname + "_v" + str(version) + "_" + os_name + ".tpp"
+	
+	if version:
+		zip_name = pluginname + "_v" + str(version) + "_" + os_name + ".tpp"
+	else:
+		zip_name = pluginname + "_" + os_name + ".tpp"
 	print("Creating archive: "+ zip_name)
 	if not os.path.exists(output):
 		os.makedirs(output)
@@ -161,8 +167,8 @@ requiredVar = [
     ]
 optionalVar = [
 	"ADDITIONAL_PYINSTALLER_ARGS", "PLUGIN_ICON", "PLUGIN_EXE_ICON",
-	"ADDITIONAL_FILES", "OUTPUT_PATH", "PLUGIN_VERSION", "PLUGIN_ENTRY_INDENT",
-	"ADDITIONAL_TPPSDK_ARGS"
+	"ADDITIONAL_FILES", "OUTPUT_PATH", "PLUGIN_ENTRY_INDENT",
+	"ADDITIONAL_TPPSDK_ARGS", "PLUGIN_VERSION"
 ]
 attri_list = requiredVar + optionalVar
 
@@ -198,10 +204,21 @@ def main(buildArgs=None):
 	print("tppbuild started with target: " + opts.target)
 	buildfile = getInfoFromBuildScript(os.path.basename(opts.target))
 
-	checklist = [attri in dir(buildfile) for attri in attri_list]
-	if all(checklist) == False:
-		print(f"{opts.target} is missing these variables: ", " ".join([attri for attri in attri_list if attri not in dir(buildfile)]))
-		return -1
+	for attr in requiredVar:
+		if not getattr(buildfile, attr):
+			print(f"ERROR: {attr} is required but is empty. Please fill in the value and try again.")
+			return -1
+		
+	for attr in optionalVar:
+		if not hasattr(buildfile, attr):
+			if attr in ["ADDITIONAL_PYINSTALLER_ARGS", "ADDITIONAL_TPPSDK_ARGS", "ADDITIONAL_FILES"]:
+				setattr(buildfile, attr, [])
+			elif attr in ["PLUGIN_ICON", "PLUGIN_EXE_ICON", "PLUGIN_VERSION"]:
+				setattr(buildfile, attr, "")
+			elif attr == "PLUGIN_ENTRY_INDENT":
+				setattr(buildfile, attr, 0)
+			elif attr == "OUTPUT_PATH":
+				setattr(buildfile, attr, "./")
 
 	TPP_PACK_LIST = {}
 
@@ -220,7 +237,7 @@ def main(buildArgs=None):
 		entry_output_path = os.path.join(distdir, "entry.tp")
 		if buildfile.PLUGIN_ENTRY.endswith(".py"):
 			sdk_arg = [entry_abs_path, f"-i={buildfile.PLUGIN_ENTRY_INDENT}", f"-o={entry_output_path}"]
-			sdk_arg.extend(buildfile.ADDITINAL_TPPSDK_ARGS)
+			sdk_arg.extend(buildfile.ADDITIONAL_TPPSDK_ARGS)
 		else:
 			sdk_arg = [entry_abs_path, "-v"]
 			entry_output_path = buildfile.PLUGIN_ENTRY
@@ -360,8 +377,6 @@ ADDITIONAL_TPPSDK_ARGS = []
 *OPTIONAL*
 ADDITIONAL_TPPSDK_ARGS: This allows you to give additional arg when generating entry.tp
 """
-
-import inspect
 
 def validateBuild():
     """

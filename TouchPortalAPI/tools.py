@@ -29,7 +29,7 @@ class Tools():
     """
 
     @staticmethod
-    def convertImage_to_base64(image, type="Auto", image_formats=["image/png", "image/jpeg", "image/jpg"]):
+    def convertImage_to_base64(image, type="Auto", image_formats=["image/png", "image/jpeg", "image/jpg", "image/webp"]):
         """
         Returns a Base64-encoded representation of an image.
 

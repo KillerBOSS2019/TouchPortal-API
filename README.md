@@ -129,6 +129,16 @@ on a TP page which uses this plugin's "ExampleAction" action.
 ## Change Log
 
 ```
+1.7.10 (8/12/2023)
+-------------------
+- Fixed typo `ADDITIONAL_TPPSDK_ARGS` changed to `ADDITIONAL_TPPSDK_ARGS`
+- Fixed tppdoc error when importing py file
+- tppbuild optional args is not required to be included in build file.
+- Removed some unused imports
+- Added "image/webp" format to convertImage_to_base64()
+- TpToPy.py action data and state key starts at 1 instead of 0
+
+
 1.7.9 (8/28/2022)
 -------------------
 - Typo `ADDITINAL_TPPSDK_ARGS` changed to `ADDITIONAL_TPPSDK_ARGS`

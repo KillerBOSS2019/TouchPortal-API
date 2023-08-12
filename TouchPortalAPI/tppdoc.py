@@ -63,13 +63,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import sys, os
 import importlib
+import os
+import sys
 from argparse import ArgumentParser
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
-from sdk_tools import _validateDefinition, generateDefinitionFromScript
 import TpToPy
+from sdk_tools import _validateDefinition, generateDefinitionFromScript, _normPath
+
 
 def getInfoFromBuildScript(script:str):
 	try:
@@ -366,6 +368,7 @@ def generateEvent(entry, baseid, categoryStruct):
 
     return eventDoc
 
+
 def main(docArg=None):
     parser = ArgumentParser(description=
         "Script to automatically generates a documentation for a TouchPortal plugin.")
@@ -390,6 +393,7 @@ def main(docArg=None):
     opts = parser.parse_args(docArg)
     del parser
 
+    opts.target = _normPath(opts.target)
     out_dir = os.path.dirname(opts.target)
     targetPathbaseName = os.path.basename(opts.target)
 
@@ -397,6 +401,8 @@ def main(docArg=None):
         os.chdir(out_dir)
 
     entryType = "py" if targetPathbaseName.endswith(".py") else "tp"
+    sys.path.append(os.path.dirname(os.path.realpath(opts.target)))
+    
     if not opts.ignoreError:
         print("vaildating entry...\n")
         if  entryType == "tp" and _validateDefinition(targetPathbaseName):
