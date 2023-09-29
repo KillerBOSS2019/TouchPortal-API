@@ -189,7 +189,7 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bo
             ret[k] = v
             # if this is the "sdk" value from TP_PLUGIN_INFO then reset the
             # passed `sdk_v` param since it was originally set to TPSDK_DEFAULT_VERSION
-            if k == "sdk":
+            if k == "sdk" or k == "api":
                 sdk_v = v
     return ret
 
@@ -440,7 +440,8 @@ def validateDefinitionObject(data:dict):
     """
     _clearSeenIds()
     clearMessages()
-    sdk_v = data.get('sdk', TPSDK_DEFAULT_VERSION)
+
+    sdk_v = data.get('sdk', data.get('api', TPSDK_DEFAULT_VERSION))
     _validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
     return len(g_messages) == 0
 
