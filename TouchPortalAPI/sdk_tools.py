@@ -201,7 +201,7 @@ def _arrayFromDict(d:dict, table:dict, sdk_v:int, category:str=None, path:str=""
     for key, item in d.items():
         if not category or not (cat := item.get('category')) or cat == category:
             ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]", skip_invalid))
-    if path in ["actions","connectors"]:
+    if path == "connectors": # only do it for connectors now? not sure how to process new line stuff
         _replaceFormatTokens(ret)
     return ret
 
@@ -340,7 +340,7 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, skip_invalid:b
     entry = _dictFromItem(info, TPSDK_ATTRIBS_ROOT, TPSDK_DEFAULT_VERSION, "info")
 
     # Get the target SDK version (was either specified in plugin or is TPSDK_DEFAULT_VERSION)
-    tgt_sdk_v = entry['sdk']
+    tgt_sdk_v = entry.get('sdk') or entry.get('api')
 
     # Loop over each plugin category and set up actions, states, events, and connectors.
     for cat, data in categories.items():
@@ -396,6 +396,10 @@ def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""
             _addSeenId(value, keypath)
         else:
             _addMessage(f"WARNING: The ID '{value}' in '{keypath}' is not unique. It was previously seen in '{g_seen_ids.get(value)}'")
+            return False
+    if (deprecated_version := attrib_data.get('DV')):
+        if deprecated_version >= sdk_v:
+            _addMessage(f"WARNING: Attribute '{keypath}' is deprecated in v{deprecated_version}")
             return False
     return True
 
