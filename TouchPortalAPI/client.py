@@ -84,6 +84,26 @@ class TYPES:
         See also `pyee.ExecutorEventEmitter.error` event.
     """
 
+class PluginCategory:
+    # see https://www.touch-portal.com/api/v2/index.php?section=description_file_structure
+    """
+    Register Plug-in in specific category within TouchPortal.
+    """
+    audio = "audio"
+    """ For all audio, music, and media related plug-ins. """
+    streaming = "streaming"
+    """ For all streaming related plug-ins. """
+    content = "content"
+    """ For all content Creation related plug-ins. """
+    homeautomation = "homeautomation"
+    """ For all home automation related plug-ins. """
+    social = "social"
+    """ For all social media related plug-ins. """
+    games = "games"
+    """ For all games related plug-ins. """
+    miscellaneous = "misc"
+    """ Default category when attribute is not set. All plug-ins not fitting in one of the categories above should be placed in this category. """
+
 class Client(ExecutorEventEmitter):
     """
     A TCP/IP client for [Touch Portal API](https://www.touch-portal.com/api) plugin integration.
