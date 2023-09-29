@@ -37,7 +37,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-TPSDK_DEFAULT_VERSION = 7
+TPSDK_DEFAULT_VERSION = 6
 """ Default Touch Portal SDK version for generating entry.tp JSON. """
 
 TPSDK_ATTRIBS_SETTINGS_TOOLTIP = {

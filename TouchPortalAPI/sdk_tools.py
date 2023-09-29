@@ -186,7 +186,12 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bo
             v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k), skip_invalid=skip_invalid)
         # check that the value is valid and add it to the dict if it is
         if validateAttribValue(k, v, data, sdk_v, path) or (not skip_invalid and v != None):
-            ret[k] = v
+            # print(k, v)
+            if k in ['api', 'sdk'] and k in item.keys():
+                ret[k] = v
+            elif not k in ['api', 'sdk']:
+                ret[k] = v
+
             # if this is the "sdk" value from TP_PLUGIN_INFO then reset the
             # passed `sdk_v` param since it was originally set to TPSDK_DEFAULT_VERSION
             if k == "sdk" or k == "api":
@@ -338,9 +343,15 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, skip_invalid:b
     # Start the root entry.tp object using basic plugin metadata
     # This will also create an empty `categories` array in the root of the entry.
     entry = _dictFromItem(info, TPSDK_ATTRIBS_ROOT, TPSDK_DEFAULT_VERSION, "info")
+    print(entry)
+
+    if 'api' in info.keys() and info.get('api') >= 7:
+        # tgt_sdk_v = info.get('sdk')
+        ...
+        
 
     # Get the target SDK version (was either specified in plugin or is TPSDK_DEFAULT_VERSION)
-    tgt_sdk_v = entry.get('sdk') or entry.get('api')
+    tgt_sdk_v = entry.get('sdk')
 
     # Loop over each plugin category and set up actions, states, events, and connectors.
     for cat, data in categories.items():
@@ -398,7 +409,7 @@ def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""
             _addMessage(f"WARNING: The ID '{value}' in '{keypath}' is not unique. It was previously seen in '{g_seen_ids.get(value)}'")
             return False
     if (deprecated_version := attrib_data.get('DV')):
-        if deprecated_version >= sdk_v:
+        if sdk_v >= deprecated_version:
             _addMessage(f"WARNING: Attribute '{keypath}' is deprecated in v{deprecated_version}")
             return False
     return True
@@ -441,7 +452,7 @@ def validateDefinitionObject(data:dict):
     _clearSeenIds()
     clearMessages()
 
-    sdk_v = data.get('sdk', data.get('api', TPSDK_DEFAULT_VERSION))
+    sdk_v = data.get('sdk', TPSDK_DEFAULT_VERSION)
     _validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
     return len(g_messages) == 0
 
