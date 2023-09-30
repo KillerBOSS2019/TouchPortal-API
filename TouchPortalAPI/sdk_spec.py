@@ -13,6 +13,7 @@ Table attributes:
   - `d`: default value, if any
   - `c`: optional list of valid value(s) (choices)
   - `l`: lookup table for child data structures, if any
+  - `DV`: deprecated version (if any)
 
 TODO: List valid attribute values per SDK version?
 """
@@ -46,6 +47,7 @@ TPSDK_ATTRIBS_SETTINGS_TOOLTIP = {
   'body':             { 'v': 7, 'r': True,  't': str },
   'docUrl':           { 'v': 7, 'r': False, 't': str },
 }
+""" [Setting Tooltip structure](https://www.touch-portal.com/api/v2/index.php?section=description_file_settings) """
 
 TPSDK_ATTRIBS_SETTINGS = {
 # key name              sdk V   required    [type(s)]    [default value]    [valid value list]
@@ -79,7 +81,7 @@ TPSDK_ATTRIBS_EVENT = {
   'format':           { 'v': 1, 'r': True,  't': str },
   'type':             { 'v': 1, 'r': True,  't': str,   'd': "communicate", 'c': ["communicate"] },
   'valueChoices':     { 'v': 1, 'r': True,  't': list,  'd': [] },
-  'valueType':        { 'v': 1, 'r': True,  't': str,   'd': "choice",      'c': ["choice"] },
+  'valueType':        { 'v': 1, 'r': True,  't': str,   'd': "choice",      'c': ["choice", "text"] }, #todo somehow limit `text` to v7+
   'valueStateId':     { 'v': 1, 'r': True,  't': str },
 }
 """ [Event structure](https://www.touch-portal.com/api/index.php?section=events) """
@@ -103,6 +105,7 @@ TPSDK_ATTRIBS_LINEACT_SUGGESTION = {
   'firstLineItemLabelWidth': { 'v': 7, 'r': False, 't': int },
   'lineIndentation':         { 'v': 7, 'r': False, 't': int },
 }
+""" [Line Action Suggestion structure](https://www.touch-portal.com/api/v2/index.php?section=description_file_actions) """
 
 TPSDK_ATTRIBS_LINE_OBJ = {
 # key name              sdk V   required    [type(s)]    [default value]    [valid value list]   [lookup table]
@@ -110,12 +113,14 @@ TPSDK_ATTRIBS_LINE_OBJ = {
   'data':             { 'v': 7, 'r': True, 't': list,    'l': TPSDK_ATTRIBS_ACT_DATA },
   'suggestions':      { 'v': 7, 'r': False, 't': dict,   'l': TPSDK_ATTRIBS_LINEACT_SUGGESTION },
 }
+""" [Line Action structure](https://www.touch-portal.com/api/v2/index.php?section=description_file_actions) """
 
 TPSDK_ATTRIBS_LINE = {
 # key name              sdk V   required    [type(s)]    [default value]    [valid value list]   [lookup table]
   'action':           { 'v': 7, 'r': False,  't': list, 'l': TPSDK_ATTRIBS_LINE_OBJ },
   'onHold':           { 'v': 7, 'r': False,  't': list, 'l': TPSDK_ATTRIBS_LINE_OBJ },
 }
+""" [Line structure](https://www.touch-portal.com/api/v2/index.php?section=description_file_actions) """
 
 TPSDK_ATTRIBS_ACTION = {
 # key name              sdk V   required    [type(s)]    [default value]    [valid value list]   [lookup table] [Deprecate version(DV)]
@@ -149,12 +154,20 @@ TPSDK_ATTRIBS_CONNECTOR = {
 }
 """ [Connector structure](https://www.touch-portal.com/api/index.php?section=connectors) """
 
+TPSDK_ATTRIBS_SUBCATEGORIES = {
+# key name              sdk V   required    [type(s)]    [default value]    [valid value list]
+  'id':               { 'v': 7, 'r': True,  't': str },
+  'name':             { 'v': 7, 'r': True,  't': str },
+  'iconRelativePath':        { 'v': 7, 'r': False, 't': str },
+}
+""" [Subcategory structure](https://www.touch-portal.com/api/v2/index.php?section=description_file_subcategories) """
+
 TPSDK_ATTRIBS_CATEGORY = {
 # key name              sdk V   required    [type(s)]  [lookup table]
   'id':               { 'v': 1, 'r': True,  't': str },  # dynamic default id based on plugin id?
   'name':             { 'v': 1, 'r': True,  't': str },  # dynamic default based on plugin name?
   'imagepath':        { 'v': 1, 'r': False, 't': str },
-  'subCategories':    { 'v': 7, 'r': False, 't': list },
+  'subCategories':    { 'v': 7, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_SUBCATEGORIES },
   'actions':          { 'v': 1, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_ACTION },
   'connectors':       { 'v': 4, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_CONNECTOR },
   'states':           { 'v': 1, 'r': False, 't': list, 'l': TPSDK_ATTRIBS_STATE },
@@ -168,6 +181,7 @@ TPSDK_ATTRIBS_CONFIGURATION = {
   'colorLight':       { 'v': 1, 'r': False, 't': str },
   'parentCategory':   { 'v': 7, 'r': False, 't': str, 'd': "misc", 'c': ["audio", "streaming", "content", "homeautomation", "social", "games", "misc"] },
 }
+""" [Configuration structure](https://www.touch-portal.com/api/v2/index.php?section=description_file_structure) """
 
 TPSDK_ATTRIBS_ROOT = {
 # key name              sdk V   required    [type(s)]    [default value]            [valid value list]   [lookup table] [Deprecate version(DV)]

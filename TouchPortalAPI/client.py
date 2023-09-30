@@ -472,6 +472,16 @@ class Client(ExecutorEventEmitter):
         """
         self.__stateUpdate(stateId, stateValue, False)
 
+    def updateStateList(self, statid:str, value:list):
+        """
+        Updating state lists API 7.0+
+
+        Args:
+            `statid`: The state id to update list
+            `value`: The new list of values
+        """
+        self.send({"type": "stateListUpdate", "id": statid, "value": value})
+
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
         if stateId:
             if forced or stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
@@ -577,6 +587,12 @@ class Client(ExecutorEventEmitter):
         This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
         """
         self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
+
+    def triggerEvent(self, eventId:str, states:dict):
+        """
+        This allows you to trigger predefined Event to TouchPortal.
+        """
+        self.send({"type": "triggerEvent", "id": eventId, "states": states})
 
     def getChoiceUpdatelist(self):
         """
