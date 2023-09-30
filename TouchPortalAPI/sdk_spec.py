@@ -121,6 +121,12 @@ TPSDK_ATTRIBS_ACTION = {
 # key name              sdk V   required    [type(s)]    [default value]    [valid value list]   [lookup table] [Deprecate version(DV)]
   'id':               { 'v': 1, 'r': True,  't': str },
   'name':             { 'v': 1, 'r': True,  't': str },
+  'name_nl':          { 'v': 7, 'r': False, 't': str },
+  'name_de':          { 'v': 7, 'r': False, 't': str },
+  'name_es':          { 'v': 7, 'r': False, 't': str },
+  'name_fr':          { 'v': 7, 'r': False, 't': str },
+  'name_pt':          { 'v': 7, 'r': False, 't': str },
+  'name_tr':          { 'v': 7, 'r': False, 't': str },
   'prefix':           { 'v': 1, 'r': True,  't': str, 'DV': 7},  # dynamic default? based on category name? # DEPRECATED V7
   'type':             { 'v': 1, 'r': True,  't': str,   'd': "communicate", 'c': ["communicate","execute"] },
   'description':      { 'v': 1, 'r': False, 't': str, 'DV': 7 }, # DEPRECATED V7
