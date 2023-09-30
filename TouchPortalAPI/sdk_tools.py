@@ -179,60 +179,79 @@ def _dictFromItem(item:dict, table:dict, sdk_v:int, path:str="", skip_invalid:bo
         # try get explicit value from item
         #if not data.get("doc"): continue
         if (v := item.get(k)) is None:
+            if (not data.get('r') or data.get('DV', 0) >= sdk_v):
+                continue
             # try get default value
             v = data.get('d')
         # check if there is nested data, eg. in an Action
+        # print(k, data.get('t'), v)
         if isinstance(v, dict) and data.get('t') is list:
+            # print(k, v)
             v = _arrayFromDict(v, data.get('l', {}), sdk_v, path=_keyPath(path, k), skip_invalid=skip_invalid)
         # check that the value is valid and add it to the dict if it is
+        # print(k, v)
         if validateAttribValue(k, v, data, sdk_v, path) or (not skip_invalid and v != None):
+            # if k == 'sdk':
+                # print(k, v, data, path)
             ret[k] = v
-            # if this is the "sdk" value from TP_PLUGIN_INFO then reset the
-            # passed `sdk_v` param since it was originally set to TPSDK_DEFAULT_VERSION
-            if k == "sdk":
-                sdk_v = v
     return ret
 
 
 def _arrayFromDict(d:dict, table:dict, sdk_v:int, category:str=None, path:str="", skip_invalid:bool=False):
+    # print(d.items())
     ret = []
     if not isinstance(d, dict):
         return ret
     for key, item in d.items():
         if not category or not (cat := item.get('category')) or cat == category:
+            # print(item, table)
             ret.append(_dictFromItem(item, table, sdk_v, f"{path}[{key}]", skip_invalid))
-    if path in ["actions","connectors"]:
+    if path in ["connectors", "actions"]:
         _replaceFormatTokens(ret)
     return ret
 
 
+def _replaceFormat(data_ids:dict, fmt:str, d:dict):
+    rx = re_compile(r'\$\[(\w+)\]')
+    begin = 0
+    while (m := rx.search(fmt, begin)):
+        idx = m.group(1)
+        if idx in data_ids.keys():
+            val = data_ids.get(idx)
+        elif idx.isdigit() and (i := int(idx) - 1) >= 0 and i < len(data_ids):
+            val = list(data_ids.values())[i]
+        else:
+            begin = m.end()
+            _addMessage(f"WARNING: Could not find replacement for token '{idx}' in 'format' attribute for element `{d.get('id')}`. The data arry does not contain this name/index.")
+            continue
+        # print(m.span(), val)
+        fmt = fmt[:m.start()] + "{$" + val + "$}" + fmt[m.end():]
+        begin = m.start() + len(val) + 4
+    return fmt
+
 def _replaceFormatTokens(items:list):
+    # print(items)
     for d in items:
-        if not isinstance(d, dict) or not 'format' in d.keys() or not 'data' in d.keys():
+        if not isinstance(d, dict) or not 'data' in d.keys():
             continue
         data_ids = {}
         for data in d.get('data'):
+            print(data)
             if (did := data.get('id')):
                 data_ids[did.rsplit(".", 1)[-1]] = did
         if not data_ids:
             continue
-        fmt = d.get('format')
-        rx = re_compile(r'\$\[(\w+)\]')
-        begin = 0
-        while (m := rx.search(fmt, begin)):
-            idx = m.group(1)
-            if idx in data_ids.keys():
-                val = data_ids.get(idx)
-            elif idx.isdigit() and (i := int(idx) - 1) >= 0 and i < len(data_ids):
-                val = list(data_ids.values())[i]
-            else:
-                begin = m.end()
-                _addMessage(f"WARNING: Could not find replacement for token '{idx}' in 'format' attribute for element `{d.get('id')}`. The data arry does not contain this name/index.")
-                continue
-            # print(m.span(), val)
-            fmt = fmt[:m.start()] + "{$" + val + "$}" + fmt[m.end():]
-            begin = m.start() + len(val) + 4
-        d['format'] = fmt
+
+        if 'lines' in d.keys():
+            for k, v in d.get('lines').items():
+                for line in v:
+                    if (line_data := line.get('data')):
+                        for data in line_data:
+                            if not isinstance(data, dict) or not 'lineFormat' in data.keys():
+                                continue
+                            data['lineFormat'] = _replaceFormat(data_ids, data.get('lineFormat'), d)
+        elif 'format' in d.keys():
+            d['format'] = _replaceFormat(data_ids, d.get('format'), d)
 
 
 def generateDefinitionFromScript(script:Union[str, TextIO], skip_invalid:bool=False):
@@ -335,12 +354,13 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, skip_invalid:b
     connectors = kwargs.get('connectors', {})
     # print(info, categories, settings, actions, states, events, connectors)
 
+    # Get the target SDK version (was either specified in plugin or is TPSDK_DEFAULT_VERSION)
+    tgt_sdk_v = info.get('api', info.get('sdk', TPSDK_DEFAULT_VERSION))
+
     # Start the root entry.tp object using basic plugin metadata
     # This will also create an empty `categories` array in the root of the entry.
-    entry = _dictFromItem(info, TPSDK_ATTRIBS_ROOT, TPSDK_DEFAULT_VERSION, "info")
 
-    # Get the target SDK version (was either specified in plugin or is TPSDK_DEFAULT_VERSION)
-    tgt_sdk_v = entry['sdk']
+    entry = _dictFromItem(info, TPSDK_ATTRIBS_ROOT, tgt_sdk_v, "info")
 
     # Loop over each plugin category and set up actions, states, events, and connectors.
     for cat, data in categories.items():
@@ -354,9 +374,10 @@ def generateDefinitionFromDeclaration(info:dict, categories:dict, skip_invalid:b
         # add the category to entry's categories array
         entry['categories'].append(category)
 
+    # print(entry)
     # Add Settings to root
     if tgt_sdk_v >= 3:
-        entry['settings'].extend(_arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings", skip_invalid = skip_invalid))
+        entry['settings'] = _arrayFromDict(settings, TPSDK_ATTRIBS_SETTINGS, tgt_sdk_v, path = "settings", skip_invalid = skip_invalid)
 
     return entry
 
@@ -397,6 +418,10 @@ def validateAttribValue(key:str, value, attrib_data:dict, sdk_v:int, path:str=""
         else:
             _addMessage(f"WARNING: The ID '{value}' in '{keypath}' is not unique. It was previously seen in '{g_seen_ids.get(value)}'")
             return False
+    if (deprecated_version := attrib_data.get('DV')):
+        if sdk_v >= deprecated_version:
+            _addMessage(f"WARNING: Attribute '{keypath}' is deprecated in v{deprecated_version}")
+            return False
     return True
 
 def _validateDefinitionDict(d:dict, table:dict, sdk_v:int, path:str=""):
@@ -436,6 +461,7 @@ def validateDefinitionObject(data:dict):
     """
     _clearSeenIds()
     clearMessages()
+
     sdk_v = data.get('sdk', TPSDK_DEFAULT_VERSION)
     _validateDefinitionDict(data, TPSDK_ATTRIBS_ROOT, sdk_v)
     return len(g_messages) == 0

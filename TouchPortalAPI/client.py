@@ -84,6 +84,26 @@ class TYPES:
         See also `pyee.ExecutorEventEmitter.error` event.
     """
 
+class PluginCategory:
+    # see https://www.touch-portal.com/api/v2/index.php?section=description_file_structure
+    """
+    Register Plug-in in specific category within TouchPortal.
+    """
+    audio = "audio"
+    """ For all audio, music, and media related plug-ins. """
+    streaming = "streaming"
+    """ For all streaming related plug-ins. """
+    content = "content"
+    """ For all content Creation related plug-ins. """
+    homeautomation = "homeautomation"
+    """ For all home automation related plug-ins. """
+    social = "social"
+    """ For all social media related plug-ins. """
+    games = "games"
+    """ For all games related plug-ins. """
+    miscellaneous = "misc"
+    """ Default category when attribute is not set. All plug-ins not fitting in one of the categories above should be placed in this category. """
+
 class Client(ExecutorEventEmitter):
     """
     A TCP/IP client for [Touch Portal API](https://www.touch-portal.com/api) plugin integration.
@@ -452,6 +472,16 @@ class Client(ExecutorEventEmitter):
         """
         self.__stateUpdate(stateId, stateValue, False)
 
+    def updateStateList(self, statid:str, value:list):
+        """
+        Updating state lists API 7.0+
+
+        Args:
+            `statid`: The state id to update list
+            `value`: The new list of values
+        """
+        self.send({"type": "stateListUpdate", "id": statid, "value": value})
+
     def __stateUpdate(self, stateId:str, stateValue:str, forced:bool):
         if stateId:
             if forced or stateId not in self.currentStates or self.currentStates[stateId] != stateValue:
@@ -557,6 +587,12 @@ class Client(ExecutorEventEmitter):
         This allows you to update Action Data in one of your Action. Currently TouchPortal only supports changing the minimum and maximum values in numeric data types.
         """
         self.send({"type": "updateActionData", "instanceId": instanceId, "data": {"minValue": minValue, "maxValue": maxValue, "id": stateId, "type": "number"}})
+
+    def triggerEvent(self, eventId:str, states:dict):
+        """
+        This allows you to trigger predefined Event to TouchPortal.
+        """
+        self.send({"type": "triggerEvent", "id": eventId, "states": states})
 
     def getChoiceUpdatelist(self):
         """
